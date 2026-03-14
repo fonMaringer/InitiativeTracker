@@ -1,3 +1,7 @@
 <Solution>
+  <Folder Name="/common/">
+    <File Path=".gitignore" />
+  </Folder>
+  <Project Path="InitiativeTracker.Tests/InitiativeTracker.Tests.csproj" />
   <Project Path="InitiativeTracker/InitiativeTracker.csproj" />
 </Solution>

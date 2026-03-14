@@ -1,10 +1,29 @@
+using InitiativeTracker;
 using InitiativeTracker.Components;
+using Microsoft.AspNetCore.Hosting.StaticWebAssets;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Configuration
+    .AddJsonFile("appsettings.json", false, true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", true, true)
+    .AddEnvironmentVariables();
+
+builder.Services.Configure<SomeTestOptions>(builder.Configuration.GetSection(nameof(SomeTestOptions)));
+
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .CreateLogger();
+
+builder.Services.AddLogging(c =>
+{
+    c.ClearProviders()
+        .AddSerilog();
+});
 
 var app = builder.Build();
 
@@ -24,5 +43,7 @@ app.UseAntiforgery();
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+
+StaticWebAssetsLoader.UseStaticWebAssets(app.Environment, app.Configuration);
 
 app.Run();

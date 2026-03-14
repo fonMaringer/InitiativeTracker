@@ -1,5 +1,5 @@
-using InitiativeTracker;
 using InitiativeTracker.Components;
+using InitiativeTracker.Infrastructure.Extensions;
 using Microsoft.AspNetCore.Hosting.StaticWebAssets;
 using Serilog;
 
@@ -13,8 +13,6 @@ builder.Configuration
     .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", true, true)
     .AddEnvironmentVariables();
 
-builder.Services.Configure<SomeTestOptions>(builder.Configuration.GetSection(nameof(SomeTestOptions)));
-
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
     .CreateLogger();
@@ -24,6 +22,8 @@ builder.Services.AddLogging(c =>
     c.ClearProviders()
         .AddSerilog();
 });
+
+builder.Services.AddHttpClients(builder.Configuration);
 
 var app = builder.Build();
 

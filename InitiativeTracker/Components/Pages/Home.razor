@@ -1,13 +1,132 @@
 ﻿@page "/"
+@using InitiativeTracker.Application
 @using InitiativeTracker.Integration.RestClients.TtgClub
-@using Microsoft.Extensions.Options
+@using InitiativeTracker.Integration.RestClients.TtgClub.Adapters
+@using InitiativeTracker.Integration.RestClients.TtgClub.Contracts.V1
 
-<PageTitle>Home</PageTitle>
+@implements IDisposable;
 
-<h1>Hello, world!</h1>
+<PageTitle>Initiative tracker</PageTitle>
 
-Welcome to your new app.
+<table class="table">
+    <thead>
+    <tr>
+        <th>Move</th>
+        <th>Initiative</th>
+        <th>Name</th>
+        <th>HP</th>
+        <th>AC</th>
+        <th>Remove</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var item in InitiativeService.Items)
+    {
+        <tr class="@(item == InitiativeService.Current ? "current-item" : item.IsDead ? "dead-item" :"")">
+            <td><button @onclick="() => InitiativeService.MoveUp(item)">^</button><button @onclick="() => InitiativeService.MoveDown(item)">v</button></td>
+            <td>@item.Initiative <button @onclick="() => item.RollInitiative()">Roll</button></td>
+            <td>
+                @item.Name
+                @if (!string.IsNullOrEmpty(item.Link))
+                {
+                    <a href="@item.Link" target="_blank">Link</a>
+                }
+            </td>
+            <td>@item.CurrentHp <button @onclick="() => item.AddHp(1)">+</button><button @onclick="() => item.RemoveHp(1)">-</button></td>
+            <td>@item.CurrentAc</td>
+            <td><button @onclick="() => InitiativeService.Remove(item)">Remove</button></td>
+        </tr>
+    }
+    </tbody>
+</table>
 
-@inject IOptionsMonitor<TtgClubClientOptions> Options;
+<div>
+    <p>Round @InitiativeService.CurrentRound</p>
+</div>
 
-<h2>Some option is: @Options.CurrentValue.Host</h2>
+<div>
+    <button @onclick="() => InitiativeService.Next()">Next</button>
+    <button @onclick="() => InitiativeService.SortByInitiative()">Sort</button>
+    <button @onclick="() => InitiativeService.Clear()">Clear</button>
+    <button @onclick="() => InitiativeService.Restart()">Restart</button>
+    <button>Add</button>
+</div>
+
+<div>
+    <InputText @bind-Value="@_searchPattern"/>
+    <button class="btn btn-secondary" @onclick="Search">Search</button>
+    
+    @if (_searchResults != null)
+    {
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Name</th>
+                <th>Source</th>
+                <th>Add</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var result in _searchResults)
+            {
+                <tr>
+                    <td>@result.Name.Rus</td>
+                    <td>@result.Source.ShortName</td>
+                    <td>
+                        <button class="btn" @onclick="() => Add(result.Url, 1)">Add</button>
+                        <button class="btn" @onclick="() => Add(result.Url, 2)">Add 2</button>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+</div>
+
+@inject IBestiaryClient BestiaryClient;
+@inject IInitiativeService InitiativeService;
+
+@code
+{
+    private readonly CancellationTokenSource _cts = new();
+    
+    private BestiarySearchResponseItem[]? _searchResults;
+
+
+    private string? _searchPattern;
+    
+    private async Task Search()
+    {
+        if (string.IsNullOrEmpty(_searchPattern))
+        {
+            _searchResults = null;
+            return;
+        }
+
+        _searchResults = await BestiaryClient.SearchV1Async(_searchPattern, _cts.Token);
+    }
+
+    private async Task Add(string url, int count)
+    {
+        if (string.IsNullOrEmpty(url))
+        {
+            return;
+        }
+
+        var details = await BestiaryClient.GetDetailsV1Async(url, _cts.Token);
+
+        var link = BestiaryClient.BuildDirectLink(details.Url);
+        for (var i = 0; i < count; i++)
+        {
+            var item = details.ToInitiativeListItem();
+            item.Link = link;
+            InitiativeService.Append(item);
+        }
+    }
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+}

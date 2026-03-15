@@ -10,6 +10,8 @@ public interface IBestiaryClient
     Task<BestiarySearchResponseItem[]> SearchV1Async(string query, CancellationToken ct);
     
     Task<BestiaryDetailsResponse?> GetDetailsV1Async(string url, CancellationToken ct);
+
+    string BuildDirectLink(string url);
 }
 
 public class BestiaryClient(IOptions<TtgClubClientOptions> options) : IBestiaryClient
@@ -30,6 +32,8 @@ public class BestiaryClient(IOptions<TtgClubClientOptions> options) : IBestiaryC
             { "Accept", MediaType },
         },
     };
+
+    public string BuildDirectLink(string url) => options.Value.Host + url;
 
     public async Task<BestiarySearchResponseItem[]> SearchV1Async(string query, CancellationToken ct)
     {

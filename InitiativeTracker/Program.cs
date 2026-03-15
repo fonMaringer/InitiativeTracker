@@ -25,7 +25,9 @@ builder.Services.AddLogging(c =>
         .AddSerilog();
 });
 
-builder.Services.AddHttpClients(builder.Configuration);
+builder.Services
+    .AddHttpClients(builder.Configuration)
+    .AddApplication();
 
 var app = builder.Build();
 

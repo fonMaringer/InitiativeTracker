@@ -58,3 +58,11 @@ h1:focus {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+
+.dead-item > td {
+    background-color: darkred;
+}
+
+.current-item > td {
+    background-color: #929292;
+}

@@ -1,4 +1,5 @@
 using InitiativeTracker.Components;
+using InitiativeTracker.Infrastructure;
 using InitiativeTracker.Infrastructure.Extensions;
 using Microsoft.AspNetCore.Hosting.StaticWebAssets;
 using Serilog;
@@ -49,5 +50,8 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 StaticWebAssetsLoader.UseStaticWebAssets(app.Environment, app.Configuration);
+
+app.WarmUp();
+app.Lifetime.ApplicationStopping.Register(_ => app.TearDown(), null);
 
 app.Run();

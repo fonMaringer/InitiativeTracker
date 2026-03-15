@@ -1,3 +1,5 @@
+using System.Reflection;
+using System.Text.Json;
 using InitiativeTracker.Domain;
 
 namespace InitiativeTracker.Application;
@@ -26,11 +28,16 @@ public interface IInitiativeService
 
     void Clear();
 
-    void Append(InitiativeListItem item); 
+    void Append(InitiativeListItem item);
     void AppendMultiple(IEnumerable<InitiativeListItem> items);
+
+    void WarmUp();
+    void SaveToFile();
 }
 
-public class InitiativeService : IInitiativeService
+public class InitiativeService(
+    ILogger<InitiativeService> logger
+) : IInitiativeService
 {
     private List<InitiativeListItem> _items = [];
 
@@ -103,7 +110,7 @@ public class InitiativeService : IInitiativeService
         {
             newIndex = 0;
         }
-        
+
         if (newIndex >= _items.Count)
         {
             return;
@@ -112,5 +119,51 @@ public class InitiativeService : IInitiativeService
         _items.RemoveAt(oldIndex);
 
         _items.Insert(newIndex, item);
+    }
+
+    private const string fileName = "InitiativeList.json";
+
+    public void WarmUp()
+    {
+        var filePath = GetFilePath();
+        if (!File.Exists(filePath))
+            return;
+
+        try
+        {
+            var json = File.ReadAllText(filePath);
+            _items = JsonSerializer.Deserialize<List<InitiativeListItem>>(json)!;
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Unable to deserialize initiative list file: {FilePath}.", filePath);
+        }
+    }
+
+    public void SaveToFile()
+    {
+        var filePath = GetFilePath();
+        try
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+
+            var json = JsonSerializer.Serialize(_items, new JsonSerializerOptions
+            {
+                WriteIndented = true,
+            });
+            File.WriteAllText(filePath, json);
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Unable to serialize initiative list to file: {FilePath}.", filePath);
+        }
+            
+    }
+
+    private static string GetFilePath()
+    {
+        var currentFilePath = Assembly.GetExecutingAssembly().Location;
+        return Path.Combine(Path.GetDirectoryName(currentFilePath), fileName);
     }
 }

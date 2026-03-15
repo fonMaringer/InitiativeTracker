@@ -9,7 +9,7 @@ public interface IBestiaryClient
 {
     Task<BestiarySearchResponseItem[]> SearchV1Async(string query, CancellationToken ct);
     
-    Task<string> GetDetailsV1Async(string url, CancellationToken ct);
+    Task<BestiaryDetailsResponse?> GetDetailsV1Async(string url, CancellationToken ct);
 }
 
 public class BestiaryClient(IOptions<TtgClubClientOptions> options) : IBestiaryClient
@@ -36,7 +36,7 @@ public class BestiaryClient(IOptions<TtgClubClientOptions> options) : IBestiaryC
         var request = new BestiarySearchRequest
         {
             Page = 0,
-            Size = 100,
+            Size = 10,
             Search = new(query, false),
             Order =
             [
@@ -56,15 +56,14 @@ public class BestiaryClient(IOptions<TtgClubClientOptions> options) : IBestiaryC
         return responseItems ?? [];
     }
 
-    public async Task<string> GetDetailsV1Async(string url, CancellationToken ct)
+    public async Task<BestiaryDetailsResponse?> GetDetailsV1Async(string url, CancellationToken ct)
     {
         var requestMessage = new HttpRequestMessage(HttpMethod.Post, _apiV1Path + url);
         
         var response = await _bestiaryV1Client.SendAsync(requestMessage, ct);
         
-        //TODO: add contract here
-        var responseString = await response.Content.ReadAsStringAsync(ct);
+        var responseItem = await response.Content.ReadFromJsonAsync<BestiaryDetailsResponse>(ct);
 
-        return responseString;
+        return responseItem;
     }
 }

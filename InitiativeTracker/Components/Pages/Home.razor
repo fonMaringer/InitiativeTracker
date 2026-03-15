@@ -1,8 +1,10 @@
 ﻿@page "/"
 @using InitiativeTracker.Application
+@using InitiativeTracker.Domain
 @using InitiativeTracker.Integration.RestClients.TtgClub
 @using InitiativeTracker.Integration.RestClients.TtgClub.Adapters
 @using InitiativeTracker.Integration.RestClients.TtgClub.Contracts.V1
+@using Source = InitiativeTracker.Domain.Source
 
 @implements IDisposable;
 
@@ -71,6 +73,25 @@
             </div>
         </div>
     }
+    
+    <div class="grid-row">
+        <div></div>
+        <div></div>
+        <div class="grid-cell">
+            <TextInput @bind-Value="_createName"/>
+        </div>
+        <div class="grid-cell">
+            <NumberInput TValue="int" @bind-Value="_createHp"/>
+        </div>
+        <div class="grid-cell">
+            <NumberInput TValue="int" @bind-Value="_createAc"/>
+        </div>
+        <div class="grid-cell">
+            <Button Color="ButtonColor.Primary" @onclick="AddManual">
+                <Icon Name="IconName.Plus" Size="IconSize.x6"/>
+            </Button>
+        </div>
+    </div>
 </div>
 
 <hr/>
@@ -85,7 +106,7 @@
 <hr/>
 
 <div>
-    <h6>Add</h6>
+    <h6>Add from bestiary</h6>
     <div style="display: flex">
         <TextInput @bind-Value="@_searchPattern" @onkeyup="OnKeyUpSearch" style="width: 200px; margin-right: 10px"/>
         <Button Color="ButtonColor.Dark" @onclick="Search">
@@ -127,12 +148,15 @@
 
     private BestiarySearchResponseItem[]? _searchResults;
 
-
     private string? _searchPattern;
+
+    private string _createName;
+    private int _createHp;
+    private int _createAc;
 
     private async Task OnKeyUpSearch(KeyboardEventArgs? e)
     {
-        if (e.Code == "Enter" || e.Code == "NumpadEnter")
+        if (e?.Code is "Enter" or "NumpadEnter")
         {
             await Search();
         }
@@ -162,13 +186,29 @@
         var link = BestiaryClient.BuildDirectLink(details.Url);
         for (var i = 0; i < item.AddCount; i++)
         {
-            var itemDetails = details.ToInitiativeListItem();
-            itemDetails.Link = link;
-            itemDetails.Reset();
+            var itemDetails = details.ToInitiativeListItem(link);
             InitiativeService.Append(itemDetails);
         }
 
         item.AddCount = 1;
+    }
+
+    private void AddManual()
+    {
+        var item = new InitiativeListItem
+        {
+            Name = _createName,
+            Hp = _createHp,
+            Ac = _createAc,
+            Source = Source.Manual,
+        };
+        item.Reset();
+        
+        InitiativeService.Append(item);
+
+        _createName = string.Empty;
+        _createHp = 0;
+        _createAc = 0;
     }
 
     public void Dispose()

@@ -22,6 +22,8 @@ public class InitiativeListItem
     public int CurrentAc { get; set; }
     
     public string? Link { get; set; }
+    
+    public Source Source { get; set; }
 
     [JsonIgnore]
     public int ChangeHpValue { get; set; }

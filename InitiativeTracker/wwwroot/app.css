@@ -59,10 +59,38 @@ h1:focus {
     text-align: start;
 }
 
-.dead-item > td {
-    background-color: darkred;
+.dead-item > div {
+    background-color: #8b0000;
 }
 
-.current-item > td {
-    background-color: #929292;
+.current-item > div {
+    background-color: #929292a0;
+}
+
+.grid-table {
+    display: grid;
+}
+
+.grid-header {
+    display: contents;
+    font-weight: bold;
+}
+
+.grid-row {
+    display: contents;
+}
+
+.grid-header > div, .grid-row > div {
+    padding: 10px;
+    border-bottom: 1px solid #929292;
+}
+
+.grid-cell {
+    padding: 12px;
+    display: flex;
+    align-items: center;
+}
+
+.control-btn {
+    width: 120px;
 }

@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/common/">
     <File Path=".gitignore" />
+    <File Path="readme.md" />
   </Folder>
   <Project Path="InitiativeTracker.Tests/InitiativeTracker.Tests.csproj" />
   <Project Path="InitiativeTracker/InitiativeTracker.csproj" />

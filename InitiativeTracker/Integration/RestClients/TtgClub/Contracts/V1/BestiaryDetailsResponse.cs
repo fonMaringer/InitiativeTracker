@@ -43,7 +43,5 @@ public class BestiaryDetailsResponse
     public Hits Hits { get; set; }
     public Speed[] Speed { get; set; }
     public Ability Ability { get; set; }
-
-    public int GetInitiative() => new Random().Next(1, 20) + (int) Math.Ceiling(Ability.Dex / 2.0);
 }
 

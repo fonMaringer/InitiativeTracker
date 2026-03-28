@@ -14,21 +14,21 @@
     <h2>Round @InitiativeService.CurrentRound</h2>
 </div>
 
-<div class="grid-table" style="grid-template-columns: 100px 175px 500px 300px 100px 75px">
+<div class="grid-table" style="grid-template-columns: 100px 195px 500px 115px 340px 100px 75px">
     <div class="grid-header">
         <div></div>
         <div>Initiative</div>
         <div>Name</div>
         <div>HP</div>
+        <div>Change HP</div>
         <div>AC</div>
         <div></div>
     </div>
     @foreach (var item in InitiativeService.Items)
     {
-        <div class="grid-row @(item.IsDead ? "dead-item" : "") @(item == InitiativeService.Current ? "current-item" : "")">
+        <div class="grid-row @(GetItemStyle(item)) @(item == InitiativeService.Current ? "current-item" : "")">
             <div class="grid-cell">
-                <Button Color="ButtonColor.Dark" @onclick="() => InitiativeService.MoveUp(item)"
-                        style="margin-right: 5px">
+                <Button Color="ButtonColor.Dark" @onclick="() => InitiativeService.MoveUp(item)" style="margin-right: 5px">
                     <Icon Name="IconName.ArrowUp" Size="IconSize.x6"/>
                 </Button>
                 <Button Color="ButtonColor.Dark" @onclick="() => InitiativeService.MoveDown(item)">
@@ -36,38 +36,58 @@
                 </Button>
             </div>
             <div class="grid-cell">
-                <NumberInput TValue="int" @bind-Value="item.Initiative" Style="width: 75px; border-width: 0"/>
-                <div style="width: 25px; margin: 0 5px 0 5px">
-                    (@(item.DexModifier > 0 ? "+" : "")@item.DexModifier)
+                <NumberInput TValue="int" @bind-Value="item.Initiative" Style="width: 75px; border-width: 0" onClick="this.select();"/>
+                <div style="min-width: 35px; margin: 0 5px 0 5px; color: #ccc">
+                    <Tooltip Placement="TooltipPlacement.Bottom" Title="Dexterity modifier">
+                        (@(item.DexModifier > 0 ? "+" : "")@item.DexModifier)
+                    </Tooltip>
                 </div>
-                <Button Color="ButtonColor.Dark" @onclick="() => item.RollInitiative()" Style="margin-left: 5px">
+                <Button Color="ButtonColor.Info" Outline="true" @onclick="() => item.RollInitiative()" Style="margin-left: 5px" TooltipPlacement="TooltipPlacement.Bottom" TooltipTitle="Roll initiative">
                     <Icon Name="IconName.ArrowClockwise" Size="IconSize.x6"/>
                 </Button>
             </div>
             <div class="grid-cell">
                 <TextInput @bind-Value="@item.Name" Style="border-width: 0; margin-right: 5px"/>
-                @if (!string.IsNullOrEmpty(item.Link))
+                @if (item.Source is Source.Bestiary)
                 {
-                    <Button Color="ButtonColor.Dark" Type="ButtonType.Link" To="@item.Link" Target="Target.Blank">
+                    <Button Color="ButtonColor.Dark" Type="ButtonType.Link" To="@item.Link" Target="Target.Blank" TooltipPlacement="TooltipPlacement.Bottom" TooltipTitle="Open in bestiary">
                         <Icon Name="IconName.Link45Deg" Size="IconSize.x6"/>
                     </Button>
                 }
             </div>
             <div class="grid-cell">
-                <NumberInput TValue="int" @bind-Value="item.CurrentHp" Style="border-width: 0"/>
-                <NumberInput TValue="int" @bind-Value="item.ChangeHpValue" Style="border-width: 0; margin: 0 15px 0 15px"/>
-                <Button Color="ButtonColor.Dark" @onclick="() => item.AddHp()" Style="margin-right: 5px">
-                    <Icon Name="IconName.Plus" Size="IconSize.x6"/>
-                </Button>
-                <Button Color="ButtonColor.Dark" @onclick="() => item.RemoveHp()">
+                <Tooltip Placement="TooltipPlacement.Bottom" Title="@(item.Source is Source.Bestiary ? $"Max HP: {item.Hp}" : "")">
+                    <NumberInput TValue="int" @bind-Value="item.CurrentHp" Style="border-width: 0" onClick="this.select();"/>
+                </Tooltip>
+            </div>
+            <div class="grid-cell">
+                <NumberInput TValue="int" @bind-Value="item.ChangeHpValue" Style="border-width: 0; margin-right: 15px" onClick="this.select();"/>
+                <Button Color="ButtonColor.Danger" @onclick="() => item.RemoveHp(OperationMode.Full)" Style="margin-right: 5px" TooltipPlacement="TooltipPlacement.Bottom" TooltipTitle="Remove value">
                     <Icon Name="IconName.Dash" Size="IconSize.x6"/>
                 </Button>
+                <Button Color="ButtonColor.Danger" @onclick="() => item.RemoveHp(OperationMode.Half)" Style="margin-right: 5px" TooltipPlacement="TooltipPlacement.Bottom" TooltipTitle="Remove half value">
+                    <div style="display: flex; flex-direction: row;">
+                        <Icon Name="IconName.Dash" Size="IconSize.x6"/>
+                        <p style="margin: 0">/2</p>
+                    </div>
+                </Button>
+                <Button Color="ButtonColor.Success" @onclick="() => item.AddHp(OperationMode.Full)" Style="margin-right: 5px" TooltipPlacement="TooltipPlacement.Bottom" TooltipTitle="Add value">
+                    <Icon Name="IconName.Plus" Size="IconSize.x6"/>
+                </Button>
+                <Button Color="ButtonColor.Success" @onclick="() => item.AddHp(OperationMode.Half)" Style="margin-right: 5px" TooltipPlacement="TooltipPlacement.Bottom" TooltipTitle="Add half value">
+                    <div style="display: flex; flex-direction: row;">
+                        <Icon Name="IconName.Plus" Size="IconSize.x6"/>
+                        <p style="margin: 0">/2</p>
+                    </div>
+                </Button>
             </div>
             <div class="grid-cell">
-                <NumberInput TValue="int" @bind-Value="item.CurrentAc" Style="border-width: 0"/>
+                <Tooltip Placement="TooltipPlacement.Bottom" Title="@(item.Source is Source.Bestiary ? $"Max AC: {item.Ac}" : "")">
+                    <NumberInput TValue="int" @bind-Value="item.CurrentAc" Style="border-width: 0" onClick="this.select();"/>
+                </Tooltip>
             </div>
             <div class="grid-cell">
-                <Button Color="ButtonColor.Danger" Outline="true" @onclick="() => InitiativeService.Remove(item)">
+                <Button Color="ButtonColor.Danger" Outline="true" @onclick="() => InitiativeService.Remove(item)" TooltipPlacement="TooltipPlacement.Bottom" TooltipTitle="Remove row">
                     <Icon Name="IconName.Trash" Size="IconSize.x6"/>
                 </Button>
             </div>
@@ -81,13 +101,14 @@
             <TextInput @bind-Value="_createName"/>
         </div>
         <div class="grid-cell">
-            <NumberInput TValue="int" @bind-Value="_createHp"/>
+            <NumberInput TValue="int" @bind-Value="_createHp" onClick="this.select();"/>
+        </div>
+        <div></div>
+        <div class="grid-cell">
+            <NumberInput TValue="int" @bind-Value="_createAc" onClick="this.select();"/>
         </div>
         <div class="grid-cell">
-            <NumberInput TValue="int" @bind-Value="_createAc"/>
-        </div>
-        <div class="grid-cell">
-            <Button Color="ButtonColor.Primary" @onclick="AddManual">
+            <Button Color="ButtonColor.Primary" @onclick="AddManual" TooltipPlacement="TooltipPlacement.Bottom" TooltipTitle="Add row manually">
                 <Icon Name="IconName.Plus" Size="IconSize.x6"/>
             </Button>
         </div>
@@ -129,7 +150,7 @@
                     <div class="grid-cell">@result.Name.Rus</div>
                     <div class="grid-cell">@result.Source.ShortName</div>
                     <div class="grid-cell">
-                        <NumberInput TValue="int" @bind-Value="result.AddCount" Style="border-width: 0"/>
+                        <NumberInput TValue="int" @bind-Value="result.AddCount" Style="border-width: 0" onClick="this.select();"/>
                         <Button Color="ButtonColor.Dark" @onclick="() => Add(result)">
                             <Icon Name="IconName.Plus" Size="IconSize.x6"/>
                         </Button>
@@ -151,7 +172,7 @@
 
     private string? _searchPattern;
 
-    private string _createName;
+    private string _createName = string.Empty;
     private int _createHp;
     private int _createAc;
 
@@ -183,6 +204,9 @@
         }
 
         var details = await BestiaryClient.GetDetailsV1Async(url, _cts.Token);
+        
+        if (details is null)
+            return;
 
         var link = BestiaryClient.BuildDirectLink(details.Url);
         for (var i = 0; i < item.AddCount; i++)
@@ -216,5 +240,24 @@
     {
         _cts.Cancel();
         _cts.Dispose();
+    }
+    
+    private static string GetItemStyle(InitiativeListItem item)
+    {
+        switch (item.State)
+        {
+            case HealthState.Healthy:
+                return "healthy-item";
+            case HealthState.SlightlyWounded:
+                return "slightly-wounded-item";
+            case HealthState.Wounded:
+                return "wounded-item";
+            case HealthState.SeriouslyWounded:
+                return "seriously-wounded-item";
+            case HealthState.Dead:
+                return "dead-item";
+            default:
+                throw new ArgumentOutOfRangeException(nameof(item.State), item.State, null);
+        }
     }
 }

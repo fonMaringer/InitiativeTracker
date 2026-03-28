@@ -59,14 +59,6 @@ h1:focus {
     text-align: start;
 }
 
-.dead-item > div {
-    background-color: #8b0000;
-}
-
-.current-item > div {
-    background-color: #929292a0;
-}
-
 .grid-table {
     display: grid;
 }
@@ -93,4 +85,47 @@ h1:focus {
 
 .control-btn {
     width: 120px;
+}
+
+.healthy-item > div:nth-child(4), .healthy-item > div:nth-child(3) {
+    background-color: #206020;
+}
+
+.slightly-wounded-item > div:nth-child(4), .slightly-wounded-item > div:nth-child(3) {
+    background-color: #506020;
+}
+
+.wounded-item > div:nth-child(4), .wounded-item > div:nth-child(3) {
+    background-color: #704020;
+}
+
+.seriously-wounded-item > div:nth-child(4), .seriously-wounded-item > div:nth-child(3) {
+    background-color: #b01010;
+}
+
+.dead-item > div:nth-child(4), .dead-item > div:nth-child(3) {
+    background-color: #401010;
+}
+
+:root {
+    --current-item-border: #0a53be;
+    --current-item-border-size-top: -3px;
+    --current-item-border-size-bottom: 3px;
+}
+
+.current-item > div {
+    box-shadow: 0px var(--current-item-border-size-top) 0px var(--current-item-border) inset,
+                0px var(--current-item-border-size-bottom) 0px var(--current-item-border) inset;
+}
+
+.current-item > div:last-child {
+    box-shadow: 0px var(--current-item-border-size-top) 0px var(--current-item-border) inset,
+                0px var(--current-item-border-size-bottom) 0px var(--current-item-border) inset,
+                var(--current-item-border-size-top) 0px 0px var(--current-item-border) inset;
+}
+
+.current-item > div:first-child {
+    box-shadow: 0px var(--current-item-border-size-top) 0px var(--current-item-border) inset,
+                0px var(--current-item-border-size-bottom) 0px var(--current-item-border) inset,
+                var(--current-item-border-size-bottom) 0px 0px var(--current-item-border) inset;
 }

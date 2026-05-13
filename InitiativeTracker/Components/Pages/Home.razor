@@ -56,8 +56,8 @@
                 }
             </div>
             <div class="grid-cell">
-                <Tooltip Placement="TooltipPlacement.Bottom" Title="@(item.Source is Source.Bestiary ? $"Max HP: {item.Hp}" : "")">
-                    <NumberInput TValue="int" @bind-Value="item.CurrentHp" Style="border-width: 0" onClick="this.select();"/>
+                <Tooltip Placement="TooltipPlacement.Bottom" Title="@(item.Source is Source.Bestiary ? $"Max HP: {item.HitsAverage}" : "")">
+                    <NumberInput TValue="int" @bind-Value="item.HitsCurrent" Style="border-width: 0" onClick="this.select();"/>
                 </Tooltip>
             </div>
             <div class="grid-cell">
@@ -82,8 +82,8 @@
                 </Button>
             </div>
             <div class="grid-cell">
-                <Tooltip Placement="TooltipPlacement.Bottom" Title="@(item.Source is Source.Bestiary ? $"Max AC: {item.Ac}" : "")">
-                    <NumberInput TValue="int" @bind-Value="item.CurrentAc" Style="border-width: 0" onClick="this.select();"/>
+                <Tooltip Placement="TooltipPlacement.Bottom" Title="@(item.Source is Source.Bestiary ? $"Max AC: {item.ArmorClass}" : "")">
+                    <NumberInput TValue="int" @bind-Value="item.ArmorClassCurrent" Style="border-width: 0" onClick="this.select();"/>
                 </Tooltip>
             </div>
             <div class="grid-cell">
@@ -138,7 +138,7 @@
 
     @if (_searchResults != null)
     {
-        <div class="grid-table" style="grid-template-columns: 400px 100px 150px">
+        <div class="grid-table" style="grid-template-columns: 400px 100px 200px">
             <div class="grid-header">
                 <div>Name</div>
                 <div>Source</div>
@@ -148,11 +148,18 @@
             {
                 <div class="grid-row">
                     <div class="grid-cell">@result.Name.Rus</div>
-                    <div class="grid-cell">@result.Source.ShortName</div>
+                    <div class="grid-cell">
+                        <Button Color="ButtonColor.None" TooltipPlacement="TooltipPlacement.Bottom" TooltipTitle="@result.Source.Name">
+                            @result.Source.ShortName
+                        </Button>
+                    </div>
                     <div class="grid-cell">
                         <NumberInput TValue="int" @bind-Value="result.AddCount" Style="border-width: 0" onClick="this.select();"/>
-                        <Button Color="ButtonColor.Dark" @onclick="() => Add(result)">
+                        <Button Color="ButtonColor.Dark" @onclick="() => Add(result, HitsMode.Average)" TooltipPlacement="TooltipPlacement.Bottom" TooltipTitle="Add with average hits" Style="margin-right: 5px">
                             <Icon Name="IconName.Plus" Size="IconSize.x6"/>
+                        </Button>
+                        <Button Color="ButtonColor.Dark" @onclick="() => Add(result, HitsMode.Random)" TooltipPlacement="TooltipPlacement.Bottom" TooltipTitle="Add with randomized hits">
+                            <Icon Name="IconName.Dice5" Size="IconSize.x6"/>
                         </Button>
                     </div>
                 </div>
@@ -195,7 +202,7 @@
         _searchResults = await BestiaryClient.SearchV1Async(_searchPattern, _cts.Token);
     }
 
-    private async Task Add(BestiarySearchResponseItem item)
+    private async Task Add(BestiarySearchResponseItem item, HitsMode hitsMode)
     {
         var url = item.Url;
         if (string.IsNullOrEmpty(url))
@@ -211,7 +218,7 @@
         var link = BestiaryClient.BuildDirectLink(details.Url);
         for (var i = 0; i < item.AddCount; i++)
         {
-            var itemDetails = details.ToInitiativeListItem(link);
+            var itemDetails = details.ToInitiativeListItem(link, hitsMode);
             InitiativeService.Append(itemDetails);
         }
 
@@ -223,11 +230,11 @@
         var item = new InitiativeListItem
         {
             Name = _createName,
-            Hp = _createHp,
-            Ac = _createAc,
+            HitsAverage = _createHp,
+            ArmorClass = _createAc,
             Source = Source.Manual,
         };
-        item.Reset();
+        item.Initialize(HitsMode.Average);
         
         InitiativeService.Append(item);
 

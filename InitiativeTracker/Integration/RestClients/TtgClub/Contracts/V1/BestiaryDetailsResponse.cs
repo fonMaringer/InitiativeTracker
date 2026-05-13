@@ -11,6 +11,7 @@ public class Hits
 {
     public int Average { get; set; }
     public string Formula { get; set; }
+    public int Bonus { get; set; }
 }
 
 public class Speed

@@ -59,9 +59,9 @@ StaticWebAssetsLoader.UseStaticWebAssets(app.Environment, app.Configuration);
 app.WarmUp();
 app.Lifetime.ApplicationStopping.Register(_ => app.TearDown(), null);
 
-var appOptions = app.Services.GetRequiredService<IOptionsSnapshot<AppOptions>>();
-if (appOptions.Value.OpenBrowserOnStart)
-    OpenBrowser(appOptions.Value.BrowserUrl);
+var appOptions = app.Services.GetRequiredService<IOptionsMonitor<AppOptions>>();
+if (appOptions.CurrentValue.OpenBrowserOnStart)
+    OpenBrowser(appOptions.CurrentValue.BrowserUrl);
 
 app.Run();
 static void OpenBrowser(string url)

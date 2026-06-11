@@ -33,6 +33,7 @@ builder.Services.AddLogging(c =>
 
 builder.Services
     .AddHttpClients(builder.Configuration)
+    .AddDatabase(builder.Configuration)
     .AddApplication();
 
 var app = builder.Build();

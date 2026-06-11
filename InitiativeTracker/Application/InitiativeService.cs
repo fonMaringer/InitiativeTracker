@@ -1,6 +1,6 @@
-using System.Reflection;
-using System.Text.Json;
 using InitiativeTracker.Domain;
+using InitiativeTracker.Domain.Entities;
+using InitiativeTracker.Infrastructure.Database;
 
 namespace InitiativeTracker.Application;
 
@@ -36,7 +36,8 @@ public interface IInitiativeService
 }
 
 public class InitiativeService(
-    ILogger<InitiativeService> logger
+    ILogger<InitiativeService> logger,
+    InitiativeTrackerDbContext dbContext
 ) : IInitiativeService
 {
     private List<InitiativeListItem> _items = [];
@@ -121,49 +122,69 @@ public class InitiativeService(
         _items.Insert(newIndex, item);
     }
 
-    private const string fileName = "InitiativeList.json";
-
     public void WarmUp()
     {
-        var filePath = GetFilePath();
-        if (!File.Exists(filePath))
-            return;
-
         try
         {
-            var json = File.ReadAllText(filePath);
-            _items = JsonSerializer.Deserialize<List<InitiativeListItem>>(json)!;
+            var entities = dbContext.Initiatives.OrderBy(e => e.OrderIndex).ToList();
+            _items = entities.Select(MapToItem).ToList();
         }
         catch (Exception e)
         {
-            logger.LogError(e, "Unable to deserialize initiative list file: {FilePath}.", filePath);
+            logger.LogError(e, "Unable to load initiative list from database.");
         }
     }
 
     public void SaveToFile()
     {
-        var filePath = GetFilePath();
         try
         {
-            if (File.Exists(filePath))
-                File.Delete(filePath);
-
-            var json = JsonSerializer.Serialize(_items, new JsonSerializerOptions
-            {
-                WriteIndented = true,
-            });
-            File.WriteAllText(filePath, json);
+            dbContext.Initiatives.RemoveRange(dbContext.Initiatives.ToList());
+            var entities = _items.Select((item, index) => MapToEntity(item, index)).ToList();
+            dbContext.Initiatives.AddRange(entities);
+            dbContext.SaveChanges();
         }
         catch (Exception e)
         {
-            logger.LogError(e, "Unable to serialize initiative list to file: {FilePath}.", filePath);
+            logger.LogError(e, "Unable to save initiative list to database.");
         }
-            
     }
 
-    private static string GetFilePath()
+    static InitiativeListItem MapToItem(InitiativeEntity entity)
     {
-        var currentFilePath = Assembly.GetExecutingAssembly().Location;
-        return Path.Combine(Path.GetDirectoryName(currentFilePath), fileName);
+        return new InitiativeListItem
+        {
+            Name = entity.Name,
+            Initiative = entity.Initiative,
+            Dexterity = entity.Dexterity,
+            HitsDefault = entity.HitsDefault,
+            HitsCurrent = entity.HitsCurrent,
+            ArmorClass = entity.ArmorClass,
+            ArmorClassCurrent = entity.ArmorClassCurrent,
+            Link = entity.Link,
+            Source = entity.SourceId switch
+            {
+                nameof(Source.Manual) => Source.Manual,
+                nameof(Source.Bestiary) => Source.Bestiary,
+                _ => Source.Manual,
+            },
+        };
+    }
+
+    static InitiativeEntity MapToEntity(InitiativeListItem item, int index)
+    {
+        return new InitiativeEntity
+        {
+            Name = item.Name,
+            Initiative = item.Initiative,
+            Dexterity = item.Dexterity,
+            HitsDefault = item.HitsDefault,
+            HitsCurrent = item.HitsCurrent,
+            ArmorClass = item.ArmorClass,
+            ArmorClassCurrent = item.ArmorClassCurrent,
+            Link = item.Link,
+            SourceId = item.Source.ToString(),
+            OrderIndex = index,
+        };
     }
 }

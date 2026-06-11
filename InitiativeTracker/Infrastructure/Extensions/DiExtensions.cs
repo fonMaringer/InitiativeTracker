@@ -1,5 +1,7 @@
 using InitiativeTracker.Application;
+using InitiativeTracker.Infrastructure.Database;
 using InitiativeTracker.Integration.RestClients.TtgClub;
+using Microsoft.EntityFrameworkCore;
 
 namespace InitiativeTracker.Infrastructure.Extensions;
 
@@ -12,6 +14,19 @@ public static class DiExtensions
             services.Configure<TtgClubClientOptions>(configuration.GetSection(nameof(TtgClubClientOptions)));
             services.AddSingleton<IBestiaryClient, BestiaryClient>();
 
+            return services;
+        }
+
+        public IServiceCollection AddDatabase(IConfiguration configuration)
+        {
+            var connectionString = configuration.GetConnectionString("Default");
+            services.AddSingleton(sp =>
+            {
+                var options = new DbContextOptionsBuilder<InitiativeTrackerDbContext>()
+                    .UseSqlite(connectionString)
+                    .Options;
+                return new InitiativeTrackerDbContext(options);
+            });
             return services;
         }
 

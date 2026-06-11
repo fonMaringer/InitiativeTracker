@@ -1,4 +1,5 @@
 using InitiativeTracker.Application;
+using InitiativeTracker.Infrastructure.Database;
 
 namespace InitiativeTracker.Infrastructure.Extensions;
 
@@ -6,6 +7,10 @@ public static class AppExtensions
 {
     public static void WarmUp(this WebApplication app)
     {
+        using var scope = app.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<InitiativeTrackerDbContext>();
+        dbContext.Database.EnsureCreated();
+
         var initiativeService = app.Services.GetRequiredService<IInitiativeService>();
         initiativeService.WarmUp();
     }

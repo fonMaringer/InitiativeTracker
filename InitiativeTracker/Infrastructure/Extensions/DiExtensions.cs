@@ -33,7 +33,8 @@ public static class DiExtensions
         public IServiceCollection AddApplication()
         {
             services.AddSingleton<IInitiativeService, InitiativeService>();
-        
+            services.AddScoped<IMiniatureService, MiniatureService>();
+
             return services;
         }
     }

@@ -36,22 +36,15 @@
             }
         </div>
         <hr/>
-        <Button Color="ButtonColor.Primary" @onclick="GeneratePrintHtml">Generate Print HTML</Button>
-    }
-
-    @if (_printHtml != null)
-    {
-        <Alert ShowDismissButton="true" Color="AlertColor.Info" Style="margin-top: 10px; white-space: pre-wrap;">
-            @_printHtml
-        </Alert>
+        <Button Color="ButtonColor.Primary" @onclick="GenerateAndOpenPrintHtml">Preview and Print</Button>
     }
 </div>
+
+@inject Microsoft.JSInterop.IJSRuntime JSRuntime;
 
 @code
 {
     List<PrintListItemEntry> _printItems = new();
-    string? _printHtml;
-
     readonly ItemPrintGenerator _printGenerator = new();
 
     public void AddItem(ItemEntity item, int quantity)
@@ -77,7 +70,7 @@
         StateHasChanged();
     }
 
-    void GeneratePrintHtml()
+    async Task GenerateAndOpenPrintHtml()
     {
         var printDataList = new List<ItemPrintDataDto>();
 
@@ -95,7 +88,8 @@
             }
         }
 
-        _printHtml = _printGenerator.Generate(printDataList);
+        string html = _printGenerator.Generate(printDataList);
+        await JSRuntime.InvokeVoidAsync("openHtmlInNewTab", html);
     }
 
     public class PrintListItemEntry(ItemEntity item, int quantity)

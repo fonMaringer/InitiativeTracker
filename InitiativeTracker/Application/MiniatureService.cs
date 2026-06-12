@@ -100,10 +100,9 @@ public class MiniatureService(
         if (string.IsNullOrWhiteSpace(query))
             return await dbContext.Miniatures.AsNoTracking().ToListAsync();
 
-        var lowerQuery = query.ToLowerInvariant();
         return await dbContext.Miniatures
             .AsNoTracking()
-            .Where(e => e.Name.ToLowerInvariant().Contains(lowerQuery))
+            .Where(e => EF.Functions.Like(e.Name, $"%{query}%"))
             .ToListAsync();
     }
 

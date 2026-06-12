@@ -1,6 +1,7 @@
 using InitiativeTracker.Domain;
 using InitiativeTracker.Domain.Entities;
 using InitiativeTracker.Infrastructure.Database;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace InitiativeTracker.Application;
 
@@ -37,7 +38,7 @@ public interface IInitiativeService
 
 public class InitiativeService(
     ILogger<InitiativeService> logger,
-    InitiativeTrackerDbContext dbContext
+    IServiceProvider serviceProvider
 ) : IInitiativeService
 {
     private List<InitiativeListItem> _items = [];
@@ -126,7 +127,9 @@ public class InitiativeService(
     {
         try
         {
-            var entities = dbContext.Initiatives.OrderBy(e => e.OrderIndex).ToList();
+            using var scope = serviceProvider.CreateScope();
+            var ctx = scope.ServiceProvider.GetRequiredService<InitiativeTrackerDbContext>();
+            var entities = ctx.Initiatives.OrderBy(e => e.OrderIndex).ToList();
             _items = entities.Select(MapToItem).ToList();
         }
         catch (Exception e)
@@ -139,10 +142,12 @@ public class InitiativeService(
     {
         try
         {
-            dbContext.Initiatives.RemoveRange(dbContext.Initiatives.ToList());
+            using var scope = serviceProvider.CreateScope();
+            var ctx = scope.ServiceProvider.GetRequiredService<InitiativeTrackerDbContext>();
+            ctx.Initiatives.RemoveRange(ctx.Initiatives.ToList());
             var entities = _items.Select((item, index) => MapToEntity(item, index)).ToList();
-            dbContext.Initiatives.AddRange(entities);
-            dbContext.SaveChanges();
+            ctx.Initiatives.AddRange(entities);
+            ctx.SaveChanges();
         }
         catch (Exception e)
         {

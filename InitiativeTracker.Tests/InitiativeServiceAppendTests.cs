@@ -3,6 +3,7 @@ using InitiativeTracker.Application;
 using InitiativeTracker.Domain;
 using InitiativeTracker.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 
@@ -22,7 +23,19 @@ public class InitiativeServiceAppendTests
             .UseInMemoryDatabase(databaseName: $"AppendDb-{Guid.NewGuid()}")
             .Options;
         _dbContext = new InitiativeTrackerDbContext(options);
-        _service = new InitiativeService(_logger, _dbContext);
+
+        var provider = Substitute.For<IServiceProvider>();
+        provider.GetService(typeof(InitiativeTrackerDbContext)).Returns(_dbContext);
+
+        var scope = Substitute.For<IServiceScope>();
+        scope.ServiceProvider.Returns(provider);
+
+        var scopeFactory = Substitute.For<IServiceScopeFactory>();
+        scopeFactory.CreateScope().Returns(scope);
+
+        provider.GetService(typeof(IServiceScopeFactory)).Returns(scopeFactory);
+
+        _service = new InitiativeService(_logger, provider);
     }
 
     [TearDown]

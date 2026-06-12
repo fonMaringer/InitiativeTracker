@@ -99,10 +99,9 @@ public class SpellService(
         if (string.IsNullOrWhiteSpace(query))
             return await dbContext.Spells.AsNoTracking().ToListAsync();
 
-        var lowerQuery = query.ToLowerInvariant();
         return await dbContext.Spells
             .AsNoTracking()
-            .Where(e => e.Name.ToLowerInvariant().Contains(lowerQuery))
+            .Where(e => EF.Functions.Like(e.Name, $"%{query}%"))
             .ToListAsync();
     }
 }

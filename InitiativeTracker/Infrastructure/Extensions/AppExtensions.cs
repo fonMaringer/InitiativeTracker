@@ -11,13 +11,14 @@ public static class AppExtensions
         var dbContext = scope.ServiceProvider.GetRequiredService<InitiativeTrackerDbContext>();
         dbContext.Database.EnsureCreated();
 
-        var initiativeService = app.Services.GetRequiredService<IInitiativeService>();
+        var initiativeService = scope.ServiceProvider.GetRequiredService<IInitiativeService>();
         initiativeService.WarmUp();
     }
 
     public static void TearDown(this WebApplication app)
     {
-        var initiativeService = app.Services.GetRequiredService<IInitiativeService>();
+        using var scope = app.Services.CreateScope();
+        var initiativeService = scope.ServiceProvider.GetRequiredService<IInitiativeService>();
         initiativeService.SaveToFile();
     }
 }

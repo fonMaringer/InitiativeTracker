@@ -20,13 +20,8 @@ public static class DiExtensions
         public IServiceCollection AddDatabase(IConfiguration configuration)
         {
             var connectionString = configuration.GetConnectionString("Default");
-            services.AddSingleton(sp =>
-            {
-                var options = new DbContextOptionsBuilder<InitiativeTrackerDbContext>()
-                    .UseSqlite(connectionString)
-                    .Options;
-                return new InitiativeTrackerDbContext(options);
-            });
+            services.AddDbContext<InitiativeTrackerDbContext>(options =>
+                options.UseSqlite(connectionString));
             return services;
         }
 

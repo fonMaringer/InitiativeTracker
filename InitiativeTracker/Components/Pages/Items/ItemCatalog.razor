@@ -1,0 +1,125 @@
+@using InitiativeTracker.Application
+@using InitiativeTracker.Application.Dtos
+@using InitiativeTracker.Domain.Entities
+
+<div>
+    @if (_isLoading)
+    {
+        <Spinner Color="SpinnerColor.Primary" Style="width: 30px; height: 30px"/>
+    }
+    else if (_items.Count == 0)
+    {
+        <p class="text-muted">No items found. Add some first.</p>
+    }
+    else
+    {
+        @foreach (var item in _items)
+        {
+            <div class="row mb-2 align-items-center">
+                <div class="col-md-6">
+                    <b>@item.Name</b>
+                    <span class="badge bg-secondary ms-2">@item.Rarity</span>
+                    @if (item.RequiresAttunement)
+                    {
+                        <span class="badge bg-warning text-dark ms-1">Attuned</span>
+                    }
+                </div>
+                <div class="col-md-4">
+                    @(Truncate(item.Description, 60))
+                </div>
+                <div class="col-md-2 text-end">
+                    <Button Color="ButtonColor.Warning" Outline="true" Class="me-1" @onclick="() => OnEdit(item)">
+                        <Icon Name="IconName.Pen" Size="IconSize.x6"/> Edit
+                    </Button>
+                    <Button Color="ButtonColor.Danger" Outline="true" @onclick="() => OnDelete(item)">
+                        <Icon Name="IconName.Trash" Size="IconSize.x6"/> Delete
+                    </Button>
+                </div>
+            </div>
+        }
+    }
+
+    @if (_itemToEdit != null)
+    {
+        <hr/>
+        <EditItem Item="@_itemToEdit" OnSaved="@OnEditSaved" OnClosed="@CancelEdit" />
+    }
+</div>
+
+@code
+{
+    private List<ItemEntity> _items = new();
+    private bool _isLoading;
+    private ItemEntity? _itemToEdit;
+
+    [Inject] IItemService ItemService { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCatalog();
+    }
+
+    public async Task RefreshAsync()
+    {
+        await LoadCatalog();
+        StateHasChanged();
+    }
+
+    private async Task LoadCatalog()
+    {
+        _isLoading = true;
+        try
+        {
+            var allItems = await ItemService.SearchAsync(string.Empty);
+            _items = new List<ItemEntity>(allItems);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to load catalog: {ex.Message}");
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void OnEdit(ItemEntity item)
+    {
+        _itemToEdit = item;
+        StateHasChanged();
+    }
+
+    private async Task OnEditSaved()
+    {
+        _itemToEdit = null;
+        await LoadCatalog();
+    }
+
+    private void CancelEdit()
+    {
+        _itemToEdit = null;
+        StateHasChanged();
+    }
+
+    private async Task OnDelete(ItemEntity item)
+    {
+        try
+        {
+            await ItemService.DeleteAsync(item.Id);
+            _items.Remove(item);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to delete item: {ex.Message}");
+        }
+    }
+
+    private string Truncate(string text, int maxLength)
+    {
+        if (string.IsNullOrEmpty(text) || text.Length <= maxLength)
+            return text;
+
+        var stripped = System.Text.RegularExpressions.Regex.Replace(text, "<.*?>", string.Empty);
+        return stripped.Substring(0, maxLength) + "...";
+    }
+}

@@ -1,0 +1,32 @@
+@page "/items"
+@using InitiativeTracker.Application
+@using InitiativeTracker.Domain
+@using InitiativeTracker.Domain.Entities
+
+<PageTitle>Предметы</PageTitle>
+
+<div>
+    <h2>Предметы</h2>
+    <p>Select a tab to manage items or prepare them for printing.</p>
+
+    <Accordion AlwaysOpen="true">
+        <AccordionItem Expanded="true" ToggleButtonContent="Каталог предметов" CollapsedToggleButtonContent="Каталог предметов">
+            <ItemCatalog />
+        </AccordionItem>
+        <AccordionItem ToggleButtonContent="Добавить предмет" CollapsedToggleButtonContent="Добавить предмет">
+            <AddItemForm OnItemAdded="OnItemAdded" />
+        </AccordionItem>
+        <AccordionItem ToggleButtonContent="Подготовка к печати" CollapsedToggleButtonContent="Подготовка к печати">
+            <ItemPreparationList />
+        </AccordionItem>
+    </Accordion>
+</div>
+
+@code
+{
+    private Task OnItemAdded()
+    {
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+}

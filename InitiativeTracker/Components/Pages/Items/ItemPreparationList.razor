@@ -1,0 +1,146 @@
+@using InitiativeTracker.Application
+@using InitiativeTracker.Domain.Entities
+
+<div>
+    <div class="mb-3">
+        <label class="form-label"><b>Поиск предмета</b></label>
+        <TextInput @bind-Value="_searchQuery" Style="width: 300px; margin-right: 10px"/>
+        <Button Color="ButtonColor.Dark" @onclick="Search">
+            <Icon Name="IconName.Search" Size="IconSize.x6"/>
+        </Button>
+    </div>
+
+    @if (_searchResults != null)
+    {
+        <div class="grid-table" style="grid-template-columns: 200px 150px 80px 300px">
+            <div class="grid-header">
+                <div>Name</div>
+                <div>Rarity</div>
+                <div>Qty</div>
+                <div></div>
+            </div>
+            @foreach (var item in _searchResults)
+            {
+                <div class="grid-row">
+                    <div class="grid-cell">@item.Name</div>
+                    <div class="grid-cell">@item.Rarity</div>
+                    <div class="grid-cell">
+                        @if (_quantities.TryGetValue(item.Id, out int currentQty))
+                        {
+                            <NumberInput TValue="int" Value="@currentQty" ValueChanged="@(v => _quantities[item.Id] = v)" Style="width: 60px; border-width: 0" onClick="this.select();"/>
+                        }
+                    </div>
+                    <div class="grid-cell">
+                        <Button Color="ButtonColor.Success" Outline="true" Disabled="@(!_canAdd(item.Id))" @onclick="() => AddToPrintList(item)">
+                            <Icon Name="IconName.Plus" Size="IconSize.x6"/> Add to print
+                        </Button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    @if (_printItems.Count > 0)
+    {
+        <hr/>
+        <h4>List for printing</h4>
+        <div class="grid-table" style="grid-template-columns: 250px 120px 80px 80px">
+            <div class="grid-header">
+                <div>Name</div>
+                <div>Rarity</div>
+                <div>Qty</div>
+                <div></div>
+            </div>
+            @foreach (var printItem in _printItems)
+            {
+                var itemName = GetItemName(printItem.ItemId);
+                var itemRarity = GetItemRarity(printItem.ItemId);
+                <div class="grid-row">
+                    <div class="grid-cell">@itemName</div>
+                    <div class="grid-cell">@itemRarity</div>
+                    <div class="grid-cell">@printItem.Quantity</div>
+                    <div class="grid-cell">
+                        <Button Color="ButtonColor.Danger" Outline="true" @onclick="() => RemoveFromPrintList(printItem.ItemId)">
+                            <Icon Name="IconName.Trash" Size="IconSize.x6"/>
+                        </Button>
+                    </div>
+                </div>
+            }
+        </div>
+        <hr/>
+        <Button Color="ButtonColor.Primary" @onclick="GeneratePrintHtml">Generate Print HTML</Button>
+    }
+
+    @if (_printHtml != null)
+    {
+        <Alert ShowDismissButton="true" Color="AlertColor.Info" Style="margin-top: 10px; white-space: pre-wrap;">
+            @_printHtml
+        </Alert>
+    }
+</div>
+
+@code
+{
+    private string _searchQuery = string.Empty;
+    private IReadOnlyList<ItemEntity>? _searchResults;
+    private readonly Dictionary<int, int> _quantities = new();
+    private List<(int ItemId, int Quantity)> _printItems = new();
+    private string? _printHtml;
+
+    [Inject] IItemService ItemService { get; set; } = default!;
+
+    private async Task Search()
+    {
+        _searchResults = await ItemService.SearchAsync(_searchQuery);
+        foreach (var item in _searchResults)
+        {
+            if (!_quantities.ContainsKey(item.Id))
+                _quantities[item.Id] = 1;
+        }
+    }
+
+    private bool _canAdd(int id)
+    {
+        return _quantities.TryGetValue(id, out int qty) && qty > 0;
+    }
+
+    private void AddToPrintList(ItemEntity item)
+    {
+        if (!_quantities.TryGetValue(item.Id, out int quantity) || quantity <= 0)
+            return;
+
+        var existingIndex = _printItems.FindIndex(p => p.ItemId == item.Id);
+        if (existingIndex >= 0)
+        {
+            var oldItem = _printItems[existingIndex];
+            _printItems[existingIndex] = (oldItem.ItemId, oldItem.Quantity + quantity);
+        }
+        else
+        {
+            _printItems.Add((item.Id, quantity));
+        }
+    }
+
+    private void RemoveFromPrintList(int itemId)
+    {
+        _printItems.RemoveAll(p => p.ItemId == itemId);
+    }
+
+    private string GetItemName(int itemId)
+    {
+        var item = _searchResults?.FirstOrDefault(i => i.Id == itemId);
+        return item?.Name ?? $"Item #{itemId}";
+    }
+
+    private string GetItemRarity(int itemId)
+    {
+        var item = _searchResults?.FirstOrDefault(i => i.Id == itemId);
+        return item?.Rarity.ToString() ?? "";
+    }
+
+    private Task GeneratePrintHtml()
+    {
+        _printHtml = "// TODO: Integration with ItemPrintGenerator (planned for next milestone)";
+        return Task.CompletedTask;
+    }
+}

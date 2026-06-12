@@ -1,0 +1,101 @@
+@using InitiativeTracker.Application
+@using InitiativeTracker.Application.Dtos
+@using InitiativeTracker.Domain
+
+<div>
+    <h4>Add new item</h4>
+
+    @if (_isProcessing)
+    {
+        <Spinner Color="SpinnerColor.Primary" Style="margin-bottom: 15px; width: 30px; height: 30px"/>
+    }
+
+    <div class="mb-2">
+        <label class="form-label"><b>Name</b></label>
+        <InputText @bind-Value="_name" class="form-control"/>
+    </div>
+
+    <div class="mb-2">
+        <label class="form-label"><b>Rarity</b></label>
+        <select class="form-select" @bind="_rarity">
+            @foreach (var option in _rarityOptions)
+            {
+                <option value="@option">@option</option>
+            }
+        </select>
+    </div>
+
+    <div class="mb-2 form-check">
+        <InputCheckbox @bind-Value="_requiresAttunement" class="form-check-input"/>
+        <label class="form-check-label"><b>Requires Attunement</b></label>
+    </div>
+
+    <div class="mb-2">
+        <label class="form-label"><b>Description</b></label>
+        <InputTextArea @bind-Value="_description" class="form-control" rows="6"/>
+        <p class="text-muted" style="font-size: 0.8em;">HTML markup is supported.</p>
+    </div>
+
+    <Button Color="ButtonColor.Primary" Disabled="@_isDisabled" @onclick="OnAdd">
+        Add Item
+    </Button>
+
+    @if (_errorMessage != null)
+    {
+        <Alert ShowDismissButton="true" Color="AlertColor.Danger" Style="margin-top: 10px;">@_errorMessage</Alert>
+    }
+
+    @if (_successMessage != null)
+    {
+        <Alert ShowDismissButton="true" Color="AlertColor.Success" Style="margin-top: 10px;">@_successMessage</Alert>
+    }
+</div>
+
+@code
+{
+    private string _name = string.Empty;
+    private ItemRarity _rarity = ItemRarity.Common;
+    private bool _requiresAttunement = false;
+    private string _description = string.Empty;
+    private bool _isProcessing;
+    private string? _errorMessage;
+    private string? _successMessage;
+
+    private readonly ItemRarity[] _rarityOptions = Enum.GetValues<ItemRarity>().ToArray();
+    private bool _isDisabled => _isProcessing || string.IsNullOrWhiteSpace(_name);
+
+    [Inject] IItemService ItemService { get; set; } = default!;
+    [Parameter] public EventCallback OnItemAdded { get; set; }
+
+    private async Task OnAdd()
+    {
+        _isProcessing = true;
+        _errorMessage = null;
+        _successMessage = null;
+
+        try
+        {
+            await ItemService.AddAsync(new ItemCreateDto(
+                Name: _name,
+                Rarity: _rarity,
+                RequiresAttunement: _requiresAttunement,
+                Description: _description));
+
+            _successMessage = $"'{_name}' added successfully.";
+            _name = string.Empty;
+            _rarity = ItemRarity.Common;
+            _requiresAttunement = false;
+            _description = string.Empty;
+
+            await OnItemAdded.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Failed to add item: {ex.Message}";
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+}

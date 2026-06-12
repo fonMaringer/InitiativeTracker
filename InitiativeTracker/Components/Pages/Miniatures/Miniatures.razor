@@ -1,0 +1,34 @@
+@page "/miniatures"
+@using InitiativeTracker.Application
+@using InitiativeTracker.Domain
+@using InitiativeTracker.Domain.Entities
+
+<PageTitle>Miniatures</PageTitle>
+
+<div>
+    <h2>Миниатюры</h2>
+    <p>Select a tab to manage miniatures or prepare them for printing.</p>
+
+    <Accordion AlwaysOpen="true">
+        <AccordionItem Expanded="true" ToggleButtonContent="Каталог миниатюр" CollapsedToggleButtonContent="Каталог миниатюр">
+            <MiniatureCatalog />
+        </AccordionItem>
+        <AccordionItem ToggleButtonContent="Добавить миниатюру" CollapsedToggleButtonContent="Добавить миниатюру">
+            <AddMiniatureForm OnMiniatureAdded="OnMiniatureAdded" />
+        </AccordionItem>
+        <AccordionItem ToggleButtonContent="Подготовка к печати" CollapsedToggleButtonContent="Подготовка к печати">
+            <PreparationList />
+        </AccordionItem>
+    </Accordion>
+</div>
+
+@inject IMiniatureService MiniatureService
+
+@code
+{
+    private Task OnMiniatureAdded()
+    {
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+}

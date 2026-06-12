@@ -1,0 +1,120 @@
+@using InitiativeTracker.Application
+@using InitiativeTracker.Application.Dtos
+@using InitiativeTracker.Domain
+@using Microsoft.AspNetCore.Components.Forms
+
+<div>
+    <h4>Add new miniature</h4>
+
+    @if (_isProcessing)
+    {
+        <Spinner Color="SpinnerColor.Primary" Style="margin-bottom: 15px; width: 30px; height: 30px"/>
+    }
+
+    <div class="mb-2">
+        <label class="form-label"><b>Name</b></label>
+        <InputText @bind-Value="_name" class="form-control"/>
+    </div>
+
+    <div class="mb-2">
+        <label class="form-label"><b>Size</b></label>
+        @foreach (var option in _sizeOptions)
+        {
+            var sizeId = SizeId(option);
+            <div style="display:inline-block; margin-right:10px;">
+                <input type="radio" id="@sizeId" name="miniatureSize" checked="@(_size == option)" @onchange="() => _size = option"/>
+                <label for="@sizeId">@option</label>
+            </div>
+        }
+    </div>
+
+    <div class="mb-2">
+        <label class="form-label"><b>Image</b></label>
+        <InputFile OnChange="OnImageSelected" class="form-control"/>
+    </div>
+
+    <div class="mb-2">
+        @if (_imageDataSrc != null)
+        {
+            <img src="@_imageDataSrc" style="max-width: 300px; max-height: 300px; display: block;" alt="Preview"/>
+            <p class="text-muted" style="font-size: 0.8em;">Crop region defaults to full image (0, 0, 100, 100).</p>
+        }
+    </div>
+
+    <Button Color="ButtonColor.Primary" Disabled="@_isDisabled" @onclick="OnAdd">
+        Add Miniature
+    </Button>
+
+    @if (_errorMessage != null)
+    {
+        <Alert ShowDismissButton="true" Color="AlertColor.Danger" Style="margin-top: 10px;">@_errorMessage</Alert>
+    }
+
+    @if (_successMessage != null)
+    {
+        <Alert ShowDismissButton="true" Color="AlertColor.Success" Style="margin-top: 10px;">@_successMessage</Alert>
+    }
+</div>
+
+@code
+{
+    private string _name = string.Empty;
+    private CreatureSize _size;
+    private byte[]? _imageData;
+    private string? _imageDataSrc;
+    private bool _isProcessing;
+    private string? _errorMessage;
+    private string? _successMessage;
+
+    private readonly CreatureSize[] _sizeOptions = Enum.GetValues<CreatureSize>().ToArray();
+
+    private bool _isDisabled => _isProcessing || string.IsNullOrWhiteSpace(_name) || _imageData == null;
+
+    [Inject] IMiniatureService MiniatureService { get; set; } = default!;
+    [Parameter] public EventCallback OnMiniatureAdded { get; set; }
+
+    private string SizeId(CreatureSize size) => "size_" + ((int)size).ToString();
+
+    private async Task OnImageSelected(InputFileChangeEventArgs e)
+    {
+        var firstFile = e.File;
+        if (firstFile == null) return;
+
+        _imageData = new byte[firstFile.Size];
+        await firstFile.OpenReadStream().ReadAsync(_imageData);
+        _imageDataSrc = Convert.ToBase64String(_imageData);
+        _errorMessage = null;
+    }
+
+    private async Task OnAdd()
+    {
+        _isProcessing = true;
+        _errorMessage = null;
+        _successMessage = null;
+
+        try
+        {
+            await MiniatureService.AddAsync(new MiniatureCreateDto(
+                Name: _name,
+                Size: _size,
+                ImageData: _imageData!,
+                CropRegion: null));
+
+            _successMessage = $"'{_name}' added successfully.";
+            _name = string.Empty;
+            _size = CreatureSize.Small;
+            _imageData = null;
+            _imageDataSrc = null;
+
+            await OnMiniatureAdded.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Failed to add miniature: {ex.Message}";
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+}

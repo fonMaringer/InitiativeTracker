@@ -21,12 +21,7 @@ public class InitiativeTrackerDbContext(DbContextOptions<InitiativeTrackerDbCont
             entity.Property(e => e.SourceId).IsRequired();
         });
 
-        modelBuilder.Entity<MiniatureEntity>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Name).IsRequired();
-            entity.Property(e => e.ImagePath).IsRequired();
-        });
+        modelBuilder.ApplyConfiguration(new MiniatureEntityConfiguration());
 
         modelBuilder.Entity<ItemEntity>(entity =>
         {

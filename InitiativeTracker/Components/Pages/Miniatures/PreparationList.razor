@@ -1,0 +1,162 @@
+@using InitiativeTracker.Application
+@using InitiativeTracker.Application.Dtos
+@using InitiativeTracker.Domain.Entities
+
+<div>
+    <div class="mb-3">
+        <label class="form-label"><b>Поиск миниатюры</b></label>
+        <TextInput @bind-Value="_searchQuery" Style="width: 300px; margin-right: 10px"/>
+        <Button Color="ButtonColor.Dark" @onclick="Search">
+            <Icon Name="IconName.Search" Size="IconSize.x6"/>
+        </Button>
+    </div>
+
+    @if (_searchResults != null)
+    {
+        <div class="grid-table" style="grid-template-columns: 80px 250px 100px 400px">
+            <div class="grid-header">
+                <div></div>
+                <div>Name</div>
+                <div>Qty</div>
+                <div>Actions</div>
+            </div>
+            @foreach (var miniature in _searchResults)
+            {
+                <div class="grid-row">
+                    <div class="grid-cell">
+                        @if (_images.TryGetValue(miniature.Id, out string? imgSrc))
+                        {
+                            <img src="@imgSrc"
+                                 alt="@miniature.Name"
+                                 style="max-width: 60px; max-height: 60px; object-fit: contain;"/>
+                        }
+                    </div>
+                    <div class="grid-cell">@miniature.Name</div>
+                    <div class="grid-cell">
+                        @if (_quantities.TryGetValue(miniature.Id, out int currentQty))
+                        {
+                            <NumberInput TValue="int" Value="@currentQty" ValueChanged="@(v => _quantities[miniature.Id] = v)" Style="width: 60px; border-width: 0" onClick="this.select();"/>
+                        }
+                    </div>
+                    <div class="grid-cell">
+                        <Button Color="ButtonColor.Success" Outline="true" Disabled="@(!_canAdd(miniature.Id))" @onclick="() => AddToPrintList(miniature)">
+                            <Icon Name="IconName.Plus" Size="IconSize.x6"/> Add to print
+                        </Button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    @if (_printItems.Count > 0)
+    {
+        <hr/>
+        <h4>List for printing</h4>
+        <div class="grid-table" style="grid-template-columns: 80px 250px 100px 100px">
+            <div class="grid-header">
+                <div></div>
+                <div>Name</div>
+                <div>Qty</div>
+                <div></div>
+            </div>
+            @foreach (var item in _printItems)
+            {
+                <div class="grid-row">
+                    <div class="grid-cell">
+                        @if (_images.ContainsKey(item.MiniatureId))
+                        {
+                            <img src="@_images[item.MiniatureId]"
+                                 style="max-width: 60px; max-height: 60px; object-fit: contain;"/>
+                        }
+                    </div>
+                    <div class="grid-cell">@GetItemName(item.MiniatureId)</div>
+                    <div class="grid-cell">@item.Quantity</div>
+                    <div class="grid-cell">
+                        <Button Color="ButtonColor.Danger" Outline="true" @onclick="() => RemoveFromPrintList(item.MiniatureId)">
+                            <Icon Name="IconName.Trash" Size="IconSize.x6"/>
+                        </Button>
+                    </div>
+                </div>
+            }
+        </div>
+        <hr/>
+        <Button Color="ButtonColor.Primary" @onclick="GeneratePrintHtml">Generate Print HTML</Button>
+    }
+
+    @if (_printHtml != null)
+    {
+        <Alert ShowDismissButton="true" Color="AlertColor.Info" Style="margin-top: 10px; white-space: pre-wrap;">
+            @_printHtml
+        </Alert>
+    }
+</div>
+
+@code
+{
+    private string _searchQuery = string.Empty;
+    private IReadOnlyList<MiniatureEntity>? _searchResults;
+    private readonly Dictionary<int, int> _quantities = new();
+    private List<MiniaturePrintItemDto> _printItems = new();
+    private readonly Dictionary<int, string> _images = new();
+    private string? _printHtml;
+
+    [Inject] IMiniatureService MiniatureService { get; set; } = default!;
+
+    private async Task Search()
+    {
+        _searchResults = await MiniatureService.SearchAsync(_searchQuery);
+        foreach (var miniature in _searchResults)
+        {
+            if (!_quantities.ContainsKey(miniature.Id))
+                _quantities[miniature.Id] = 1;
+
+            if (!_images.ContainsKey(miniature.Id))
+            {
+                var imageBytes = await MiniatureService.GetImageAsync(miniature.Id);
+                if (imageBytes != null && imageBytes.Length > 0)
+                {
+                    _images[miniature.Id] = $"data:image/png;base64,{Convert.ToBase64String(imageBytes)}";
+                }
+            }
+        }
+    }
+
+    private bool _canAdd(int id)
+    {
+        return _quantities.TryGetValue(id, out int qty) && qty > 0;
+    }
+
+    private async Task AddToPrintList(MiniatureEntity miniature)
+    {
+        if (!_quantities.TryGetValue(miniature.Id, out int quantity) || quantity <= 0)
+            return;
+
+        var existingIndex = _printItems.FindIndex(p => p.MiniatureId == miniature.Id);
+        if (existingIndex >= 0)
+        {
+            var oldItem = _printItems[existingIndex];
+            _printItems[existingIndex] = new MiniaturePrintItemDto(oldItem.MiniatureId, oldItem.Quantity + quantity);
+        }
+        else
+        {
+            _printItems.Add(new MiniaturePrintItemDto(miniature.Id, quantity));
+        }
+    }
+
+    private void RemoveFromPrintList(int miniatureId)
+    {
+        _printItems.RemoveAll(p => p.MiniatureId == miniatureId);
+    }
+
+    private string GetItemName(int miniatureId)
+    {
+        var item = _searchResults?.FirstOrDefault(m => m.Id == miniatureId);
+        return item?.Name ?? $"Miniature #{miniatureId}";
+    }
+
+    private Task GeneratePrintHtml()
+    {
+        _printHtml = "// TODO: Integration with PrintHtmlGenerators (planned for next milestone)";
+        return Task.CompletedTask;
+    }
+}

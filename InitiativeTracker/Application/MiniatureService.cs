@@ -28,7 +28,7 @@ public class MiniatureService(
             {
                 Name = dto.Name,
                 Size = dto.Size,
-                ImagePath = GenerateImagePath(dto),
+                ImageData = dto.ImageData,
                 CroppedRegionX = dto.CropRegion?.X ?? 0,
                 CroppedRegionY = dto.CropRegion?.Y ?? 0,
                 CroppedRegionWidth = dto.CropRegion?.Width ?? 100,
@@ -109,17 +109,12 @@ public class MiniatureService(
 
     public async Task<byte[]> GetImageAsync(int miniatureId)
     {
-        var entity = await GetByIdAsync(miniatureId);
-        if (entity == null || string.IsNullOrEmpty(entity.ImagePath))
-            return Array.Empty<byte>();
+        var imageData = await dbContext.Miniatures
+            .AsNoTracking()
+            .Where(e => e.Id == miniatureId)
+            .Select(e => e.ImageData)
+            .FirstOrDefaultAsync();
 
-        var filePath = Path.Combine("wwwroot", "images", entity.ImagePath);
-        return await File.ReadAllBytesAsync(filePath);
-    }
-
-    static string GenerateImagePath(MiniatureCreateDto dto)
-    {
-        var fileName = Path.ChangeExtension(dto.Name.Trim().ToLowerInvariant().Replace(" ", "_"), ".png");
-        return $"miniatures/{fileName}";
+        return imageData ?? Array.Empty<byte>();
     }
 }

@@ -1,0 +1,99 @@
+@using InitiativeTracker.Application
+@using InitiativeTracker.Domain.Entities
+
+<div>
+    @if (_isLoading)
+    {
+        <Spinner Color="SpinnerColor.Primary" Style="width: 30px; height: 30px"/>
+    }
+    else if (_miniatures.Count == 0)
+    {
+        <p class="text-muted">No miniatures found. Add some first.</p>
+    }
+    else
+    {
+        @foreach (var miniature in _miniatures)
+        {
+            <div class="row mb-2 align-items-center">
+                <div class="col-md-2">
+                    @if (_imageSources.TryGetValue(miniature.Id, out string? imgSrc))
+                    {
+                        <img src="@imgSrc"
+                             alt="@miniature.Name"
+                             style="max-width: 80px; max-height: 80px; object-fit: contain;"/>
+                    }
+                </div>
+                <div class="col-md-6">
+                    <b>@miniature.Name</b>
+                    <span class="badge bg-secondary ms-2">@miniature.Size</span>
+                </div>
+                <div class="col-md-4 text-end">
+                    <Button Color="ButtonColor.Danger" Outline="true" @onclick="() => OnDelete(miniature)">
+                        <Icon Name="IconName.Trash" Size="IconSize.x6"/> Delete
+                    </Button>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@code
+{
+    private List<MiniatureEntity> _miniatures = new();
+    private bool _isLoading;
+    private readonly Dictionary<int, string> _imageSources = new();
+
+    [Inject] IMiniatureService MiniatureService { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCatalog();
+    }
+
+    public async Task RefreshAsync()
+    {
+        await LoadCatalog();
+        StateHasChanged();
+    }
+
+    private async Task LoadCatalog()
+    {
+        _isLoading = true;
+        try
+        {
+            var allItems = await MiniatureService.SearchAsync(string.Empty);
+            _miniatures = new List<MiniatureEntity>(allItems);
+
+            foreach (var miniature in _miniatures)
+            {
+                var imageBytes = await MiniatureService.GetImageAsync(miniature.Id);
+                if (imageBytes != null && imageBytes.Length > 0)
+                {
+                    _imageSources[miniature.Id] = $"data:image/png;base64,{Convert.ToBase64String(imageBytes)}";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to load catalog: {ex.Message}");
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task OnDelete(MiniatureEntity miniature)
+    {
+        try
+        {
+            await MiniatureService.DeleteAsync(miniature.Id);
+            _miniatures.Remove(miniature);
+            _imageSources.Remove(miniature.Id);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to delete miniature: {ex.Message}");
+        }
+    }
+}

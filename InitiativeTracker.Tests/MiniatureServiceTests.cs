@@ -45,7 +45,7 @@ public class MiniatureServiceTests
         result.Should().HaveCount(1);
         result[0].Name.Should().Be("Goblin Commander");
         result[0].Size.Should().Be(CreatureSize.Medium);
-        result[0].ImagePath.Should().Be("miniatures/goblin_commander.png");
+        result[0].ImageData.Should().NotBeNull();
     }
 
     [Test]
@@ -73,14 +73,16 @@ public class MiniatureServiceTests
     }
 
     [Test]
-    public async Task AddAsync_GenerateImagePath_WithSpaces_ShouldReplaceUnderscore()
+    public async Task AddAsync_WithImageData_ShouldPersistImage()
     {
-        var dto = CreateMiniatureCreateDto("Big Red Dragon", CreatureSize.Gargantuan, null);
+        var imageBytes = new byte[] { 1, 2, 3 };
+        var dto = new MiniatureCreateDto("Big Red Dragon", CreatureSize.Gargantuan, imageBytes, null);
 
         await _service.AddAsync(dto);
 
         var result = await _dbContext.Miniatures.ToListAsync();
-        result[0].ImagePath.Should().Be("miniatures/big_red_dragon.png");
+        result.Should().HaveCount(1);
+        result[0].ImageData.Should().Equal(imageBytes);
     }
 
     [Test]

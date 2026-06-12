@@ -6,23 +6,27 @@
 <div>
     <h2>Miniatures</h2>
 
-    <div class="mb-4">
-        <h5>Miniature list</h5>
-        <MiniatureCatalog />
-    </div>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="mb-4">
+                <h5>Miniature list</h5>
+                <MiniatureCatalog />
+            </div>
+        </div>
 
-    <hr />
+        <div class="col-md-4">
+            <div class="mb-4">
+                <h5>Add miniature</h5>
+                <AddMiniatureForm OnMiniatureAdded="OnMiniatureAdded" />
+            </div>
+        </div>
 
-    <div class="mb-4">
-        <h5>Add miniature</h5>
-        <AddMiniatureForm OnMiniatureAdded="OnMiniatureAdded" />
-    </div>
-
-    <hr />
-
-    <div>
-        <h5>Print miniatures</h5>
-        <PreparationList />
+        <div class="col-md-4">
+            <div>
+                <h5>Print miniatures</h5>
+                <PreparationList />
+            </div>
+        </div>
     </div>
 </div>
 

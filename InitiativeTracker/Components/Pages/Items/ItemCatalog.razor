@@ -4,6 +4,13 @@
 @using InitiativeTracker.Domain.Entities
 
 <div>
+    <div class="mb-3 d-grid">
+        <input type="text" class="form-control mb-2" bind="_searchQuery" placeholder="Filter items..." />
+        <Button Color="ButtonColor.Primary" @onclick="_onSearch">
+            <Icon Name="IconName.Search" Size="IconSize.x6"/> Filter
+        </Button>
+    </div>
+
     @if (_isLoading)
     {
         <Spinner Color="SpinnerColor.Primary" Style="width: 30px; height: 30px"/>
@@ -52,6 +59,7 @@
     private List<ItemEntity> _items = new();
     private bool _isLoading;
     private ItemEntity? _itemToEdit;
+    private string _searchQuery = string.Empty;
 
     [Inject] IItemService ItemService { get; set; } = default!;
 
@@ -66,12 +74,14 @@
         StateHasChanged();
     }
 
-    private async Task LoadCatalog()
+    private async Task LoadCatalog() => await SearchAsync(string.Empty);
+
+    private async Task SearchAsync(string query)
     {
         _isLoading = true;
         try
         {
-            var allItems = await ItemService.SearchAsync(string.Empty);
+            var allItems = await ItemService.SearchAsync(query);
             _items = new List<ItemEntity>(allItems);
         }
         catch (Exception ex)
@@ -83,6 +93,8 @@
             _isLoading = false;
         }
     }
+
+    private async Task _onSearch() => await SearchAsync(_searchQuery);
 
     private void OnEdit(ItemEntity item)
     {

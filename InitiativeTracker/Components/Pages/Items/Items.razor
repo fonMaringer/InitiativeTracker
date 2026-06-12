@@ -6,23 +6,27 @@
 <div>
     <h2>Items</h2>
 
-    <div class="mb-4">
-        <h5>Item list</h5>
-        <ItemCatalog />
-    </div>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="mb-4">
+                <h5>Item list</h5>
+                <ItemCatalog />
+            </div>
+        </div>
 
-    <hr />
+        <div class="col-md-4">
+            <div class="mb-4">
+                <h5>Add item</h5>
+                <AddItemForm OnItemAdded="OnItemAdded" />
+            </div>
+        </div>
 
-    <div class="mb-4">
-        <h5>Add item</h5>
-        <AddItemForm OnItemAdded="OnItemAdded" />
-    </div>
-
-    <hr />
-
-    <div>
-        <h5>Print cards</h5>
-        <ItemPreparationList />
+        <div class="col-md-4">
+            <div>
+                <h5>Print cards</h5>
+                <ItemPreparationList />
+            </div>
+        </div>
     </div>
 </div>
 

@@ -3,6 +3,13 @@
 @using InitiativeTracker.Domain.Entities
 
 <div>
+    <div class="mb-3 d-grid">
+        <input type="text" class="form-control mb-2" bind="_searchQuery" placeholder="Filter miniatures..." />
+        <Button Color="ButtonColor.Primary" @onclick="_onSearch">
+            <Icon Name="IconName.Search" Size="IconSize.x6"/> Filter
+        </Button>
+    </div>
+
     @if (_isLoading)
     {
         <Spinner Color="SpinnerColor.Primary" Style="width: 30px; height: 30px"/>
@@ -43,6 +50,7 @@
     private List<MiniatureEntity> _miniatures = new();
     private bool _isLoading;
     private readonly Dictionary<int, string> _imageSources = new();
+    private string _searchQuery = string.Empty;
 
     [Inject] IMiniatureService MiniatureService { get; set; } = default!;
 
@@ -57,20 +65,25 @@
         StateHasChanged();
     }
 
-    private async Task LoadCatalog()
+    private async Task _onSearch() => await SearchAsync(_searchQuery);
+
+    private async Task SearchAsync(string query)
     {
         _isLoading = true;
         try
         {
-            var allItems = await MiniatureService.SearchAsync(string.Empty);
+            var allItems = await MiniatureService.SearchAsync(query);
             _miniatures = new List<MiniatureEntity>(allItems);
 
             foreach (var miniature in _miniatures)
             {
-                var imageBytes = await MiniatureService.GetImageAsync(miniature.Id);
-                if (imageBytes != null && imageBytes.Length > 0)
+                if (!_imageSources.ContainsKey(miniature.Id))
                 {
-                    _imageSources[miniature.Id] = $"data:image/png;base64,{Convert.ToBase64String(imageBytes)}";
+                    var imageBytes = await MiniatureService.GetImageAsync(miniature.Id);
+                    if (imageBytes != null && imageBytes.Length > 0)
+                    {
+                        _imageSources[miniature.Id] = $"data:image/png;base64,{Convert.ToBase64String(imageBytes)}";
+                    }
                 }
             }
         }
@@ -82,6 +95,11 @@
         {
             _isLoading = false;
         }
+    }
+
+    private async Task LoadCatalog()
+    {
+        await SearchAsync(string.Empty);
     }
 
     private async Task OnDelete(MiniatureEntity miniature)

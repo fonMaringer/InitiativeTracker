@@ -4,6 +4,13 @@
 @using InitiativeTracker.Domain.Entities
 
 <div>
+    <div class="mb-3 d-grid">
+        <input type="text" class="form-control mb-2" bind="_searchQuery" placeholder="Filter spells..." />
+        <Button Color="ButtonColor.Primary" @onclick="_onSearch">
+            <Icon Name="IconName.Search" Size="IconSize.x6"/> Filter
+        </Button>
+    </div>
+
     @if (_isLoading)
     {
         <Spinner Color="SpinnerColor.Primary" Style="width: 30px; height: 30px"/>
@@ -60,6 +67,7 @@
     private List<SpellEntity> _spells = new();
     private bool _isLoading;
     private SpellEntity? _spellToEdit;
+    private string _searchQuery = string.Empty;
 
     [Inject] ISpellService SpellService { get; set; } = default!;
 
@@ -74,12 +82,14 @@
         StateHasChanged();
     }
 
-    private async Task LoadCatalog()
+    private async Task LoadCatalog() => await SearchAsync(string.Empty);
+
+    private async Task SearchAsync(string query)
     {
         _isLoading = true;
         try
         {
-            var allSpells = await SpellService.SearchAsync(string.Empty);
+            var allSpells = await SpellService.SearchAsync(query);
             _spells = new List<SpellEntity>(allSpells);
         }
         catch (Exception ex)
@@ -91,6 +101,8 @@
             _isLoading = false;
         }
     }
+
+    private async Task _onSearch() => await SearchAsync(_searchQuery);
 
     private void OnEdit(SpellEntity spell)
     {

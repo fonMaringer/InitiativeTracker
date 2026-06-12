@@ -4,11 +4,10 @@
 @using InitiativeTracker.Domain.Entities
 
 <div>
-    <div class="mb-3">
-        <label class="form-label"><b>Поиск заклинания</b></label>
-        <TextInput @bind-Value="_searchQuery" Style="width: 300px; margin-right: 10px"/>
-        <Button Color="ButtonColor.Dark" @onclick="Search">
-            <Icon Name="IconName.Search" Size="IconSize.x6"/>
+    <div class="mb-3 d-grid">
+        <input type="text" class="form-control mb-2" bind="_searchQuery" placeholder="Filter spells..." />
+        <Button Color="ButtonColor.Primary" @onclick="Search">
+            <Icon Name="IconName.Search" Size="IconSize.x6"/> Filter
         </Button>
     </div>
 

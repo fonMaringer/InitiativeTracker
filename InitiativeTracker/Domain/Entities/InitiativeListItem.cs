@@ -1,7 +1,8 @@
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
+using InitiativeTracker.Domain.Enums;
 
-namespace InitiativeTracker.Domain;
+namespace InitiativeTracker.Domain.Entities;
 
 public class InitiativeListItem
 {

@@ -1,6 +1,7 @@
 using InitiativeTracker.Domain;
+using InitiativeTracker.Domain.Entities;
 using InitiativeTracker.Integration.RestClients.TtgClub.Contracts.V1;
-using Source = InitiativeTracker.Domain.Source;
+using Source = InitiativeTracker.Domain.Enums.Source;
 
 namespace InitiativeTracker.Integration.RestClients.TtgClub.Adapters;
 

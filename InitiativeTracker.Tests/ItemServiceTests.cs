@@ -3,6 +3,7 @@ using InitiativeTracker.Application;
 using InitiativeTracker.Application.Dtos;
 using InitiativeTracker.Domain;
 using InitiativeTracker.Domain.Entities;
+using InitiativeTracker.Domain.Enums;
 using InitiativeTracker.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

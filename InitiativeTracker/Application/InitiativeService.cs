@@ -1,7 +1,6 @@
-using InitiativeTracker.Domain;
 using InitiativeTracker.Domain.Entities;
+using InitiativeTracker.Domain.Enums;
 using InitiativeTracker.Infrastructure.Database;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace InitiativeTracker.Application;
 
@@ -38,7 +37,7 @@ public interface IInitiativeService
 
 public class InitiativeService(
     ILogger<InitiativeService> logger,
-    IServiceProvider serviceProvider
+    InitiativeTrackerDbContext dbContext
 ) : IInitiativeService
 {
     private List<InitiativeListItem> _items = [];
@@ -127,9 +126,7 @@ public class InitiativeService(
     {
         try
         {
-            using var scope = serviceProvider.CreateScope();
-            var ctx = scope.ServiceProvider.GetRequiredService<InitiativeTrackerDbContext>();
-            var entities = ctx.Initiatives.OrderBy(e => e.OrderIndex).ToList();
+            var entities = dbContext.Initiatives.OrderBy(e => e.OrderIndex).ToList();
             _items = entities.Select(MapToItem).ToList();
         }
         catch (Exception e)
@@ -142,12 +139,10 @@ public class InitiativeService(
     {
         try
         {
-            using var scope = serviceProvider.CreateScope();
-            var ctx = scope.ServiceProvider.GetRequiredService<InitiativeTrackerDbContext>();
-            ctx.Initiatives.RemoveRange(ctx.Initiatives.ToList());
-            var entities = _items.Select((item, index) => MapToEntity(item, index)).ToList();
-            ctx.Initiatives.AddRange(entities);
-            ctx.SaveChanges();
+            dbContext.Initiatives.RemoveRange(dbContext.Initiatives.ToList());
+            var entities = _items.Select(MapToEntity).ToList();
+            dbContext.Initiatives.AddRange(entities);
+            dbContext.SaveChanges();
         }
         catch (Exception e)
         {
@@ -155,7 +150,7 @@ public class InitiativeService(
         }
     }
 
-    static InitiativeListItem MapToItem(InitiativeEntity entity)
+    private static InitiativeListItem MapToItem(InitiativeEntity entity)
     {
         return new InitiativeListItem
         {
@@ -176,7 +171,7 @@ public class InitiativeService(
         };
     }
 
-    static InitiativeEntity MapToEntity(InitiativeListItem item, int index)
+    private static InitiativeEntity MapToEntity(InitiativeListItem item, int index)
     {
         return new InitiativeEntity
         {

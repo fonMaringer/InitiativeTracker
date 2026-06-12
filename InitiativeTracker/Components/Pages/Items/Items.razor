@@ -1,22 +1,29 @@
 @page "/items"
 @rendermode InteractiveServer
 
-<PageTitle>Предметы</PageTitle>
+<PageTitle>Items</PageTitle>
 
 <div>
-    <h2>Предметы</h2>
+    <h2>Items</h2>
 
-    <Tabs>
-        <TabItem Text="Каталог предметов" Display="TabDisplay.Button">
-            <ItemCatalog />
-        </TabItem>
-        <TabItem Text="Добавить предмет" Display="TabDisplay.Button">
-            <AddItemForm OnItemAdded="OnItemAdded" />
-        </TabItem>
-        <TabItem Text="Подготовка к печати" Display="TabDisplay.Button">
-            <ItemPreparationList />
-        </TabItem>
-    </Tabs>
+    <div class="mb-4">
+        <h5>Item list</h5>
+        <ItemCatalog />
+    </div>
+
+    <hr />
+
+    <div class="mb-4">
+        <h5>Add item</h5>
+        <AddItemForm OnItemAdded="OnItemAdded" />
+    </div>
+
+    <hr />
+
+    <div>
+        <h5>Print cards</h5>
+        <ItemPreparationList />
+    </div>
 </div>
 
 @code

@@ -1,22 +1,29 @@
 @page "/spells"
 @rendermode InteractiveServer
 
-<PageTitle>Заклинания</PageTitle>
+<PageTitle>Spells</PageTitle>
 
 <div>
-    <h2>Заклинания</h2>
+    <h2>Spells</h2>
 
-    <Tabs>
-        <TabItem Text="Каталог заклинаний" Display="TabDisplay.Button">
-            <SpellCatalog />
-        </TabItem>
-        <TabItem Text="Добавить заклинание" Display="TabDisplay.Button">
-            <AddSpellForm OnSpellAdded="OnSpellAdded" />
-        </TabItem>
-        <TabItem Text="Подготовка к печати" Display="TabDisplay.Button">
-            <SpellPreparationList />
-        </TabItem>
-    </Tabs>
+    <div class="mb-4">
+        <h5>Spell list</h5>
+        <SpellCatalog />
+    </div>
+
+    <hr />
+
+    <div class="mb-4">
+        <h5>Add spell</h5>
+        <AddSpellForm OnSpellAdded="OnSpellAdded" />
+    </div>
+
+    <hr />
+
+    <div>
+        <h5>Print cards</h5>
+        <SpellPreparationList />
+    </div>
 </div>
 
 @code

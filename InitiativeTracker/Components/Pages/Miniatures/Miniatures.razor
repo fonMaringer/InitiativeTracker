@@ -1,22 +1,29 @@
 @page "/miniatures"
 @rendermode InteractiveServer
 
-<PageTitle>Миниатюры</PageTitle>
+<PageTitle>Miniatures</PageTitle>
 
 <div>
-    <h2>Миниатюры</h2>
+    <h2>Miniatures</h2>
 
-    <Tabs>
-        <TabItem Text="Каталог миниатюр" Display="TabDisplay.Button">
-            <MiniatureCatalog />
-        </TabItem>
-        <TabItem Text="Добавить миниатюру" Display="TabDisplay.Button">
-            <AddMiniatureForm OnMiniatureAdded="OnMiniatureAdded" />
-        </TabItem>
-        <TabItem Text="Подготовка к печати" Display="TabDisplay.Button">
-            <PreparationList />
-        </TabItem>
-    </Tabs>
+    <div class="mb-4">
+        <h5>Miniature list</h5>
+        <MiniatureCatalog />
+    </div>
+
+    <hr />
+
+    <div class="mb-4">
+        <h5>Add miniature</h5>
+        <AddMiniatureForm OnMiniatureAdded="OnMiniatureAdded" />
+    </div>
+
+    <hr />
+
+    <div>
+        <h5>Print miniatures</h5>
+        <PreparationList />
+    </div>
 </div>
 
 @code

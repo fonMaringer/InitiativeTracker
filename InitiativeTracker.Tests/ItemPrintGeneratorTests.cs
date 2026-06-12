@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using FluentAssertions;
 using InitiativeTracker.Application.PrintHtmlGenerators;
 using InitiativeTracker.Domain;
+using InitiativeTracker.Domain.Enums;
 
 namespace InitiativeTracker.Tests;
 

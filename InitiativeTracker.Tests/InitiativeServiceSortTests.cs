@@ -1,9 +1,8 @@
 using FluentAssertions;
 using InitiativeTracker.Application;
-using InitiativeTracker.Domain;
+using InitiativeTracker.Domain.Entities;
 using InitiativeTracker.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 
@@ -23,19 +22,7 @@ public class InitiativeServiceSortTests
             .UseInMemoryDatabase(databaseName: $"SortDb-{Guid.NewGuid()}")
             .Options;
         _dbContext = new InitiativeTrackerDbContext(options);
-
-        var provider = Substitute.For<IServiceProvider>();
-        provider.GetService(typeof(InitiativeTrackerDbContext)).Returns(_dbContext);
-
-        var scope = Substitute.For<IServiceScope>();
-        scope.ServiceProvider.Returns(provider);
-
-        var scopeFactory = Substitute.For<IServiceScopeFactory>();
-        scopeFactory.CreateScope().Returns(scope);
-
-        provider.GetService(typeof(IServiceScopeFactory)).Returns(scopeFactory);
-
-        _service = new InitiativeService(_logger, provider);
+        _service = new InitiativeService(_logger, _dbContext);
     }
 
     [TearDown]

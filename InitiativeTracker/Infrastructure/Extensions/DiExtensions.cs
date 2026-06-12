@@ -21,16 +21,16 @@ public static class DiExtensions
         {
             var connectionString = configuration.GetConnectionString("Default");
             services.AddDbContext<InitiativeTrackerDbContext>(options =>
-                options.UseSqlite(connectionString));
+                options.UseSqlite(connectionString), ServiceLifetime.Singleton);
             return services;
         }
 
         public IServiceCollection AddApplication()
         {
             services.AddSingleton<IInitiativeService, InitiativeService>();
-            services.AddScoped<IMiniatureService, MiniatureService>();
-            services.AddScoped<IItemService, ItemService>();
-            services.AddScoped<ISpellService, SpellService>();
+            services.AddSingleton<IMiniatureService, MiniatureService>();
+            services.AddSingleton<IItemService, ItemService>();
+            services.AddSingleton<ISpellService, SpellService>();
 
             return services;
         }

@@ -1,6 +1,7 @@
 using InitiativeTracker.Domain;
 using System.Text;
 using System.Web;
+using InitiativeTracker.Domain.Enums;
 
 namespace InitiativeTracker.Application.PrintHtmlGenerators;
 

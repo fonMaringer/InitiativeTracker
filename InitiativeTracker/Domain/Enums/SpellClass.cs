@@ -1,4 +1,4 @@
-namespace InitiativeTracker.Domain;
+namespace InitiativeTracker.Domain.Enums;
 
 public enum SpellClass
 {

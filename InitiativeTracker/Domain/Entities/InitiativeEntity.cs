@@ -1,5 +1,3 @@
-using Microsoft.EntityFrameworkCore;
-
 namespace InitiativeTracker.Domain.Entities;
 
 public class InitiativeEntity

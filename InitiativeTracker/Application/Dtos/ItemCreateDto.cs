@@ -1,4 +1,4 @@
-using InitiativeTracker.Domain;
+using InitiativeTracker.Domain.Enums;
 
 namespace InitiativeTracker.Application.Dtos;
 

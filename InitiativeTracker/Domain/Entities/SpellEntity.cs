@@ -1,3 +1,5 @@
+using InitiativeTracker.Domain.Enums;
+
 namespace InitiativeTracker.Domain.Entities;
 
 public class SpellEntity

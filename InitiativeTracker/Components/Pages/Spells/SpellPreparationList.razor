@@ -1,4 +1,5 @@
 @using InitiativeTracker.Application
+@using InitiativeTracker.Application.PrintHtmlGenerators
 @using InitiativeTracker.Domain.Entities
 
 <div>
@@ -89,6 +90,8 @@
 
     [Inject] ISpellService SpellService { get; set; } = default!;
 
+    readonly SpellPrintGenerator _printGenerator = new();
+
     private async Task Search()
     {
         _searchResults = await SpellService.SearchAsync(_searchQuery);
@@ -140,5 +143,25 @@
 
     private void GeneratePrintHtml()
     {
+        var printDataList = new List<SpellPrintDataDto>();
+
+        foreach (var printItem in _printItems)
+        {
+            var entity = _searchResults?.FirstOrDefault(s => s.Id == printItem.SpellId);
+            if (entity == null) continue;
+
+            for (int n = 0; n < printItem.Quantity; n++)
+            {
+                printDataList.Add(new SpellPrintDataDto(
+                    Name: entity.Name,
+                    VerbalComponent: entity.VerbalComponent,
+                    SomaticComponent: entity.SomaticComponent,
+                    MaterialComponent: entity.MaterialComponent,
+                    SpellClass: entity.Class,
+                    DescriptionHtml: entity.Description));
+            }
+        }
+
+        _printHtml = _printGenerator.Generate(printDataList);
     }
 }

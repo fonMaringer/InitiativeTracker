@@ -1,11 +1,12 @@
 @rendermode InteractiveServer
 @using InitiativeTracker.Application
 @using InitiativeTracker.Application.Dtos
+@using InitiativeTracker.Domain.Entities
 @using InitiativeTracker.Domain
 @using InitiativeTracker.Domain.Enums
 
 <div>
-    <h4>Add new item</h4>
+    <h5>@(_editItem != null ? "Edit item" : "Add item")</h5>
 
     @if (_isProcessing)
     {
@@ -38,9 +39,15 @@
         <p class="text-muted" style="font-size: 0.8em;">HTML markup is supported.</p>
     </div>
 
-    <Button Color="ButtonColor.Primary" Disabled="@_isDisabled" @onclick="OnAdd">
-        Add Item
+    <Button Color="ButtonColor.Primary" Disabled="@_isDisabled" Class="me-2" @onclick="OnSave">
+        @(_editItem != null ? "Save" : "Add Item")
     </Button>
+    @if (_editItem != null)
+    {
+        <Button Color="ButtonColor.Secondary" @onclick="OnCancel">
+            Cancel
+        </Button>
+    }
 
     @if (_errorMessage != null)
     {
@@ -66,10 +73,33 @@
     private readonly ItemRarity[] _rarityOptions = Enum.GetValues<ItemRarity>().ToArray();
     private bool _isDisabled => _isProcessing || string.IsNullOrWhiteSpace(_name);
 
-    [Inject] IItemService ItemService { get; set; } = default!;
-    [Parameter] public EventCallback OnItemAdded { get; set; }
+    [Parameter] public EventCallback OnDataChanged { get; set; }
+    [Parameter] public ItemEntity? EditItem { get; set; }
+    [Parameter] public EventCallback<ItemEntity?> OnEditItemChanged { get; set; }
 
-    private async Task OnAdd()
+    private ItemEntity? _editItem;
+
+    protected override void OnParametersSet()
+    {
+        _editItem = EditItem;
+        if (_editItem != null)
+        {
+            _name = _editItem.Name;
+            _rarity = _editItem.Rarity;
+            _requiresAttunement = _editItem.RequiresAttunement;
+            _description = _editItem.Description;
+            _errorMessage = null;
+            _successMessage = null;
+        }
+        else
+        {
+            ResetForm();
+        }
+    }
+
+    [Inject] IItemService ItemService { get; set; } = default!;
+
+    private async Task OnSave()
     {
         _isProcessing = true;
         _errorMessage = null;
@@ -77,27 +107,51 @@
 
         try
         {
-            await ItemService.AddAsync(new ItemCreateDto(
-                Name: _name,
-                Rarity: _rarity,
-                RequiresAttunement: _requiresAttunement,
-                Description: _description));
+            if (_editItem != null)
+            {
+                await ItemService.UpdateAsync(_editItem.Id, new ItemUpdateDto(
+                    Name: _name,
+                    Rarity: _rarity,
+                    RequiresAttunement: _requiresAttunement,
+                    Description: _description));
 
-            _successMessage = $"'{_name}' added successfully.";
-            _name = string.Empty;
-            _rarity = ItemRarity.Common;
-            _requiresAttunement = false;
-            _description = string.Empty;
+                _successMessage = $"'{_name}' updated successfully.";
+                await OnEditItemChanged.InvokeAsync(null);
+                await OnDataChanged.InvokeAsync();
+            }
+            else
+            {
+                await ItemService.AddAsync(new ItemCreateDto(
+                    Name: _name,
+                    Rarity: _rarity,
+                    RequiresAttunement: _requiresAttunement,
+                    Description: _description));
 
-            await OnItemAdded.InvokeAsync();
+                _successMessage = $"'{_name}' added successfully.";
+                ResetForm();
+                await OnDataChanged.InvokeAsync();
+            }
         }
         catch (Exception ex)
         {
-            _errorMessage = $"Failed to add item: {ex.Message}";
+            _errorMessage = $"Failed to save item: {ex.Message}";
         }
         finally
         {
             _isProcessing = false;
         }
+    }
+
+    private async Task OnCancel()
+    {
+        await OnEditItemChanged.InvokeAsync(null);
+    }
+
+    private void ResetForm()
+    {
+        _name = string.Empty;
+        _rarity = ItemRarity.Common;
+        _requiresAttunement = false;
+        _description = string.Empty;
     }
 }

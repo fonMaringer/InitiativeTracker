@@ -1,5 +1,6 @@
 @page "/items"
 @rendermode InteractiveServer
+@using InitiativeTracker.Domain.Entities
 
 <PageTitle>Items</PageTitle>
 
@@ -9,22 +10,21 @@
     <div class="row">
         <div class="col-md-4">
             <div class="mb-4">
-                <h5>Item list</h5>
-                <ItemCatalog />
+                <h5>Item list (click to edit)</h5>
+                <ItemCatalog @key="_catalogKey" OnEditSelected="@OnEditSelected" OnDataChanged="@InvalidateCatalog" OnAddForPrint="@OnAddForPrint" />
             </div>
         </div>
 
         <div class="col-md-4">
             <div class="mb-4">
-                <h5>Add item</h5>
-                <AddItemForm OnItemAdded="OnItemAdded" />
+                <AddItemForm OnDataChanged="InvalidateCatalog" EditItem="@_editItem" OnEditItemChanged="OnEditItemChanged" />
             </div>
         </div>
 
         <div class="col-md-4">
             <div>
                 <h5>Print cards</h5>
-                <ItemPreparationList />
+                <ItemPreparationList @ref="PreparationListRef" />
             </div>
         </div>
     </div>
@@ -32,9 +32,26 @@
 
 @code
 {
-    private Task OnItemAdded()
+    private int _catalogKey;
+    private ItemEntity? _editItem;
+    private ItemPreparationList? PreparationListRef;
+
+    private Task OnEditSelected(ItemEntity? item) => OnEditItemChanged(item);
+
+    private async Task OnEditItemChanged(ItemEntity? item)
     {
+        _editItem = item;
         StateHasChanged();
-        return Task.CompletedTask;
+    }
+
+    private void InvalidateCatalog()
+    {
+        _catalogKey++;
+    }
+
+    private async Task OnAddForPrint(ItemEntity item)
+    {
+        PreparationListRef?.AddItem(item, 1);
+        StateHasChanged();
     }
 }

@@ -5,10 +5,10 @@
 
 <div>
     <div class="mb-3 d-grid">
-        <input type="text" class="form-control mb-2" bind="_searchQuery" placeholder="Filter items..." />
-        <Button Color="ButtonColor.Primary" @onclick="_onSearch">
+        <input type="text" class="form-control mb-2" @bind="_searchQuery" placeholder="Filter items..." />
+        <button type="button" class="btn btn-primary w-100" @onclick="(_ => _onSearch())">
             <Icon Name="IconName.Search" Size="IconSize.x6"/> Filter
-        </Button>
+        </button>
     </div>
 
     @if (_isLoading)
@@ -23,8 +23,9 @@
     {
         @foreach (var item in _items)
         {
-            <div class="row mb-2 align-items-center">
-                <div class="col-md-6">
+            var itemId = item.Id; 
+            <div class="row mb-2 align-items-center" style="cursor: pointer;" @onclick="() => SelectForEdit(item)">
+                <div class="col-md-5">
                     <b>@item.Name</b>
                     <span class="badge bg-secondary ms-2">@item.Rarity</span>
                     @if (item.RequiresAttunement)
@@ -35,22 +36,18 @@
                 <div class="col-md-4">
                     @(Truncate(item.Description, 60))
                 </div>
-                <div class="col-md-2 text-end">
-                    <Button Color="ButtonColor.Warning" Outline="true" Class="me-1" @onclick="() => OnEdit(item)">
-                        <Icon Name="IconName.Pen" Size="IconSize.x6"/> Edit
+                <div class="col-md-3 d-flex gap-1 align-items-center justify-content-end" @onclick:stopPropagation="true">
+                    <Button Color="ButtonColor.Success" Outline="true" Size="ButtonSize.Small" 
+                            @onclick="() => OnAddToPrint(item)">
+                        <Icon Name="IconName.Plus" Size="IconSize.x6"/> Add to print list
                     </Button>
-                    <Button Color="ButtonColor.Danger" Outline="true" @onclick="() => OnDelete(item)">
+                    <Button Color="ButtonColor.Danger" Outline="true" Size="ButtonSize.Small"
+                            @onclick="() => OnDelete(item)">
                         <Icon Name="IconName.Trash" Size="IconSize.x6"/> Delete
                     </Button>
                 </div>
             </div>
         }
-    }
-
-    @if (_itemToEdit != null)
-    {
-        <hr/>
-        <EditItem Item="@_itemToEdit" OnSaved="@OnEditSaved" OnClosed="@CancelEdit" />
     }
 </div>
 
@@ -58,30 +55,34 @@
 {
     private List<ItemEntity> _items = new();
     private bool _isLoading;
-    private ItemEntity? _itemToEdit;
     private string _searchQuery = string.Empty;
 
     [Inject] IItemService ItemService { get; set; } = default!;
+    [Parameter] public EventCallback<ItemEntity?> OnEditSelected { get; set; }
+    [Parameter] public EventCallback OnDataChanged { get; set; }
+    [Parameter] public EventCallback<ItemEntity> OnAddForPrint { get; set; }
+
+    private volatile bool _isSearching;
+    private int _pendingSearchVersion;
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadCatalog();
+        await LoadAllItems();
     }
 
     public async Task RefreshAsync()
     {
-        await LoadCatalog();
-        StateHasChanged();
+        _searchQuery = string.Empty;
+        await LoadAllItems();
     }
 
-    private async Task LoadCatalog() => await SearchAsync(string.Empty);
-
-    private async Task SearchAsync(string query)
+    private async Task LoadAllItems()
     {
         _isLoading = true;
+        StateHasChanged();
         try
         {
-            var allItems = await ItemService.SearchAsync(query);
+            var allItems = await ItemService.SearchAsync(string.Empty);
             _items = new List<ItemEntity>(allItems);
         }
         catch (Exception ex)
@@ -91,27 +92,44 @@
         finally
         {
             _isLoading = false;
+            StateHasChanged();
         }
     }
 
-    private async Task _onSearch() => await SearchAsync(_searchQuery);
-
-    private void OnEdit(ItemEntity item)
+    private async Task _onSearch()
     {
-        _itemToEdit = item;
-        StateHasChanged();
+        if (_isSearching) return;
+        var version = Interlocked.Increment(ref _pendingSearchVersion);
+        _isSearching = true;
+        try
+        {
+            _isLoading = true;
+            StateHasChanged();
+            var results = await ItemService.SearchAsync(_searchQuery);
+            if (version == _pendingSearchVersion)
+                _items = new List<ItemEntity>(results);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to search items: {ex.Message}");
+            StateHasChanged();
+        }
+        finally
+        {
+            _isLoading = false;
+            _isSearching = false;
+        }
     }
 
-    private async Task OnEditSaved()
+    private async Task SelectForEdit(ItemEntity item)
     {
-        _itemToEdit = null;
-        await LoadCatalog();
+        await OnEditSelected.InvokeAsync(item);
     }
 
-    private void CancelEdit()
+    private async Task OnAddToPrint(ItemEntity item)
     {
-        _itemToEdit = null;
-        StateHasChanged();
+        await OnAddForPrint.InvokeAsync(item);
     }
 
     private async Task OnDelete(ItemEntity item)
@@ -120,6 +138,8 @@
         {
             await ItemService.DeleteAsync(item.Id);
             _items.Remove(item);
+            StateHasChanged();
+            await OnDataChanged.InvokeAsync();
         }
         catch (Exception ex)
         {

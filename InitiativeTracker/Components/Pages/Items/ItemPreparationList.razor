@@ -4,48 +4,13 @@
 @using InitiativeTracker.Domain.Entities
 
 <div>
-    <div class="mb-3 d-grid">
-        <input type="text" class="form-control mb-2" bind="_searchQuery" placeholder="Filter items..." />
-        <Button Color="ButtonColor.Primary" @onclick="Search">
-            <Icon Name="IconName.Search" Size="IconSize.x6"/> Filter
-        </Button>
-    </div>
-
-    @if (_searchResults != null)
+    @if (_printItems.Count == 0)
     {
-        <div class="grid-table" style="grid-template-columns: 200px 150px 80px 300px">
-            <div class="grid-header">
-                <div>Name</div>
-                <div>Rarity</div>
-                <div>Qty</div>
-                <div></div>
-            </div>
-            @foreach (var item in _searchResults)
-            {
-                <div class="grid-row">
-                    <div class="grid-cell">@item.Name</div>
-                    <div class="grid-cell">@item.Rarity</div>
-                    <div class="grid-cell">
-                        @if (_quantities.TryGetValue(item.Id, out int currentQty))
-                        {
-                            <NumberInput TValue="int" Value="@currentQty" ValueChanged="@(v => _quantities[item.Id] = v)" Style="width: 60px; border-width: 0" onClick="this.select();"/>
-                        }
-                    </div>
-                    <div class="grid-cell">
-                        <Button Color="ButtonColor.Success" Outline="true" Disabled="@(!_canAdd(item.Id))" @onclick="() => AddToPrintList(item)">
-                            <Icon Name="IconName.Plus" Size="IconSize.x6"/> Add to print
-                        </Button>
-                    </div>
-                </div>
-            }
-        </div>
+        <p class="text-muted">No items in the print list. Use the catalog to add items.</p>
     }
-
-    @if (_printItems.Count > 0)
+    else
     {
-        <hr/>
-        <h4>List for printing</h4>
-        <div class="grid-table" style="grid-template-columns: 250px 120px 80px 80px">
+        <div class="grid-table" style="grid-template-columns: 250px 100px 80px 80px">
             <div class="grid-header">
                 <div>Name</div>
                 <div>Rarity</div>
@@ -54,14 +19,16 @@
             </div>
             @foreach (var printItem in _printItems)
             {
-                var itemName = GetItemName(printItem.ItemId);
-                var itemRarity = GetItemRarity(printItem.ItemId);
                 <div class="grid-row">
-                    <div class="grid-cell">@itemName</div>
-                    <div class="grid-cell">@itemRarity</div>
-                    <div class="grid-cell">@printItem.Quantity</div>
+                    <div class="grid-cell">@printItem.Item.Name</div>
+                    <div class="grid-cell">@printItem.Item.Rarity</div>
                     <div class="grid-cell">
-                        <Button Color="ButtonColor.Danger" Outline="true" @onclick="() => RemoveFromPrintList(printItem.ItemId)">
+                        <NumberInput TValue="int" 
+                                     @bind-Value="@printItem.Quantity"
+                                    Style="width: 60px; border-width: 0" onClick="this.select();"/>
+                    </div>
+                    <div class="grid-cell">
+                        <Button Color="ButtonColor.Danger" Outline="true" @onclick="() => RemoveFromPrintList(printItem.Item.Id)">
                             <Icon Name="IconName.Trash" Size="IconSize.x6"/>
                         </Button>
                     </div>
@@ -82,73 +49,41 @@
 
 @code
 {
-    private string _searchQuery = string.Empty;
-    private IReadOnlyList<ItemEntity>? _searchResults;
-    private readonly Dictionary<int, int> _quantities = new();
-    private List<(int ItemId, int Quantity)> _printItems = new();
-    private string? _printHtml;
-
-    [Inject] IItemService ItemService { get; set; } = default!;
+    List<PrintListItemEntry> _printItems = new();
+    string? _printHtml;
 
     readonly ItemPrintGenerator _printGenerator = new();
 
-    private async Task Search()
+    public void AddItem(ItemEntity item, int quantity)
     {
-        _searchResults = await ItemService.SearchAsync(_searchQuery);
-        foreach (var item in _searchResults)
+        if (quantity <= 0) return;
+
+        var entry = _printItems.FirstOrDefault(p => p.Item.Id == item.Id);
+        if (entry != null)
         {
-            if (!_quantities.ContainsKey(item.Id))
-                _quantities[item.Id] = 1;
-        }
-    }
-
-    private bool _canAdd(int id)
-    {
-        return _quantities.TryGetValue(id, out int qty) && qty > 0;
-    }
-
-    private void AddToPrintList(ItemEntity item)
-    {
-        if (!_quantities.TryGetValue(item.Id, out int quantity) || quantity <= 0)
-            return;
-
-        var existingIndex = _printItems.FindIndex(p => p.ItemId == item.Id);
-        if (existingIndex >= 0)
-        {
-            var oldItem = _printItems[existingIndex];
-            _printItems[existingIndex] = (oldItem.ItemId, oldItem.Quantity + quantity);
+            entry.Quantity += quantity;
         }
         else
         {
-            _printItems.Add((item.Id, quantity));
+            _printItems.Add(new PrintListItemEntry(item, quantity));
         }
+
+        StateHasChanged();
     }
 
-    private void RemoveFromPrintList(int itemId)
+    void RemoveFromPrintList(int itemId)
     {
-        _printItems.RemoveAll(p => p.ItemId == itemId);
+        _printItems.RemoveAll(p => p.Item.Id == itemId);
+        StateHasChanged();
     }
 
-    private string GetItemName(int itemId)
-    {
-        var item = _searchResults?.FirstOrDefault(i => i.Id == itemId);
-        return item?.Name ?? $"Item #{itemId}";
-    }
-
-    private string GetItemRarity(int itemId)
-    {
-        var item = _searchResults?.FirstOrDefault(i => i.Id == itemId);
-        return item?.Rarity.ToString() ?? "";
-    }
-
-    private void GeneratePrintHtml()
+    void GeneratePrintHtml()
     {
         var printDataList = new List<ItemPrintDataDto>();
 
         foreach (var printItem in _printItems)
         {
-            var entity = _searchResults?.FirstOrDefault(i => i.Id == printItem.ItemId);
-            if (entity == null) continue;
+            var entity = printItem.Item;
 
             for (int n = 0; n < printItem.Quantity; n++)
             {
@@ -161,5 +96,11 @@
         }
 
         _printHtml = _printGenerator.Generate(printDataList);
+    }
+
+    public class PrintListItemEntry(ItemEntity item, int quantity)
+    {
+        public ItemEntity Item { get; } = item;
+        public int Quantity { get; set; } = quantity;
     }
 }

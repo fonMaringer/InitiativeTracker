@@ -34,6 +34,7 @@ public static class DiExtensions
         {
             services.AddSingleton<IInitiativeService, InitiativeService>();
             services.AddScoped<IMiniatureService, MiniatureService>();
+            services.AddScoped<IItemService, ItemService>();
 
             return services;
         }

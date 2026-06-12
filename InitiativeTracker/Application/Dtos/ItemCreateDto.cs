@@ -1,0 +1,9 @@
+using InitiativeTracker.Domain;
+
+namespace InitiativeTracker.Application.Dtos;
+
+public record ItemCreateDto(
+    string Name,
+    ItemRarity Rarity,
+    bool RequiresAttunement,
+    string Description);

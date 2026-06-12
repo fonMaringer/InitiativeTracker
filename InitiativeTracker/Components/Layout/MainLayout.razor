@@ -1,7 +1,7 @@
 ﻿@inherits LayoutComponentBase
 
 <div class="page">
-    <nav class="navbar navbar-expand-sm bg-light border-bottom">
+    <nav class="navbar navbar-expand-sm border-bottom" style="background-color: var(--bs-body-bg);">
         <div class="container-fluid">
             <a class="navbar-brand" href="">Initiative Tracker</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
@@ -23,14 +23,13 @@
                     </li>
                 </ul>
             </div>
+            <div class="ms-auto d-flex align-items-center">
+                <ThemeSwitcher/>
+            </div>
         </div>
     </nav>
 
     <main>
-        <div class="top-row ps-3 d-flex justify-content-end align-items-center">
-            <ThemeSwitcher/>
-        </div>
-
         <article class="content px-4">
             @Body
         </article>

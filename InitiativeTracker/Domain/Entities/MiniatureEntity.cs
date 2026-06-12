@@ -21,6 +21,6 @@ public class MiniatureEntityConfiguration : IEntityTypeConfiguration<MiniatureEn
     {
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Name).IsRequired();
-        builder.Property(e => e.ImageData).HasColumnType("varbinary(max)").HasConversion<byte[]>(v => v, v => v);
+        builder.Property(e => e.ImageData);
     }
 }

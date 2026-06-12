@@ -1,0 +1,133 @@
+@using InitiativeTracker.Application
+@using InitiativeTracker.Application.Dtos
+@using InitiativeTracker.Domain.Entities
+
+<div>
+    @if (_isLoading)
+    {
+        <Spinner Color="SpinnerColor.Primary" Style="width: 30px; height: 30px"/>
+    }
+    else if (_spells.Count == 0)
+    {
+        <p class="text-muted">No spells found. Add some first.</p>
+    }
+    else
+    {
+        @foreach (var spell in _spells)
+        {
+            <div class="row mb-2 align-items-center">
+                <div class="col-md-6">
+                    <b>@spell.Name</b>
+                    <span class="badge bg-secondary ms-2">@spell.Class</span>
+                    @if (spell.VerbalComponent)
+                    {
+                        <span class="badge bg-info ms-1">V</span>
+                    }
+                    @if (spell.SomaticComponent)
+                    {
+                        <span class="badge bg-info ms-1">J</span>
+                    }
+                    @if (spell.MaterialComponent)
+                    {
+                        <span class="badge bg-info ms-1">R</span>
+                    }
+                </div>
+                <div class="col-md-4">
+                    @(Truncate(spell.Description, 60))
+                </div>
+                <div class="col-md-2 text-end">
+                    <Button Color="ButtonColor.Warning" Outline="true" Class="me-1" @onclick="() => OnEdit(spell)">
+                        <Icon Name="IconName.Pen" Size="IconSize.x6"/> Edit
+                    </Button>
+                    <Button Color="ButtonColor.Danger" Outline="true" @onclick="() => OnDelete(spell)">
+                        <Icon Name="IconName.Trash" Size="IconSize.x6"/> Delete
+                    </Button>
+                </div>
+            </div>
+        }
+    }
+
+    @if (_spellToEdit != null)
+    {
+        <hr/>
+        <EditSpell Spell="@_spellToEdit" OnSaved="@OnEditSaved" OnClosed="@CancelEdit" />
+    }
+</div>
+
+@code
+{
+    private List<SpellEntity> _spells = new();
+    private bool _isLoading;
+    private SpellEntity? _spellToEdit;
+
+    [Inject] ISpellService SpellService { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCatalog();
+    }
+
+    public async Task RefreshAsync()
+    {
+        await LoadCatalog();
+        StateHasChanged();
+    }
+
+    private async Task LoadCatalog()
+    {
+        _isLoading = true;
+        try
+        {
+            var allSpells = await SpellService.SearchAsync(string.Empty);
+            _spells = new List<SpellEntity>(allSpells);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to load catalog: {ex.Message}");
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void OnEdit(SpellEntity spell)
+    {
+        _spellToEdit = spell;
+        StateHasChanged();
+    }
+
+    private async Task OnEditSaved()
+    {
+        _spellToEdit = null;
+        await LoadCatalog();
+    }
+
+    private void CancelEdit()
+    {
+        _spellToEdit = null;
+        StateHasChanged();
+    }
+
+    private async Task OnDelete(SpellEntity spell)
+    {
+        try
+        {
+            await SpellService.DeleteAsync(spell.Id);
+            _spells.Remove(spell);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to delete spell: {ex.Message}");
+        }
+    }
+
+    private string Truncate(string text, int maxLength)
+    {
+        if (string.IsNullOrEmpty(text) || text.Length <= maxLength)
+            return text;
+
+        var stripped = System.Text.RegularExpressions.Regex.Replace(text, "<.*?>", string.Empty);
+        return stripped.Substring(0, maxLength) + "...";
+    }
+}

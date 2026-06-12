@@ -1,0 +1,32 @@
+@page "/spells"
+@using InitiativeTracker.Application
+@using InitiativeTracker.Domain
+@using InitiativeTracker.Domain.Entities
+
+<PageTitle>Заклинания</PageTitle>
+
+<div>
+    <h2>Заклинания</h2>
+    <p>Select a tab to manage spells or prepare them for printing.</p>
+
+    <Accordion AlwaysOpen="true">
+        <AccordionItem Expanded="true" ToggleButtonContent="Каталог заклинаний" CollapsedToggleButtonContent="Каталог заклинаний">
+            <SpellCatalog />
+        </AccordionItem>
+        <AccordionItem ToggleButtonContent="Добавить заклинание" CollapsedToggleButtonContent="Добавить заклинание">
+            <AddSpellForm OnSpellAdded="OnSpellAdded" />
+        </AccordionItem>
+        <AccordionItem ToggleButtonContent="Подготовка к печати" CollapsedToggleButtonContent="Подготовка к печати">
+            <SpellPreparationList />
+        </AccordionItem>
+    </Accordion>
+</div>
+
+@code
+{
+    private Task OnSpellAdded()
+    {
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+}

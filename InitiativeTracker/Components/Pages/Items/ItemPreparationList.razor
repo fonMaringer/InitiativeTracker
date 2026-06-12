@@ -1,4 +1,5 @@
 @using InitiativeTracker.Application
+@using InitiativeTracker.Application.PrintHtmlGenerators
 @using InitiativeTracker.Domain.Entities
 
 <div>
@@ -89,6 +90,8 @@
 
     [Inject] IItemService ItemService { get; set; } = default!;
 
+    readonly ItemPrintGenerator _printGenerator = new();
+
     private async Task Search()
     {
         _searchResults = await ItemService.SearchAsync(_searchQuery);
@@ -138,9 +141,25 @@
         return item?.Rarity.ToString() ?? "";
     }
 
-    private Task GeneratePrintHtml()
+    private void GeneratePrintHtml()
     {
-        _printHtml = "// TODO: Integration with ItemPrintGenerator (planned for next milestone)";
-        return Task.CompletedTask;
+        var printDataList = new List<ItemPrintDataDto>();
+
+        foreach (var printItem in _printItems)
+        {
+            var entity = _searchResults?.FirstOrDefault(i => i.Id == printItem.ItemId);
+            if (entity == null) continue;
+
+            for (int n = 0; n < printItem.Quantity; n++)
+            {
+                printDataList.Add(new ItemPrintDataDto(
+                    Name: entity.Name,
+                    Rarity: entity.Rarity,
+                    RequiresAttunement: entity.RequiresAttunement,
+                    DescriptionHtml: entity.Description));
+            }
+        }
+
+        _printHtml = _printGenerator.Generate(printDataList);
     }
 }

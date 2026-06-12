@@ -1,5 +1,6 @@
 @page "/spells"
 @rendermode InteractiveServer
+@using InitiativeTracker.Domain.Entities
 
 <PageTitle>Spells</PageTitle>
 
@@ -9,22 +10,21 @@
     <div class="row">
         <div class="col-md-4">
             <div class="mb-4">
-                <h5>Spell list</h5>
-                <SpellCatalog />
+                <h5>Spell list (click to edit)</h5>
+                <SpellCatalog @key="_catalogKey" OnEditSelected="@OnEditSelected" OnDataChanged="@InvalidateCatalog" OnAddForPrint="@OnAddForPrint" />
             </div>
         </div>
 
         <div class="col-md-4">
             <div class="mb-4">
-                <h5>Add spell</h5>
-                <AddSpellForm OnSpellAdded="OnSpellAdded" />
+                <AddSpellForm OnDataChanged="InvalidateCatalog" EditSpell="@_editSpell" OnEditSpellChanged="OnEditSpellChanged" />
             </div>
         </div>
 
         <div class="col-md-4">
             <div>
                 <h5>Print cards</h5>
-                <SpellPreparationList />
+                <SpellPreparationList @ref="PreparationListRef" />
             </div>
         </div>
     </div>
@@ -32,9 +32,26 @@
 
 @code
 {
-    private Task OnSpellAdded()
+    private int _catalogKey;
+    private SpellEntity? _editSpell;
+    private SpellPreparationList? PreparationListRef;
+
+    private Task OnEditSelected(SpellEntity? spell) => OnEditSpellChanged(spell);
+
+    private async Task OnEditSpellChanged(SpellEntity? spell)
     {
+        _editSpell = spell;
         StateHasChanged();
-        return Task.CompletedTask;
+    }
+
+    private void InvalidateCatalog()
+    {
+        _catalogKey++;
+    }
+
+    private async Task OnAddForPrint(SpellEntity spell)
+    {
+        PreparationListRef?.AddItem(spell, 1);
+        StateHasChanged();
     }
 }

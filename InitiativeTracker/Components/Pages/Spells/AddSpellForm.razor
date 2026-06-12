@@ -1,11 +1,11 @@
 @rendermode InteractiveServer
 @using InitiativeTracker.Application
 @using InitiativeTracker.Application.Dtos
-@using InitiativeTracker.Domain
+@using InitiativeTracker.Domain.Entities
 @using InitiativeTracker.Domain.Enums
 
 <div>
-    <h4>Add new spell</h4>
+    <h5>@(_editSpell != null ? "Edit spell" : "Add spell")</h5>
 
     @if (_isProcessing)
     {
@@ -48,9 +48,15 @@
         <p class="text-muted" style="font-size: 0.8em;">HTML markup is supported.</p>
     </div>
 
-    <Button Color="ButtonColor.Primary" Disabled="@_isDisabled" @onclick="OnAdd">
-        Add Spell
+    <Button Color="ButtonColor.Primary" Disabled="@_isDisabled" Class="me-2" @onclick="OnSave">
+        @(_editSpell != null ? "Save" : "Add Spell")
     </Button>
+    @if (_editSpell != null)
+    {
+        <Button Color="ButtonColor.Secondary" @onclick="OnCancel">
+            Cancel
+        </Button>
+    }
 
     @if (_errorMessage != null)
     {
@@ -78,10 +84,35 @@
     private readonly SpellClass[] _classOptions = Enum.GetValues<SpellClass>().ToArray();
     private bool _isDisabled => _isProcessing || string.IsNullOrWhiteSpace(_name);
 
-    [Inject] ISpellService SpellService { get; set; } = default!;
-    [Parameter] public EventCallback OnSpellAdded { get; set; }
+    [Parameter] public EventCallback OnDataChanged { get; set; }
+    [Parameter] public SpellEntity? EditSpell { get; set; }
+    [Parameter] public EventCallback<SpellEntity?> OnEditSpellChanged { get; set; }
 
-    private async Task OnAdd()
+    private SpellEntity? _editSpell;
+
+    protected override void OnParametersSet()
+    {
+        _editSpell = EditSpell;
+        if (_editSpell != null)
+        {
+            _name = _editSpell.Name;
+            _spellClass = _editSpell.Class;
+            _verbalComponent = _editSpell.VerbalComponent;
+            _somaticComponent = _editSpell.SomaticComponent;
+            _materialComponent = _editSpell.MaterialComponent;
+            _description = _editSpell.Description;
+            _errorMessage = null;
+            _successMessage = null;
+        }
+        else
+        {
+            ResetForm();
+        }
+    }
+
+    [Inject] ISpellService SpellService { get; set; } = default!;
+
+    private async Task OnSave()
     {
         _isProcessing = true;
         _errorMessage = null;
@@ -89,31 +120,57 @@
 
         try
         {
-            await SpellService.AddAsync(new SpellCreateDto(
-                Name: _name,
-                VerbalComponent: _verbalComponent,
-                SomaticComponent: _somaticComponent,
-                MaterialComponent: _materialComponent,
-                Class: _spellClass,
-                Description: _description));
+            if (_editSpell != null)
+            {
+                await SpellService.UpdateAsync(_editSpell.Id, new SpellUpdateDto(
+                    Name: _name,
+                    VerbalComponent: _verbalComponent,
+                    SomaticComponent: _somaticComponent,
+                    MaterialComponent: _materialComponent,
+                    Class: _spellClass,
+                    Description: _description));
 
-            _successMessage = $"'{_name}' added successfully.";
-            _name = string.Empty;
-            _spellClass = SpellClass.Wizard;
-            _verbalComponent = false;
-            _somaticComponent = false;
-            _materialComponent = false;
-            _description = string.Empty;
+                _successMessage = $"'{_name}' updated successfully.";
+                await OnEditSpellChanged.InvokeAsync(null);
+                await OnDataChanged.InvokeAsync();
+            }
+            else
+            {
+                await SpellService.AddAsync(new SpellCreateDto(
+                    Name: _name,
+                    VerbalComponent: _verbalComponent,
+                    SomaticComponent: _somaticComponent,
+                    MaterialComponent: _materialComponent,
+                    Class: _spellClass,
+                    Description: _description));
 
-            await OnSpellAdded.InvokeAsync();
+                _successMessage = $"'{_name}' added successfully.";
+                ResetForm();
+                await OnDataChanged.InvokeAsync();
+            }
         }
         catch (Exception ex)
         {
-            _errorMessage = $"Failed to add spell: {ex.Message}";
+            _errorMessage = $"Failed to save spell: {ex.Message}";
         }
         finally
         {
             _isProcessing = false;
         }
+    }
+
+    private async Task OnCancel()
+    {
+        await OnEditSpellChanged.InvokeAsync(null);
+    }
+
+    private void ResetForm()
+    {
+        _name = string.Empty;
+        _spellClass = SpellClass.Wizard;
+        _verbalComponent = false;
+        _somaticComponent = false;
+        _materialComponent = false;
+        _description = string.Empty;
     }
 }

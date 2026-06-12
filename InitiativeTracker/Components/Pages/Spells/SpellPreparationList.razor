@@ -4,47 +4,12 @@
 @using InitiativeTracker.Domain.Entities
 
 <div>
-    <div class="mb-3 d-grid">
-        <input type="text" class="form-control mb-2" bind="_searchQuery" placeholder="Filter spells..." />
-        <Button Color="ButtonColor.Primary" @onclick="Search">
-            <Icon Name="IconName.Search" Size="IconSize.x6"/> Filter
-        </Button>
-    </div>
-
-    @if (_searchResults != null)
+    @if (_printItems.Count == 0)
     {
-        <div class="grid-table" style="grid-template-columns: 200px 150px 80px 300px">
-            <div class="grid-header">
-                <div>Name</div>
-                <div>Class</div>
-                <div>Qty</div>
-                <div></div>
-            </div>
-            @foreach (var spell in _searchResults)
-            {
-                <div class="grid-row">
-                    <div class="grid-cell">@spell.Name</div>
-                    <div class="grid-cell">@spell.Class</div>
-                    <div class="grid-cell">
-                        @if (_quantities.TryGetValue(spell.Id, out int currentQty))
-                        {
-                            <NumberInput TValue="int" Value="@currentQty" ValueChanged="@(v => _quantities[spell.Id] = v)" Style="width: 60px; border-width: 0" onClick="this.select();"/>
-                        }
-                    </div>
-                    <div class="grid-cell">
-                        <Button Color="ButtonColor.Success" Outline="true" Disabled="@(!_canAdd(spell.Id))" @onclick="() => AddToPrintList(spell)">
-                            <Icon Name="IconName.Plus" Size="IconSize.x6"/> Add to print
-                        </Button>
-                    </div>
-                </div>
-            }
-        </div>
+        <p class="text-muted">No spells in the print list. Use the catalog to add spells.</p>
     }
-
-    @if (_printItems.Count > 0)
+    else
     {
-        <hr/>
-        <h4>List for printing</h4>
         <div class="grid-table" style="grid-template-columns: 250px 120px 80px 80px">
             <div class="grid-header">
                 <div>Name</div>
@@ -54,14 +19,16 @@
             </div>
             @foreach (var printItem in _printItems)
             {
-                var spellName = GetSpellName(printItem.SpellId);
-                var spellClass = GetSpellClass(printItem.SpellId);
                 <div class="grid-row">
-                    <div class="grid-cell">@spellName</div>
-                    <div class="grid-cell">@spellClass</div>
-                    <div class="grid-cell">@printItem.Quantity</div>
+                    <div class="grid-cell">@printItem.Spell.Name</div>
+                    <div class="grid-cell">@printItem.Spell.Class</div>
                     <div class="grid-cell">
-                        <Button Color="ButtonColor.Danger" Outline="true" @onclick="() => RemoveFromPrintList(printItem.SpellId)">
+                        <NumberInput TValue="int" 
+                                     @bind-Value="@printItem.Quantity"
+                                    Style="width: 60px; border-width: 0" onClick="this.select();"/>
+                    </div>
+                    <div class="grid-cell">
+                        <Button Color="ButtonColor.Danger" Outline="true" @onclick="() => RemoveFromPrintList(printItem.Spell.Id)">
                             <Icon Name="IconName.Trash" Size="IconSize.x6"/>
                         </Button>
                     </div>
@@ -82,73 +49,41 @@
 
 @code
 {
-    private string _searchQuery = string.Empty;
-    private IReadOnlyList<SpellEntity>? _searchResults;
-    private readonly Dictionary<int, int> _quantities = new();
-    private List<(int SpellId, int Quantity)> _printItems = new();
-    private string? _printHtml;
-
-    [Inject] ISpellService SpellService { get; set; } = default!;
+    List<PrintListSpellEntry> _printItems = new();
+    string? _printHtml;
 
     readonly SpellPrintGenerator _printGenerator = new();
 
-    private async Task Search()
+    public void AddItem(SpellEntity spell, int quantity)
     {
-        _searchResults = await SpellService.SearchAsync(_searchQuery);
-        foreach (var spell in _searchResults)
+        if (quantity <= 0) return;
+
+        var entry = _printItems.FirstOrDefault(p => p.Spell.Id == spell.Id);
+        if (entry != null)
         {
-            if (!_quantities.ContainsKey(spell.Id))
-                _quantities[spell.Id] = 1;
-        }
-    }
-
-    private bool _canAdd(int id)
-    {
-        return _quantities.TryGetValue(id, out int qty) && qty > 0;
-    }
-
-    private void AddToPrintList(SpellEntity spell)
-    {
-        if (!_quantities.TryGetValue(spell.Id, out int quantity) || quantity <= 0)
-            return;
-
-        var existingIndex = _printItems.FindIndex(p => p.SpellId == spell.Id);
-        if (existingIndex >= 0)
-        {
-            var oldItem = _printItems[existingIndex];
-            _printItems[existingIndex] = (oldItem.SpellId, oldItem.Quantity + quantity);
+            entry.Quantity += quantity;
         }
         else
         {
-            _printItems.Add((spell.Id, quantity));
+            _printItems.Add(new PrintListSpellEntry(spell, quantity));
         }
+
+        StateHasChanged();
     }
 
-    private void RemoveFromPrintList(int spellId)
+    void RemoveFromPrintList(int spellId)
     {
-        _printItems.RemoveAll(p => p.SpellId == spellId);
+        _printItems.RemoveAll(p => p.Spell.Id == spellId);
+        StateHasChanged();
     }
 
-    private string GetSpellName(int spellId)
-    {
-        var spell = _searchResults?.FirstOrDefault(s => s.Id == spellId);
-        return spell?.Name ?? $"Spell #{spellId}";
-    }
-
-    private string GetSpellClass(int spellId)
-    {
-        var spell = _searchResults?.FirstOrDefault(s => s.Id == spellId);
-        return spell?.Class.ToString() ?? "";
-    }
-
-    private void GeneratePrintHtml()
+    void GeneratePrintHtml()
     {
         var printDataList = new List<SpellPrintDataDto>();
 
         foreach (var printItem in _printItems)
         {
-            var entity = _searchResults?.FirstOrDefault(s => s.Id == printItem.SpellId);
-            if (entity == null) continue;
+            var entity = printItem.Spell;
 
             for (int n = 0; n < printItem.Quantity; n++)
             {
@@ -163,5 +98,11 @@
         }
 
         _printHtml = _printGenerator.Generate(printDataList);
+    }
+
+    public class PrintListSpellEntry(SpellEntity spell, int quantity)
+    {
+        public SpellEntity Spell { get; } = spell;
+        public int Quantity { get; set; } = quantity;
     }
 }

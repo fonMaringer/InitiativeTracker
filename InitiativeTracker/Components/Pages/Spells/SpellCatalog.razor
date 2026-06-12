@@ -5,10 +5,10 @@
 
 <div>
     <div class="mb-3 d-grid">
-        <input type="text" class="form-control mb-2" bind="_searchQuery" placeholder="Filter spells..." />
-        <Button Color="ButtonColor.Primary" @onclick="_onSearch">
+        <input type="text" class="form-control mb-2" @bind="_searchQuery" placeholder="Filter spells..." />
+        <button type="button" class="btn btn-primary w-100" @onclick="(_ => _onSearch())">
             <Icon Name="IconName.Search" Size="IconSize.x6"/> Filter
-        </Button>
+        </button>
     </div>
 
     @if (_isLoading)
@@ -23,8 +23,9 @@
     {
         @foreach (var spell in _spells)
         {
-            <div class="row mb-2 align-items-center">
-                <div class="col-md-6">
+            var spellId = spell.Id; 
+            <div class="row mb-2 align-items-center" style="cursor: pointer;" @onclick="() => SelectForEdit(spell)">
+                <div class="col-md-5">
                     <b>@spell.Name</b>
                     <span class="badge bg-secondary ms-2">@spell.Class</span>
                     @if (spell.VerbalComponent)
@@ -43,22 +44,18 @@
                 <div class="col-md-4">
                     @(Truncate(spell.Description, 60))
                 </div>
-                <div class="col-md-2 text-end">
-                    <Button Color="ButtonColor.Warning" Outline="true" Class="me-1" @onclick="() => OnEdit(spell)">
-                        <Icon Name="IconName.Pen" Size="IconSize.x6"/> Edit
+                <div class="col-md-3 d-flex gap-1 align-items-center justify-content-end" @onclick:stopPropagation="true">
+                    <Button Color="ButtonColor.Success" Outline="true" Size="ButtonSize.Small" 
+                            @onclick="() => OnAddToPrint(spell)">
+                        <Icon Name="IconName.Plus" Size="IconSize.x6"/> Add to print list
                     </Button>
-                    <Button Color="ButtonColor.Danger" Outline="true" @onclick="() => OnDelete(spell)">
+                    <Button Color="ButtonColor.Danger" Outline="true" Size="ButtonSize.Small"
+                            @onclick="() => OnDelete(spell)">
                         <Icon Name="IconName.Trash" Size="IconSize.x6"/> Delete
                     </Button>
                 </div>
             </div>
         }
-    }
-
-    @if (_spellToEdit != null)
-    {
-        <hr/>
-        <EditSpell Spell="@_spellToEdit" OnSaved="@OnEditSaved" OnClosed="@CancelEdit" />
     }
 </div>
 
@@ -66,30 +63,34 @@
 {
     private List<SpellEntity> _spells = new();
     private bool _isLoading;
-    private SpellEntity? _spellToEdit;
     private string _searchQuery = string.Empty;
 
     [Inject] ISpellService SpellService { get; set; } = default!;
+    [Parameter] public EventCallback<SpellEntity?> OnEditSelected { get; set; }
+    [Parameter] public EventCallback OnDataChanged { get; set; }
+    [Parameter] public EventCallback<SpellEntity> OnAddForPrint { get; set; }
+
+    private volatile bool _isSearching;
+    private int _pendingSearchVersion;
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadCatalog();
+        await LoadAllSpells();
     }
 
     public async Task RefreshAsync()
     {
-        await LoadCatalog();
-        StateHasChanged();
+        _searchQuery = string.Empty;
+        await LoadAllSpells();
     }
 
-    private async Task LoadCatalog() => await SearchAsync(string.Empty);
-
-    private async Task SearchAsync(string query)
+    private async Task LoadAllSpells()
     {
         _isLoading = true;
+        StateHasChanged();
         try
         {
-            var allSpells = await SpellService.SearchAsync(query);
+            var allSpells = await SpellService.SearchAsync(string.Empty);
             _spells = new List<SpellEntity>(allSpells);
         }
         catch (Exception ex)
@@ -99,27 +100,44 @@
         finally
         {
             _isLoading = false;
+            StateHasChanged();
         }
     }
 
-    private async Task _onSearch() => await SearchAsync(_searchQuery);
-
-    private void OnEdit(SpellEntity spell)
+    private async Task _onSearch()
     {
-        _spellToEdit = spell;
-        StateHasChanged();
+        if (_isSearching) return;
+        var version = Interlocked.Increment(ref _pendingSearchVersion);
+        _isSearching = true;
+        try
+        {
+            _isLoading = true;
+            StateHasChanged();
+            var results = await SpellService.SearchAsync(_searchQuery);
+            if (version == _pendingSearchVersion)
+                _spells = new List<SpellEntity>(results);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to search spells: {ex.Message}");
+            StateHasChanged();
+        }
+        finally
+        {
+            _isLoading = false;
+            _isSearching = false;
+        }
     }
 
-    private async Task OnEditSaved()
+    private async Task SelectForEdit(SpellEntity spell)
     {
-        _spellToEdit = null;
-        await LoadCatalog();
+        await OnEditSelected.InvokeAsync(spell);
     }
 
-    private void CancelEdit()
+    private async Task OnAddToPrint(SpellEntity spell)
     {
-        _spellToEdit = null;
-        StateHasChanged();
+        await OnAddForPrint.InvokeAsync(spell);
     }
 
     private async Task OnDelete(SpellEntity spell)
@@ -128,6 +146,8 @@
         {
             await SpellService.DeleteAsync(spell.Id);
             _spells.Remove(spell);
+            StateHasChanged();
+            await OnDataChanged.InvokeAsync();
         }
         catch (Exception ex)
         {

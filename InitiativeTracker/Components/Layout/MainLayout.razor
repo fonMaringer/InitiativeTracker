@@ -1,11 +1,33 @@
 ﻿@inherits LayoutComponentBase
 
 <div class="page">
-    <main>
-        <div class="top-row ps-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" href="">Initiative Tracker</a>
+    <nav class="navbar navbar-expand-sm bg-light border-bottom">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="">Initiative Tracker</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="mainNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <NavLink class="nav-link" href="" Match="NavLinkMatch.All">Инициатива</NavLink>
+                    </li>
+                    <li class="nav-item">
+                        <NavLink class="nav-link" href="miniatures">Миниатюры</NavLink>
+                    </li>
+                    <li class="nav-item">
+                        <NavLink class="nav-link" href="items">Предметы</NavLink>
+                    </li>
+                    <li class="nav-item">
+                        <NavLink class="nav-link" href="spells">Заклинания</NavLink>
+                    </li>
+                </ul>
             </div>
+        </div>
+    </nav>
+
+    <main>
+        <div class="top-row ps-3 d-flex justify-content-end align-items-center">
             <ThemeSwitcher/>
         </div>
 

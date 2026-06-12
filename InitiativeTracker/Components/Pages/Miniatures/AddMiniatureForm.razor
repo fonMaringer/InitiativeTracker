@@ -1,12 +1,12 @@
 @rendermode InteractiveServer
 @using InitiativeTracker.Application
 @using InitiativeTracker.Application.Dtos
-@using InitiativeTracker.Domain
+@using InitiativeTracker.Domain.Entities
 @using InitiativeTracker.Domain.Enums
 @using Microsoft.AspNetCore.Components.Forms
 
 <div>
-    <h4>Add new miniature</h4>
+    <h5>@(_editMiniature != null ? "Edit miniature" : "Add miniature")</h5>
 
     @if (_isProcessing)
     {
@@ -43,9 +43,15 @@
         }
     </div>
 
-    <Button Color="ButtonColor.Primary" Disabled="@_isDisabled" @onclick="OnAdd">
-        Add Miniature
+    <Button Color="ButtonColor.Primary" Disabled="@_isDisabled" Class="me-2" @onclick="OnSave">
+        @(_editMiniature != null ? "Save" : "Add Miniature")
     </Button>
+    @if (_editMiniature != null)
+    {
+        <Button Color="ButtonColor.Secondary" @onclick="OnCancel">
+            Cancel
+        </Button>
+    }
 
     @if (_errorMessage != null)
     {
@@ -61,7 +67,7 @@
 @code
 {
     private string _name = string.Empty;
-    private CreatureSize _size;
+    private CreatureSize _size = CreatureSize.Small;
     private byte[]? _imageData;
     private string? _imageDataSrc;
     private bool _isProcessing;
@@ -69,11 +75,31 @@
     private string? _successMessage;
 
     private readonly CreatureSize[] _sizeOptions = Enum.GetValues<CreatureSize>().ToArray();
+    private bool _isDisabled => _isProcessing || string.IsNullOrWhiteSpace(_name) || (_editMiniature == null && _imageData == null);
 
-    private bool _isDisabled => _isProcessing || string.IsNullOrWhiteSpace(_name) || _imageData == null;
+    [Parameter] public EventCallback OnDataChanged { get; set; }
+    [Parameter] public MiniatureEntity? EditMiniature { get; set; }
+    [Parameter] public EventCallback<MiniatureEntity?> OnEditMiniatureChanged { get; set; }
+
+    private MiniatureEntity? _editMiniature;
+
+    protected override void OnParametersSet()
+    {
+        _editMiniature = EditMiniature;
+        if (_editMiniature != null)
+        {
+            _name = _editMiniature.Name;
+            _size = _editMiniature.Size;
+            _errorMessage = null;
+            _successMessage = null;
+        }
+        else
+        {
+            ResetForm();
+        }
+    }
 
     [Inject] IMiniatureService MiniatureService { get; set; } = default!;
-    [Parameter] public EventCallback OnMiniatureAdded { get; set; }
 
     private string SizeId(CreatureSize size) => "size_" + ((int)size).ToString();
 
@@ -88,7 +114,7 @@
         _errorMessage = null;
     }
 
-    private async Task OnAdd()
+    private async Task OnSave()
     {
         _isProcessing = true;
         _errorMessage = null;
@@ -96,27 +122,51 @@
 
         try
         {
-            await MiniatureService.AddAsync(new MiniatureCreateDto(
-                Name: _name,
-                Size: _size,
-                ImageData: _imageData!,
-                CropRegion: null));
+            if (_editMiniature != null)
+            {
+                var dto = new MiniatureUpdateDto(
+                    Name: _name,
+                    Size: _size,
+                    CropRegion: null);
+                await MiniatureService.UpdateAsync(_editMiniature.Id, dto);
 
-            _successMessage = $"'{_name}' added successfully.";
-            _name = string.Empty;
-            _size = CreatureSize.Small;
-            _imageData = null;
-            _imageDataSrc = null;
+                _successMessage = $"'{_name}' updated successfully.";
+                await OnEditMiniatureChanged.InvokeAsync(null);
+                await OnDataChanged.InvokeAsync();
+            }
+            else
+            {
+                await MiniatureService.AddAsync(new MiniatureCreateDto(
+                    Name: _name,
+                    Size: _size,
+                    ImageData: _imageData!,
+                    CropRegion: null));
 
-            await OnMiniatureAdded.InvokeAsync();
+                _successMessage = $"'{_name}' added successfully.";
+                ResetForm();
+                await OnDataChanged.InvokeAsync();
+            }
         }
         catch (Exception ex)
         {
-            _errorMessage = $"Failed to add miniature: {ex.Message}";
+            _errorMessage = $"Failed to save miniature: {ex.Message}";
         }
         finally
         {
             _isProcessing = false;
         }
+    }
+
+    private async Task OnCancel()
+    {
+        await OnEditMiniatureChanged.InvokeAsync(null);
+    }
+
+    private void ResetForm()
+    {
+        _name = string.Empty;
+        _size = CreatureSize.Small;
+        _imageData = null;
+        _imageDataSrc = null;
     }
 }

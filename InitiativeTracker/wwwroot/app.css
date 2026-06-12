@@ -129,3 +129,14 @@ h1:focus {
                 0px var(--current-item-border-size-bottom) 0px var(--current-item-border) inset,
                 var(--current-item-border-size-bottom) 0px 0px var(--current-item-border) inset;
 }
+
+.catalog-row {
+    border-radius: 4px;
+    box-sizing: border-box;
+    border: 2px solid transparent;
+    padding: 5px;
+}
+
+.catalog-row:hover {
+    border-color: var(--current-item-border);
+}

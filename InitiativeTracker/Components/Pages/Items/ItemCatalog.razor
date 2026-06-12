@@ -4,11 +4,11 @@
 @using InitiativeTracker.Domain.Entities
 
 <div>
-    <div class="mb-3 d-grid">
-        <input type="text" class="form-control mb-2" @bind="_searchQuery" placeholder="Filter items..." />
-        <button type="button" class="btn btn-primary w-100" @onclick="(_ => _onSearch())">
-            <Icon Name="IconName.Search" Size="IconSize.x6"/> Filter
-        </button>
+    <div class="mb-3" style="display: flex; align-items: center;">
+        <TextInput @bind-Value="_searchQuery" @onkeyup="OnKeyUpSearch" Style="flex-grow: 1; margin-right: 10px"/>
+        <Button Color="ButtonColor.Dark" @onclick="(_ => _onSearch())">
+            <Icon Name="IconName.Search" Size="IconSize.x6"/>
+        </Button>
     </div>
 
     @if (_isLoading)
@@ -24,7 +24,7 @@
         @foreach (var item in _items)
         {
             var itemId = item.Id; 
-            <div class="row mb-2 align-items-center" style="cursor: pointer;" @onclick="() => SelectForEdit(item)">
+            <div class="row mb-2 align-items-center catalog-row" style="cursor: pointer;" @onclick="() => SelectForEdit(item)">
                 <div class="col-md-5">
                     <b>@item.Name</b>
                     <span class="badge bg-secondary ms-2">@item.Rarity</span>
@@ -93,6 +93,14 @@
         {
             _isLoading = false;
             StateHasChanged();
+        }
+    }
+
+    private async Task OnKeyUpSearch(KeyboardEventArgs? e)
+    {
+        if (e?.Code is "Enter" or "NumpadEnter")
+        {
+            await _onSearch();
         }
     }
 

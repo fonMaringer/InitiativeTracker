@@ -1,5 +1,6 @@
 @page "/miniatures"
 @rendermode InteractiveServer
+@using InitiativeTracker.Domain.Entities
 
 <PageTitle>Miniatures</PageTitle>
 
@@ -9,22 +10,21 @@
     <div class="row">
         <div class="col-md-4">
             <div class="mb-4">
-                <h5>Miniature list</h5>
-                <MiniatureCatalog />
+                <h5>Miniature list (click to edit)</h5>
+                <MiniatureCatalog @key="_catalogKey" OnEditSelected="@OnEditSelected" OnDataChanged="@InvalidateCatalog" OnAddForPrint="@OnAddForPrint" />
             </div>
         </div>
 
         <div class="col-md-4">
             <div class="mb-4">
-                <h5>Add miniature</h5>
-                <AddMiniatureForm OnMiniatureAdded="OnMiniatureAdded" />
+                <AddMiniatureForm OnDataChanged="InvalidateCatalog" EditMiniature="@_editMiniature" OnEditMiniatureChanged="OnEditMiniatureChanged" />
             </div>
         </div>
 
         <div class="col-md-4">
             <div>
                 <h5>Print miniatures</h5>
-                <PreparationList />
+                <PreparationList @ref="PreparationListRef" />
             </div>
         </div>
     </div>
@@ -32,9 +32,26 @@
 
 @code
 {
-    private Task OnMiniatureAdded()
+    private int _catalogKey;
+    private MiniatureEntity? _editMiniature;
+    private PreparationList? PreparationListRef;
+
+    private Task OnEditSelected(MiniatureEntity? miniature) => OnEditMiniatureChanged(miniature);
+
+    private async Task OnEditMiniatureChanged(MiniatureEntity? miniature)
     {
+        _editMiniature = miniature;
         StateHasChanged();
-        return Task.CompletedTask;
+    }
+
+    private void InvalidateCatalog()
+    {
+        _catalogKey++;
+    }
+
+    private async Task OnAddForPrint(MiniatureEntity miniature)
+    {
+        PreparationListRef?.AddItem(miniature, 1);
+        StateHasChanged();
     }
 }

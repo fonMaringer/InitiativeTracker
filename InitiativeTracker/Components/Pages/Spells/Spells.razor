@@ -1,25 +1,21 @@
 @page "/spells"
-@using InitiativeTracker.Application
-@using InitiativeTracker.Domain
-@using InitiativeTracker.Domain.Entities
 
 <PageTitle>Заклинания</PageTitle>
 
 <div>
     <h2>Заклинания</h2>
-    <p>Select a tab to manage spells or prepare them for printing.</p>
 
-    <Accordion AlwaysOpen="true">
-        <AccordionItem Expanded="true" ToggleButtonContent="Каталог заклинаний" CollapsedToggleButtonContent="Каталог заклинаний">
+    <Tabs>
+        <TabItem Text="Каталог заклинаний" Display="TabDisplay.Button">
             <SpellCatalog />
-        </AccordionItem>
-        <AccordionItem ToggleButtonContent="Добавить заклинание" CollapsedToggleButtonContent="Добавить заклинание">
+        </TabItem>
+        <TabItem Text="Добавить заклинание" Display="TabDisplay.Button">
             <AddSpellForm OnSpellAdded="OnSpellAdded" />
-        </AccordionItem>
-        <AccordionItem ToggleButtonContent="Подготовка к печати" CollapsedToggleButtonContent="Подготовка к печати">
+        </TabItem>
+        <TabItem Text="Подготовка к печати" Display="TabDisplay.Button">
             <SpellPreparationList />
-        </AccordionItem>
-    </Accordion>
+        </TabItem>
+    </Tabs>
 </div>
 
 @code

@@ -1,28 +1,23 @@
 @page "/miniatures"
-@using InitiativeTracker.Application
-@using InitiativeTracker.Domain
-@using InitiativeTracker.Domain.Entities
+@rendermode InteractiveServer
 
-<PageTitle>Miniatures</PageTitle>
+<PageTitle>Миниатюры</PageTitle>
 
 <div>
     <h2>Миниатюры</h2>
-    <p>Select a tab to manage miniatures or prepare them for printing.</p>
 
-    <Accordion AlwaysOpen="true">
-        <AccordionItem Expanded="true" ToggleButtonContent="Каталог миниатюр" CollapsedToggleButtonContent="Каталог миниатюр">
+    <Tabs>
+        <TabItem Text="Каталог миниатюр" Display="TabDisplay.Button">
             <MiniatureCatalog />
-        </AccordionItem>
-        <AccordionItem ToggleButtonContent="Добавить миниатюру" CollapsedToggleButtonContent="Добавить миниатюру">
+        </TabItem>
+        <TabItem Text="Добавить миниатюру" Display="TabDisplay.Button">
             <AddMiniatureForm OnMiniatureAdded="OnMiniatureAdded" />
-        </AccordionItem>
-        <AccordionItem ToggleButtonContent="Подготовка к печати" CollapsedToggleButtonContent="Подготовка к печати">
+        </TabItem>
+        <TabItem Text="Подготовка к печати" Display="TabDisplay.Button">
             <PreparationList />
-        </AccordionItem>
-    </Accordion>
+        </TabItem>
+    </Tabs>
 </div>
-
-@inject IMiniatureService MiniatureService
 
 @code
 {

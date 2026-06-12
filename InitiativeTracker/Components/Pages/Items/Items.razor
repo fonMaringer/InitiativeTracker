@@ -1,25 +1,22 @@
 @page "/items"
-@using InitiativeTracker.Application
-@using InitiativeTracker.Domain
-@using InitiativeTracker.Domain.Entities
+@rendermode InteractiveServer
 
 <PageTitle>Предметы</PageTitle>
 
 <div>
     <h2>Предметы</h2>
-    <p>Select a tab to manage items or prepare them for printing.</p>
 
-    <Accordion AlwaysOpen="true">
-        <AccordionItem Expanded="true" ToggleButtonContent="Каталог предметов" CollapsedToggleButtonContent="Каталог предметов">
+    <Tabs>
+        <TabItem Text="Каталог предметов" Display="TabDisplay.Button">
             <ItemCatalog />
-        </AccordionItem>
-        <AccordionItem ToggleButtonContent="Добавить предмет" CollapsedToggleButtonContent="Добавить предмет">
+        </TabItem>
+        <TabItem Text="Добавить предмет" Display="TabDisplay.Button">
             <AddItemForm OnItemAdded="OnItemAdded" />
-        </AccordionItem>
-        <AccordionItem ToggleButtonContent="Подготовка к печати" CollapsedToggleButtonContent="Подготовка к печати">
+        </TabItem>
+        <TabItem Text="Подготовка к печати" Display="TabDisplay.Button">
             <ItemPreparationList />
-        </AccordionItem>
-    </Accordion>
+        </TabItem>
+    </Tabs>
 </div>
 
 @code

@@ -114,7 +114,7 @@ public class ItemServiceTests
 
         var entity = (await _dbContext.Items.ToListAsync())[0];
 
-        await _service.UpdateAsync(entity.Id, new ItemUpdateDto("Main-Gauche", null, null, null, null));
+        await _service.UpdateAsync(entity.Id, new ItemUpdateDto("Main-Gauche", null, null, null, null, null));
 
         var updated = await _service.GetByIdAsync(entity.Id);
         updated!.Name.Should().Be("Main-Gauche");
@@ -128,7 +128,7 @@ public class ItemServiceTests
 
         var entity = (await _dbContext.Items.ToListAsync())[0];
 
-        await _service.UpdateAsync(entity.Id, new ItemUpdateDto(null, null, null, null, null));
+        await _service.UpdateAsync(entity.Id, new ItemUpdateDto(null, null, null, null, null, null));
 
         var updated = await _service.GetByIdAsync(entity.Id);
         updated!.Name.Should().Be("Dagger");
@@ -142,7 +142,7 @@ public class ItemServiceTests
 
         var entity = (await _dbContext.Items.ToListAsync())[0];
 
-        await _service.UpdateAsync(entity.Id, new ItemUpdateDto(null, ItemRarity.Uncommon, null, null, null));
+        await _service.UpdateAsync(entity.Id, new ItemUpdateDto(null, ItemRarity.Uncommon, null, null, null, null));
 
         var updated = await _service.GetByIdAsync(entity.Id);
         updated!.Rarity.Should().Be(ItemRarity.Uncommon);
@@ -156,7 +156,7 @@ public class ItemServiceTests
 
         var entity = (await _dbContext.Items.ToListAsync())[0];
 
-        await _service.UpdateAsync(entity.Id, new ItemUpdateDto(null, null, true, null, null));
+        await _service.UpdateAsync(entity.Id, new ItemUpdateDto(null, null, true, null, null, null));
 
         var updated = await _service.GetByIdAsync(entity.Id);
         updated!.RequiresAttunement.Should().BeTrue();
@@ -170,30 +170,44 @@ public class ItemServiceTests
 
         var entity = (await _dbContext.Items.ToListAsync())[0];
 
-        await _service.UpdateAsync(entity.Id, new ItemUpdateDto(null, null, null, "<p>Magical +1 dagger.</p>", null));
+        await _service.UpdateAsync(entity.Id, new ItemUpdateDto(null, null, null, "<p>Magical +1 dagger.</p>", null, null));
 
         var updated = await _service.GetByIdAsync(entity.Id);
         updated!.Description.Should().Be("<p>Magical +1 dagger.</p>");
     }
 
     [Test]
-    public async Task UpdateAsync_WithPrintedCount_ShouldUpdateDescription()
+    public async Task UpdateAsync_WithPrintedCount_ShouldUpdatePrintedCount()
     {
         var dto = CreateItemCreateDto("Dagger", ItemRarity.Common, false, "A dagger.");
         await _service.AddAsync(dto);
 
         var entity = (await _dbContext.Items.ToListAsync())[0];
 
-        await _service.UpdateAsync(entity.Id, new ItemUpdateDto(null, null, null,  null, 100));
+        await _service.UpdateAsync(entity.Id, new ItemUpdateDto(null, null, null,  null, 100, null));
 
         var updated = await _service.GetByIdAsync(entity.Id);
         updated!.PrintedCount.Should().Be(100);
     }
 
     [Test]
+    public async Task UpdateAsync_WithLink_ShouldUpdateLink()
+    {
+        var dto = CreateItemCreateDto("Dagger", ItemRarity.Common, false, "A dagger.");
+        await _service.AddAsync(dto);
+
+        var entity = (await _dbContext.Items.ToListAsync())[0];
+
+        await _service.UpdateAsync(entity.Id, new ItemUpdateDto(null, null, null,  null, null, "link"));
+
+        var updated = await _service.GetByIdAsync(entity.Id);
+        updated!.Link.Should().Be("link");
+    }
+
+    [Test]
     public async Task UpdateAsync_NonExistentId_ShouldNotThrow()
     {
-        var act = () => _service.UpdateAsync(999, new ItemUpdateDto("Name", ItemRarity.Common, false, null, null));
+        var act = () => _service.UpdateAsync(999, new ItemUpdateDto("Name", ItemRarity.Common, false, null, null, null));
 
         await act.Should().NotThrowAsync();
 
@@ -208,7 +222,7 @@ public class ItemServiceTests
 
         var entity = (await _dbContext.Items.ToListAsync())[0];
 
-        await _service.UpdateAsync(entity.Id, new ItemUpdateDto(null, ItemRarity.Rare, null, null, null));
+        await _service.UpdateAsync(entity.Id, new ItemUpdateDto(null, ItemRarity.Rare, null, null, null, null));
 
         var updated = await _service.GetByIdAsync(entity.Id);
         updated!.Name.Should().Be("Dagger");
@@ -318,6 +332,12 @@ public class ItemServiceTests
         result[0].Description.Should().Be(htmlDesc);
     }
 
-    static ItemCreateDto CreateItemCreateDto(string name, ItemRarity rarity, bool requiresAttunement, string description, int printedCount = 0) =>
-        new(name, rarity, requiresAttunement, description, printedCount);
+    static ItemCreateDto CreateItemCreateDto(
+        string name,
+        ItemRarity rarity,
+        bool requiresAttunement,
+        string description,
+        int printedCount = 0,
+        string? link = null) =>
+        new(name, rarity, requiresAttunement, description, printedCount, link);
 }

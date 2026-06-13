@@ -10,4 +10,5 @@ public record SpellCreateDto(
     bool MaterialComponent,
     SpellClass Class,
     string Description,
-    int PrintedCount);
+    int PrintedCount,
+    string? Link);

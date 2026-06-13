@@ -7,4 +7,5 @@ public record ItemCreateDto(
     ItemRarity Rarity,
     bool RequiresAttunement,
     string Description,
-    int PrintedCount);
+    int PrintedCount,
+    string? Link);

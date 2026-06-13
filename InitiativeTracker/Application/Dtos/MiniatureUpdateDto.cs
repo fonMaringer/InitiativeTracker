@@ -5,5 +5,6 @@ namespace InitiativeTracker.Application.Dtos;
 public record MiniatureUpdateDto(
     string? Name,
     CreatureSize? Size,
-    int? PrintedCount);
+    int? PrintedCount,
+    string? Link);
 

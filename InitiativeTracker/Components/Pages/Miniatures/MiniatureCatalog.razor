@@ -22,10 +22,16 @@
     {
         @foreach (var miniature in _miniatures)
         {
-            var miniatureId = miniature.Id; 
             <div class="row mb-2 align-items-center catalog-row" style="cursor: pointer;" @onclick="() => SelectForEdit(miniature)">
                 <div class="col-md-5">
-                    <b>@miniature.Name</b>
+                    @if (miniature.Link is not null)
+                    {
+                        <a href="@miniature.Link" target="_blank">@miniature.Name</a>
+                    }
+                    else
+                    {
+                        @miniature.Name
+                    }
                     <span class="badge bg-secondary ms-2">@miniature.Size</span>
                 </div>
                 <div class="col-md-3" @onclick:stopPropagation="true">

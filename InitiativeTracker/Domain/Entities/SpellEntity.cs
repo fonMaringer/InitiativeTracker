@@ -13,4 +13,5 @@ public class SpellEntity
     public SpellClass Class { get; set; }
     public string Description { get; set; } = string.Empty;
     public int PrintedCount { get; set; }
+    public string? Link { get; set; }
 }

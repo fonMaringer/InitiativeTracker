@@ -61,7 +61,7 @@ public class MiniatureServiceTests
     public async Task AddAsync_WithImageData_ShouldPersistImage()
     {
         var imageBytes = new byte[] { 1, 2, 3 };
-        var dto = new MiniatureCreateDto("Big Red Dragon", CreatureSize.Gargantuan, imageBytes, 12);
+        var dto = new MiniatureCreateDto("Big Red Dragon", CreatureSize.Gargantuan, imageBytes, 12, null);
 
         await _service.AddAsync(dto);
 
@@ -102,7 +102,7 @@ public class MiniatureServiceTests
 
         var entity = (await _dbContext.Miniatures.ToListAsync())[0];
 
-        await _service.UpdateAsync(entity.Id, new MiniatureUpdateDto("New Goblin", null, null));
+        await _service.UpdateAsync(entity.Id, new MiniatureUpdateDto("New Goblin", null, null, null));
 
         var updated = await _service.GetByIdAsync(entity.Id);
         updated!.Name.Should().Be("New Goblin");
@@ -116,7 +116,7 @@ public class MiniatureServiceTests
 
         var entity = (await _dbContext.Miniatures.ToListAsync())[0];
 
-        await _service.UpdateAsync(entity.Id, new MiniatureUpdateDto(null, null, null));
+        await _service.UpdateAsync(entity.Id, new MiniatureUpdateDto(null, null, null, null));
 
         var updated = await _service.GetByIdAsync(entity.Id);
         updated!.Name.Should().Be("Goblin");
@@ -130,7 +130,7 @@ public class MiniatureServiceTests
 
         var entity = (await _dbContext.Miniatures.ToListAsync())[0];
 
-        await _service.UpdateAsync(entity.Id, new MiniatureUpdateDto(null, CreatureSize.Medium, null));
+        await _service.UpdateAsync(entity.Id, new MiniatureUpdateDto(null, CreatureSize.Medium, null, null));
 
         var updated = await _service.GetByIdAsync(entity.Id);
         updated!.Size.Should().Be(CreatureSize.Medium);
@@ -144,16 +144,30 @@ public class MiniatureServiceTests
 
         var entity = (await _dbContext.Miniatures.ToListAsync())[0];
 
-        await _service.UpdateAsync(entity.Id, new MiniatureUpdateDto(null, null, 5));
+        await _service.UpdateAsync(entity.Id, new MiniatureUpdateDto(null, null, 5, null));
 
         var updated = await _service.GetByIdAsync(entity.Id);
         updated!.PrintedCount.Should().Be(5);
     }
 
     [Test]
+    public async Task UpdateAsync_WithLink_ShouldUpdateLink()
+    {
+        var dto = CreateMiniatureCreateDto("Goblin", CreatureSize.Small);
+        await _service.AddAsync(dto);
+
+        var entity = (await _dbContext.Miniatures.ToListAsync())[0];
+
+        await _service.UpdateAsync(entity.Id, new MiniatureUpdateDto(null, null, null, "link"));
+
+        var updated = await _service.GetByIdAsync(entity.Id);
+        updated!.Link.Should().Be("link");
+    }
+
+    [Test]
     public async Task UpdateAsync_NonExistentId_ShouldNotThrow()
     {
-        var act = () => _service.UpdateAsync(999, new MiniatureUpdateDto("Name", CreatureSize.Small, null));
+        var act = () => _service.UpdateAsync(999, new MiniatureUpdateDto("Name", CreatureSize.Small, null, null));
 
         await act.Should().NotThrowAsync();
 
@@ -244,6 +258,10 @@ public class MiniatureServiceTests
         result.Should().BeEmpty();
     }
 
-    static MiniatureCreateDto CreateMiniatureCreateDto(string name, CreatureSize size, int printedCount = 0) =>
-        new(name, size, [], printedCount);
+    static MiniatureCreateDto CreateMiniatureCreateDto(
+        string name,
+        CreatureSize size,
+        int printedCount = 0,
+        string? link = null) =>
+        new(name, size, [], printedCount, link);
 }

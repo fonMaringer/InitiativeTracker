@@ -14,6 +14,11 @@
     }
 
     <div class="mb-2">
+        <label class="form-label"><b>Link</b></label>
+        <InputText @bind-Value="_link" class="form-control"/>
+    </div>
+
+    <div class="mb-2">
         <label class="form-label"><b>Name</b></label>
         <InputText @bind-Value="_name" class="form-control"/>
     </div>
@@ -68,6 +73,7 @@
 @code
 {
     private string _name = string.Empty;
+    private string? _link;
     private ItemRarity _rarity = ItemRarity.Common;
     private bool _requiresAttunement = false;
     private string _description = string.Empty;
@@ -91,6 +97,7 @@
         if (_editItem != null)
         {
             _name = _editItem.Name;
+            _link = _editItem.Link;
             _rarity = _editItem.Rarity;
             _requiresAttunement = _editItem.RequiresAttunement;
             _description = _editItem.Description;
@@ -121,7 +128,8 @@
                     Rarity: _rarity,
                     RequiresAttunement: _requiresAttunement,
                     Description: _description,
-                    PrintedCount: _printedCount));
+                    PrintedCount: _printedCount,
+                    Link: _link));
 
                 _successMessage = $"'{_name}' updated successfully.";
                 await OnEditItemChanged.InvokeAsync(null);
@@ -134,7 +142,8 @@
                     Rarity: _rarity,
                     RequiresAttunement: _requiresAttunement,
                     Description: _description,
-                    PrintedCount: _printedCount ?? 0));
+                    PrintedCount: _printedCount ?? 0,
+                    Link: _link));
 
                 _successMessage = $"'{_name}' added successfully.";
                 ResetForm();
@@ -159,9 +168,10 @@
     private void ResetForm()
     {
         _name = string.Empty;
+        _link = null;
+        _printedCount = null;
         _rarity = ItemRarity.Common;
         _requiresAttunement = false;
         _description = string.Empty;
-        _printedCount = null;
     }
 }

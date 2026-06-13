@@ -23,10 +23,18 @@
     {
         @foreach (var item in _items)
         {
-            var itemId = item.Id; 
             <div class="row mb-2 align-items-center catalog-row" style="cursor: pointer;" @onclick="() => SelectForEdit(item)">
                 <div class="col-md-5">
-                    <b>@item.Name</b>
+                    <b>
+                        @if (item.Link is not null)
+                        {
+                            <a href="@item.Link" target="_blank">@item.Name</a>
+                        }
+                        else
+                        {
+                            @item.Name
+                        }
+                    </b>
                     <span class="badge bg-secondary ms-2">@item.Rarity</span>
                     @if (item.RequiresAttunement)
                     {

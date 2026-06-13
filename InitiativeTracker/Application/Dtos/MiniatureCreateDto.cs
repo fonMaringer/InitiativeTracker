@@ -6,4 +6,5 @@ public record MiniatureCreateDto(
     string Name,
     CreatureSize Size,
     byte[] ImageData,
-    int PrintedCount);
+    int PrintedCount,
+    string? Link);

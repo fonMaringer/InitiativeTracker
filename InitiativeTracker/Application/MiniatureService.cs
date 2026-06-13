@@ -30,6 +30,7 @@ public class MiniatureService(
                 Size = dto.Size,
                 ImageData = dto.ImageData,
                 PrintedCount = dto.PrintedCount,
+                Link = dto.Link,
             };
 
             dbContext.Miniatures.Add(entity);
@@ -56,6 +57,7 @@ public class MiniatureService(
                 entity.Size = dto.Size.Value;
             if (dto.PrintedCount.HasValue)
                 entity.PrintedCount = dto.PrintedCount.Value;
+            entity.Link = dto.Link;
 
             await dbContext.SaveChangesAsync();
         }

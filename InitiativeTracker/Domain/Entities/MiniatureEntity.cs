@@ -11,6 +11,7 @@ public class MiniatureEntity
     public byte[]? ImageData { get; set; } = [];
     public CreatureSize Size { get; set; }
     public int PrintedCount { get; set; }
+    public string? Link { get; set; }
 }
 
 public class MiniatureEntityConfiguration : IEntityTypeConfiguration<MiniatureEntity>

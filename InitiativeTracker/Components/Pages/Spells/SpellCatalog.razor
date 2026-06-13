@@ -1,6 +1,5 @@
 @rendermode InteractiveServer
 @using InitiativeTracker.Application
-@using InitiativeTracker.Application.Dtos
 @using InitiativeTracker.Domain.Entities
 
 <div>
@@ -23,10 +22,16 @@
     {
         @foreach (var spell in _spells)
         {
-            var spellId = spell.Id; 
             <div class="row mb-2 align-items-center catalog-row" style="cursor: pointer;" @onclick="() => SelectForEdit(spell)">
                 <div class="col-md-5">
-                    <b>@spell.Name</b>
+                    @if (spell.Link is not null)
+                    {
+                        <a href="@spell.Link" target="_blank">@spell.Name</a>
+                    }
+                    else
+                    {
+                        @spell.Name
+                    }
                     <span class="badge bg-secondary ms-2">@spell.Type</span>
                     <span class="badge bg-secondary ms-2">@spell.Class</span>
                     @if (spell.VerbalComponent)

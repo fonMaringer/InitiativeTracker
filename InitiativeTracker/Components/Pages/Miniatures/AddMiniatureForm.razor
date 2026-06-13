@@ -14,6 +14,11 @@
     }
 
     <div class="mb-2">
+        <label class="form-label"><b>Link</b></label>
+        <InputText @bind-Value="_link" class="form-control"/>
+    </div>
+
+    <div class="mb-2">
         <label class="form-label"><b>Name</b></label>
         <InputText @bind-Value="_name" class="form-control"/>
     </div>
@@ -39,7 +44,7 @@
         @if (_imageDataSrc != null)
         {
             <img src="@_imageDataSrc" style="max-width: 300px; max-height: 300px; display: block;" alt="Preview"/>
-            <p class="text-muted" style="font-size: 0.8em;">Crop region defaults to full image (0, 0, 100, 100).</p>
+            <p class="text-muted" style="font-size: 0.8em;">Image will be cropped to 25:32 ratio.</p>
         }
     </div>
 
@@ -72,6 +77,7 @@
 @code
 {
     private string _name = string.Empty;
+    private string? _link;
     private CreatureSize _size = CreatureSize.Small;
     private byte[]? _imageData;
     private string? _imageDataSrc;
@@ -95,6 +101,7 @@
         if (_editMiniature != null)
         {
             _name = _editMiniature.Name;
+            _link = _editMiniature.Link;
             _size = _editMiniature.Size;
             _errorMessage = null;
             _successMessage = null;
@@ -134,7 +141,8 @@
                 var dto = new MiniatureUpdateDto(
                     Name: _name,
                     Size: _size,
-                    PrintedCount:  _printedCount);
+                    PrintedCount:  _printedCount,
+                    Link: _link);
                 await MiniatureService.UpdateAsync(_editMiniature.Id, dto);
 
                 _successMessage = $"'{_name}' updated successfully.";
@@ -147,7 +155,8 @@
                     Name: _name,
                     Size: _size,
                     ImageData: _imageData!,
-                    PrintedCount: _printedCount ?? 0));
+                    PrintedCount: _printedCount ?? 0,
+                    Link: _link));
 
                 _successMessage = $"'{_name}' added successfully.";
                 ResetForm();
@@ -174,7 +183,8 @@
         _name = string.Empty;
         _size = CreatureSize.Small;
         _imageData = null;
-        _imageDataSrc = null;
         _printedCount = null;
+        _link = null;
+        _imageDataSrc = null;
     }
 }

@@ -33,6 +33,7 @@ public class SpellService(
                 Class = dto.Class,
                 Description = dto.Description,
                 PrintedCount = dto.PrintedCount,
+                Link = dto.Link,
             };
 
             dbContext.Spells.Add(entity);
@@ -69,6 +70,7 @@ public class SpellService(
                 entity.Description = dto.Description;
             if (dto.PrintedCount.HasValue)
                 entity.PrintedCount = dto.PrintedCount.Value;
+            entity.Link = dto.Link;
 
             await dbContext.SaveChangesAsync();
         }

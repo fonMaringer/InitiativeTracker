@@ -13,6 +13,11 @@
     }
 
     <div class="mb-2">
+        <label class="form-label"><b>Link</b></label>
+        <InputText @bind-Value="_link" class="form-control"/>
+    </div>
+
+    <div class="mb-2">
         <label class="form-label"><b>Name</b></label>
         <InputText @bind-Value="_name" class="form-control"/>
     </div>
@@ -82,6 +87,7 @@
 @code
 {
     private string _name = string.Empty;
+    private string? _link;
     private string _type = string.Empty;
     private SpellClass _spellClass = SpellClass.Wizard;
     private bool _verbalComponent = false;
@@ -117,6 +123,7 @@
             _errorMessage = null;
             _successMessage = null;
             _printedCount = _editSpell.PrintedCount;
+            _link = _editSpell.Link;
         }
         else
         {
@@ -144,7 +151,8 @@
                     MaterialComponent: _materialComponent,
                     Class: _spellClass,
                     Description: _description,
-                    PrintedCount: _printedCount));
+                    PrintedCount: _printedCount,
+                    Link: _link));
 
                 _successMessage = $"'{_name}' updated successfully.";
                 await OnEditSpellChanged.InvokeAsync(null);
@@ -160,7 +168,8 @@
                     MaterialComponent: _materialComponent,
                     Class: _spellClass,
                     Description: _description,
-                    PrintedCount: _printedCount ?? 0));
+                    PrintedCount: _printedCount ?? 0,
+                    Link: _link));
 
                 _successMessage = $"'{_name}' added successfully.";
                 ResetForm();
@@ -192,5 +201,6 @@
         _materialComponent = false;
         _description = string.Empty;
         _printedCount = null;
+        _link = null;
     }
 }

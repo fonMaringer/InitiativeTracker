@@ -30,6 +30,7 @@ public class ItemService(
                 RequiresAttunement = dto.RequiresAttunement,
                 Description = dto.Description,
                 PrintedCount = dto.PrintedCount,
+                Link = dto.Link,
             };
 
             dbContext.Items.Add(entity);
@@ -60,6 +61,7 @@ public class ItemService(
                 entity.Description = dto.Description;
             if (dto.PrintedCount.HasValue)
                 entity.PrintedCount = dto.PrintedCount.Value;
+            entity.Link = dto.Link;
 
             await dbContext.SaveChangesAsync();
         }

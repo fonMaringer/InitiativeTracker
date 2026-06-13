@@ -10,4 +10,5 @@ public class ItemEntity
     public bool RequiresAttunement { get; set; }
     public string Description { get; set; } = string.Empty;
     public int PrintedCount { get; set; }
+    public string? Link { get; set; } = string.Empty;
 }

@@ -10,4 +10,5 @@ public record SpellUpdateDto(
     bool? MaterialComponent,
     SpellClass? Class,
     string? Description,
-    int? PrintedCount);
+    int? PrintedCount,
+    string? Link);

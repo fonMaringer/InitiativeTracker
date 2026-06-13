@@ -6,4 +6,5 @@ public record ItemUpdateDto(
     string? Name,
     ItemRarity? Rarity,
     bool? RequiresAttunement,
-    string? Description);
+    string? Description,
+    int? PrintedCount);

@@ -45,6 +45,9 @@
                 <div class="col-md-4">
                     @(Truncate(spell.Description, 60))
                 </div>
+                <div class="col-md-4">
+                    @(spell.PrintedCount)
+                </div>
                 <div class="col-md-3 d-flex gap-1 align-items-center justify-content-end" @onclick:stopPropagation="true">
                     <Button Color="ButtonColor.Success" Outline="true" Size="ButtonSize.Small" 
                             @onclick="() => OnAddToPrint(spell)">

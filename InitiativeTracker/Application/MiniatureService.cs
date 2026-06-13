@@ -29,10 +29,7 @@ public class MiniatureService(
                 Name = dto.Name,
                 Size = dto.Size,
                 ImageData = dto.ImageData,
-                CroppedRegionX = dto.CropRegion?.X ?? 0,
-                CroppedRegionY = dto.CropRegion?.Y ?? 0,
-                CroppedRegionWidth = dto.CropRegion?.Width ?? 100,
-                CroppedRegionHeight = dto.CropRegion?.Height ?? 100,
+                PrintedCount = dto.PrintedCount,
             };
 
             dbContext.Miniatures.Add(entity);
@@ -57,13 +54,8 @@ public class MiniatureService(
                 entity.Name = dto.Name;
             if (dto.Size.HasValue)
                 entity.Size = dto.Size.Value;
-            if (dto.CropRegion != null)
-            {
-                entity.CroppedRegionX = dto.CropRegion.X;
-                entity.CroppedRegionY = dto.CropRegion.Y;
-                entity.CroppedRegionWidth = dto.CropRegion.Width;
-                entity.CroppedRegionHeight = dto.CropRegion.Height;
-            }
+            if (dto.PrintedCount.HasValue)
+                entity.PrintedCount = dto.PrintedCount.Value;
 
             await dbContext.SaveChangesAsync();
         }

@@ -1,8 +1,6 @@
 using FluentAssertions;
 using InitiativeTracker.Application;
 using InitiativeTracker.Application.Dtos;
-using InitiativeTracker.Domain;
-using InitiativeTracker.Domain.Entities;
 using InitiativeTracker.Domain.Enums;
 using InitiativeTracker.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
@@ -175,7 +173,7 @@ public class SpellServiceTests
 
         var entity = (await _dbContext.Spells.ToListAsync())[0];
 
-        await _service.UpdateAsync(entity.Id, new SpellUpdateDto("Greater Fireball", null, null, null, null, null, null));
+        await _service.UpdateAsync(entity.Id, new SpellUpdateDto("Greater Fireball", null, null, null, null, null, null, null));
 
         var updated = await _service.GetByIdAsync(entity.Id);
         updated!.Name.Should().Be("Greater Fireball");
@@ -189,7 +187,7 @@ public class SpellServiceTests
 
         var entity = (await _dbContext.Spells.ToListAsync())[0];
 
-        await _service.UpdateAsync(entity.Id, new SpellUpdateDto(null, null, null, null, null, null, null));
+        await _service.UpdateAsync(entity.Id, new SpellUpdateDto(null, null, null, null, null, null, null, null));
 
         var updated = await _service.GetByIdAsync(entity.Id);
         updated!.Name.Should().Be("Fireball");
@@ -203,7 +201,7 @@ public class SpellServiceTests
 
         var entity = (await _dbContext.Spells.ToListAsync())[0];
 
-        await _service.UpdateAsync(entity.Id, new SpellUpdateDto("", null, null, null, null, null, null));
+        await _service.UpdateAsync(entity.Id, new SpellUpdateDto("", null, null, null, null, null, null, null));
 
         var updated = await _service.GetByIdAsync(entity.Id);
         updated!.Name.Should().Be("Fireball");
@@ -217,7 +215,7 @@ public class SpellServiceTests
 
         var entity = (await _dbContext.Spells.ToListAsync())[0];
 
-        await _service.UpdateAsync(entity.Id, new SpellUpdateDto(null, null, true, null, null, null, null));
+        await _service.UpdateAsync(entity.Id, new SpellUpdateDto(null, null, true, null, null, null, null, null));
 
         var updated = await _service.GetByIdAsync(entity.Id);
         updated!.VerbalComponent.Should().BeTrue();
@@ -231,7 +229,7 @@ public class SpellServiceTests
 
         var entity = (await _dbContext.Spells.ToListAsync())[0];
 
-        await _service.UpdateAsync(entity.Id, new SpellUpdateDto(null, null, null, true, null, null, null));
+        await _service.UpdateAsync(entity.Id, new SpellUpdateDto(null, null, null, true, null, null, null, null));
 
         var updated = await _service.GetByIdAsync(entity.Id);
         updated!.SomaticComponent.Should().BeTrue();
@@ -245,7 +243,7 @@ public class SpellServiceTests
 
         var entity = (await _dbContext.Spells.ToListAsync())[0];
 
-        await _service.UpdateAsync(entity.Id, new SpellUpdateDto(null, null, null, null, true, null, null));
+        await _service.UpdateAsync(entity.Id, new SpellUpdateDto(null, null, null, null, true, null, null, null));
 
         var updated = await _service.GetByIdAsync(entity.Id);
         updated!.MaterialComponent.Should().BeTrue();
@@ -259,7 +257,7 @@ public class SpellServiceTests
 
         var entity = (await _dbContext.Spells.ToListAsync())[0];
 
-        await _service.UpdateAsync(entity.Id, new SpellUpdateDto(null, null, null, null, null, SpellClass.Bard, null));
+        await _service.UpdateAsync(entity.Id, new SpellUpdateDto(null, null, null, null, null, SpellClass.Bard, null, null));
 
         var updated = await _service.GetByIdAsync(entity.Id);
         updated!.Class.Should().Be(SpellClass.Bard);
@@ -273,16 +271,30 @@ public class SpellServiceTests
 
         var entity = (await _dbContext.Spells.ToListAsync())[0];
 
-        await _service.UpdateAsync(entity.Id, new SpellUpdateDto(null, null, null, null, null, null, "<p>A brilliant streak flashes.</p>"));
+        await _service.UpdateAsync(entity.Id, new SpellUpdateDto(null, null, null, null, null, null, "<p>A brilliant streak flashes.</p>", null));
 
         var updated = await _service.GetByIdAsync(entity.Id);
         updated!.Description.Should().Be("<p>A brilliant streak flashes.</p>");
     }
 
     [Test]
+    public async Task UpdateAsync_WithPrintedCount_ShouldUpdatePrintedCount()
+    {
+        var dto = CreateSpellCreateDto("Fireball", "Type", true, true, false, SpellClass.Wizard, "Fire.");
+        await _service.AddAsync(dto);
+
+        var entity = (await _dbContext.Spells.ToListAsync())[0];
+
+        await _service.UpdateAsync(entity.Id, new SpellUpdateDto(null, null, null, null, null, null, null, 123));
+
+        var updated = await _service.GetByIdAsync(entity.Id);
+        updated!.PrintedCount.Should().Be(123);
+    }
+
+    [Test]
     public async Task UpdateAsync_NonExistentId_ShouldNotThrow()
     {
-        var act = () => _service.UpdateAsync(999, new SpellUpdateDto("Name", "Type", true, false, false, SpellClass.Wizard, null));
+        var act = () => _service.UpdateAsync(999, new SpellUpdateDto("Name", "Type", true, false, false, SpellClass.Wizard, null, null));
 
         await act.Should().NotThrowAsync();
 
@@ -297,7 +309,7 @@ public class SpellServiceTests
 
         var entity = (await _dbContext.Spells.ToListAsync())[0];
 
-        await _service.UpdateAsync(entity.Id, new SpellUpdateDto(null, null, null, null, true, SpellClass.Sorcerer, null));
+        await _service.UpdateAsync(entity.Id, new SpellUpdateDto(null, null, null, null, true, SpellClass.Sorcerer, null, null));
 
         var updated = await _service.GetByIdAsync(entity.Id);
         updated!.Name.Should().Be("Fireball");
@@ -398,6 +410,14 @@ public class SpellServiceTests
         result.Should().HaveCount(1);
     }
 
-    static SpellCreateDto CreateSpellCreateDto(string name, string type, bool verbal, bool somatic, bool material, SpellClass spellClass, string description) =>
-        new(name, type, verbal, somatic, material, spellClass, description);
+    static SpellCreateDto CreateSpellCreateDto(
+        string name,
+        string type,
+        bool verbal,
+        bool somatic,
+        bool material,
+        SpellClass spellClass,
+        string description,
+        int printedCount = 0) =>
+        new(name, type, verbal, somatic, material, spellClass, description, printedCount);
 }

@@ -36,6 +36,9 @@
                              style="max-width: 80px; max-height: 80px; object-fit: contain;" @onclick:stopPropagation="true"/>
                     }
                 </div>
+                <div class="col-md-4">
+                    @(miniature.PrintedCount)
+                </div>
                 <div class="col-md-4 d-flex gap-1 align-items-center justify-content-end" @onclick:stopPropagation="true">
                     <Button Color="ButtonColor.Success" Outline="true" Size="ButtonSize.Small" 
                             @onclick="() => OnAddToPrint(miniature)">

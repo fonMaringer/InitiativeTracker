@@ -36,6 +36,9 @@
                 <div class="col-md-4">
                     @(Truncate(item.Description, 60))
                 </div>
+                <div class="col-md-4">
+                    @(item.PrintedCount)
+                </div>
                 <div class="col-md-3 d-flex gap-1 align-items-center justify-content-end" @onclick:stopPropagation="true">
                     <Button Color="ButtonColor.Success" Outline="true" Size="ButtonSize.Small" 
                             @onclick="() => OnAddToPrint(item)">

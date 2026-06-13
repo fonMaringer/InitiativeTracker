@@ -10,10 +10,7 @@ public class MiniatureEntity
     public string Name { get; set; } = string.Empty;
     public byte[]? ImageData { get; set; } = [];
     public CreatureSize Size { get; set; }
-    public double CroppedRegionX { get; set; }
-    public double CroppedRegionY { get; set; }
-    public double CroppedRegionWidth { get; set; }
-    public double CroppedRegionHeight { get; set; }
+    public int PrintedCount { get; set; }
 }
 
 public class MiniatureEntityConfiguration : IEntityTypeConfiguration<MiniatureEntity>

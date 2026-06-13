@@ -53,6 +53,11 @@
         <p class="text-muted" style="font-size: 0.8em;">HTML markup is supported.</p>
     </div>
 
+    <div class="mb-2">
+        <label class="form-label"><b>Printed count</b></label>
+        <NumberInput TValue="int?" Min="0" @bind-Value="_printedCount" class="form-control"/>
+    </div>
+
     <Button Color="ButtonColor.Primary" Disabled="@_isDisabled" Class="me-2" @onclick="OnSave">
         @(_editSpell != null ? "Save" : "Add Spell")
     </Button>
@@ -86,6 +91,7 @@
     private bool _isProcessing;
     private string? _errorMessage;
     private string? _successMessage;
+    private int? _printedCount;
 
     private readonly SpellClass[] _classOptions = Enum.GetValues<SpellClass>().ToArray();
     private bool _isDisabled => _isProcessing || string.IsNullOrWhiteSpace(_name);
@@ -110,6 +116,7 @@
             _description = _editSpell.Description;
             _errorMessage = null;
             _successMessage = null;
+            _printedCount = _editSpell.PrintedCount;
         }
         else
         {
@@ -136,7 +143,8 @@
                     SomaticComponent: _somaticComponent,
                     MaterialComponent: _materialComponent,
                     Class: _spellClass,
-                    Description: _description));
+                    Description: _description,
+                    PrintedCount: _printedCount));
 
                 _successMessage = $"'{_name}' updated successfully.";
                 await OnEditSpellChanged.InvokeAsync(null);
@@ -151,7 +159,8 @@
                     SomaticComponent: _somaticComponent,
                     MaterialComponent: _materialComponent,
                     Class: _spellClass,
-                    Description: _description));
+                    Description: _description,
+                    PrintedCount: _printedCount ?? 0));
 
                 _successMessage = $"'{_name}' added successfully.";
                 ResetForm();
@@ -182,5 +191,6 @@
         _somaticComponent = false;
         _materialComponent = false;
         _description = string.Empty;
+        _printedCount = null;
     }
 }

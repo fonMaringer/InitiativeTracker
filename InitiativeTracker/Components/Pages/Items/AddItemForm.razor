@@ -38,6 +38,11 @@
         <InputTextArea @bind-Value="_description" class="form-control" rows="6"/>
         <p class="text-muted" style="font-size: 0.8em;">HTML markup is supported.</p>
     </div>
+    
+    <div class="mb-2">
+        <label class="form-label"><b>Printed count</b></label>
+        <NumberInput TValue="int?" Min="0" @bind-Value="_printedCount" class="form-control"/>
+    </div>
 
     <Button Color="ButtonColor.Primary" Disabled="@_isDisabled" Class="me-2" @onclick="OnSave">
         @(_editItem != null ? "Save" : "Add Item")
@@ -69,6 +74,7 @@
     private bool _isProcessing;
     private string? _errorMessage;
     private string? _successMessage;
+    private int? _printedCount = 0;
 
     private readonly ItemRarity[] _rarityOptions = Enum.GetValues<ItemRarity>().ToArray();
     private bool _isDisabled => _isProcessing || string.IsNullOrWhiteSpace(_name);
@@ -90,6 +96,7 @@
             _description = _editItem.Description;
             _errorMessage = null;
             _successMessage = null;
+            _printedCount = _editItem.PrintedCount;
         }
         else
         {
@@ -113,7 +120,8 @@
                     Name: _name,
                     Rarity: _rarity,
                     RequiresAttunement: _requiresAttunement,
-                    Description: _description));
+                    Description: _description,
+                    PrintedCount: _printedCount));
 
                 _successMessage = $"'{_name}' updated successfully.";
                 await OnEditItemChanged.InvokeAsync(null);
@@ -125,7 +133,8 @@
                     Name: _name,
                     Rarity: _rarity,
                     RequiresAttunement: _requiresAttunement,
-                    Description: _description));
+                    Description: _description,
+                    PrintedCount: _printedCount ?? 0));
 
                 _successMessage = $"'{_name}' added successfully.";
                 ResetForm();
@@ -153,5 +162,6 @@
         _rarity = ItemRarity.Common;
         _requiresAttunement = false;
         _description = string.Empty;
+        _printedCount = null;
     }
 }

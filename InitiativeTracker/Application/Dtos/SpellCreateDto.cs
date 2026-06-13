@@ -9,4 +9,5 @@ public record SpellCreateDto(
     bool SomaticComponent,
     bool MaterialComponent,
     SpellClass Class,
-    string Description);
+    string Description,
+    int PrintedCount);

@@ -1,8 +1,6 @@
 using FluentAssertions;
 using InitiativeTracker.Application;
 using InitiativeTracker.Application.Dtos;
-using InitiativeTracker.Domain;
-using InitiativeTracker.Domain.Entities;
 using InitiativeTracker.Domain.Enums;
 using InitiativeTracker.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
@@ -38,7 +36,7 @@ public class MiniatureServiceTests
     [Test]
     public async Task AddAsync_ValidDto_ShouldAddMiniature()
     {
-        var dto = CreateMiniatureCreateDto("Goblin Commander", CreatureSize.Medium, new CropRegion(10, 20, 50, 60));
+        var dto = CreateMiniatureCreateDto("Goblin Commander", CreatureSize.Medium, 123);
 
         await _service.AddAsync(dto);
 
@@ -50,24 +48,10 @@ public class MiniatureServiceTests
     }
 
     [Test]
-    public async Task AddAsync_WithNullCropRegion_ShouldUseDefaults()
-    {
-        var dto = CreateMiniatureCreateDto("Orc", CreatureSize.Large, null);
-
-        await _service.AddAsync(dto);
-
-        var result = await _dbContext.Miniatures.ToListAsync();
-        result[0].CroppedRegionX.Should().Be(0);
-        result[0].CroppedRegionY.Should().Be(0);
-        result[0].CroppedRegionWidth.Should().Be(100);
-        result[0].CroppedRegionHeight.Should().Be(100);
-    }
-
-    [Test]
     public async Task AddAsync_MultipleItems_ShouldPersistAll()
     {
-        await _service.AddAsync(CreateMiniatureCreateDto("Goblin", CreatureSize.Small, null));
-        await _service.AddAsync(CreateMiniatureCreateDto("Dragon", CreatureSize.Gargantuan, null));
+        await _service.AddAsync(CreateMiniatureCreateDto("Goblin", CreatureSize.Small));
+        await _service.AddAsync(CreateMiniatureCreateDto("Dragon", CreatureSize.Gargantuan));
 
         var result = await _dbContext.Miniatures.ToListAsync();
         result.Should().HaveCount(2);
@@ -77,7 +61,7 @@ public class MiniatureServiceTests
     public async Task AddAsync_WithImageData_ShouldPersistImage()
     {
         var imageBytes = new byte[] { 1, 2, 3 };
-        var dto = new MiniatureCreateDto("Big Red Dragon", CreatureSize.Gargantuan, imageBytes, null);
+        var dto = new MiniatureCreateDto("Big Red Dragon", CreatureSize.Gargantuan, imageBytes, 12);
 
         await _service.AddAsync(dto);
 
@@ -89,7 +73,7 @@ public class MiniatureServiceTests
     [Test]
     public async Task GetByIdAsync_ExistingId_ShouldReturnMiniature()
     {
-        var dto = CreateMiniatureCreateDto("Goblin", CreatureSize.Small, null);
+        var dto = CreateMiniatureCreateDto("Goblin", CreatureSize.Small);
         await _service.AddAsync(dto);
 
         var result = await _dbContext.Miniatures.ToListAsync();
@@ -113,7 +97,7 @@ public class MiniatureServiceTests
     [Test]
     public async Task UpdateAsync_ExistingName_ShouldUpdateName()
     {
-        var dto = CreateMiniatureCreateDto("Goblin", CreatureSize.Small, null);
+        var dto = CreateMiniatureCreateDto("Goblin", CreatureSize.Small);
         await _service.AddAsync(dto);
 
         var entity = (await _dbContext.Miniatures.ToListAsync())[0];
@@ -127,7 +111,7 @@ public class MiniatureServiceTests
     [Test]
     public async Task UpdateAsync_NullName_ShouldNotChangeName()
     {
-        var dto = CreateMiniatureCreateDto("Goblin", CreatureSize.Small, null);
+        var dto = CreateMiniatureCreateDto("Goblin", CreatureSize.Small);
         await _service.AddAsync(dto);
 
         var entity = (await _dbContext.Miniatures.ToListAsync())[0];
@@ -141,7 +125,7 @@ public class MiniatureServiceTests
     [Test]
     public async Task UpdateAsync_WithSize_ShouldUpdateSize()
     {
-        var dto = CreateMiniatureCreateDto("Goblin", CreatureSize.Small, null);
+        var dto = CreateMiniatureCreateDto("Goblin", CreatureSize.Small);
         await _service.AddAsync(dto);
 
         var entity = (await _dbContext.Miniatures.ToListAsync())[0];
@@ -153,21 +137,17 @@ public class MiniatureServiceTests
     }
 
     [Test]
-    public async Task UpdateAsync_WithCropRegion_ShouldUpdateCropRegion()
+    public async Task UpdateAsync_WithPrintedCount_ShouldUpdatePrintedCount()
     {
-        var dto = CreateMiniatureCreateDto("Goblin", CreatureSize.Small, null);
+        var dto = CreateMiniatureCreateDto("Goblin", CreatureSize.Small);
         await _service.AddAsync(dto);
 
         var entity = (await _dbContext.Miniatures.ToListAsync())[0];
 
-        var cropRegion = new CropRegion(5, 10, 80, 90);
-        await _service.UpdateAsync(entity.Id, new MiniatureUpdateDto(null, null, cropRegion));
+        await _service.UpdateAsync(entity.Id, new MiniatureUpdateDto(null, null, 5));
 
         var updated = await _service.GetByIdAsync(entity.Id);
-        updated!.CroppedRegionX.Should().Be(5);
-        updated.CroppedRegionY.Should().Be(10);
-        updated.CroppedRegionWidth.Should().Be(80);
-        updated.CroppedRegionHeight.Should().Be(90);
+        updated!.PrintedCount.Should().Be(5);
     }
 
     [Test]
@@ -183,7 +163,7 @@ public class MiniatureServiceTests
     [Test]
     public async Task DeleteAsync_ExistingId_ShouldRemoveMiniature()
     {
-        var dto = CreateMiniatureCreateDto("Goblin", CreatureSize.Small, null);
+        var dto = CreateMiniatureCreateDto("Goblin", CreatureSize.Small);
         await _service.AddAsync(dto);
 
         var entity = (await _dbContext.Miniatures.ToListAsync())[0];
@@ -204,9 +184,9 @@ public class MiniatureServiceTests
     [Test]
     public async Task SearchAsync_MatchingQuery_ShouldReturnSubset()
     {
-        await _service.AddAsync(CreateMiniatureCreateDto("Giant", CreatureSize.Small, null));
-        await _service.AddAsync(CreateMiniatureCreateDto("Gibbering Mouther", CreatureSize.Medium, null));
-        await _service.AddAsync(CreateMiniatureCreateDto("Orc", CreatureSize.Large, null));
+        await _service.AddAsync(CreateMiniatureCreateDto("Giant", CreatureSize.Small));
+        await _service.AddAsync(CreateMiniatureCreateDto("Gibbering Mouther", CreatureSize.Medium));
+        await _service.AddAsync(CreateMiniatureCreateDto("Orc", CreatureSize.Large));
 
         var result = await _service.SearchAsync("gi");
 
@@ -217,7 +197,7 @@ public class MiniatureServiceTests
     [Test]
     public async Task SearchAsync_NoMatch_ShouldReturnEmpty()
     {
-        await _service.AddAsync(CreateMiniatureCreateDto("Goblin", CreatureSize.Small, null));
+        await _service.AddAsync(CreateMiniatureCreateDto("Goblin", CreatureSize.Small));
 
         var result = await _service.SearchAsync("dragon");
 
@@ -227,8 +207,8 @@ public class MiniatureServiceTests
     [Test]
     public async Task SearchAsync_EmptyQuery_ShouldReturnAll()
     {
-        await _service.AddAsync(CreateMiniatureCreateDto("Goblin", CreatureSize.Small, null));
-        await _service.AddAsync(CreateMiniatureCreateDto("Orc", CreatureSize.Large, null));
+        await _service.AddAsync(CreateMiniatureCreateDto("Goblin", CreatureSize.Small));
+        await _service.AddAsync(CreateMiniatureCreateDto("Orc", CreatureSize.Large));
 
         var result = await _service.SearchAsync("");
 
@@ -238,7 +218,7 @@ public class MiniatureServiceTests
     [Test]
     public async Task SearchAsync_NullQuery_ShouldReturnAll()
     {
-        await _service.AddAsync(CreateMiniatureCreateDto("Goblin", CreatureSize.Small, null));
+        await _service.AddAsync(CreateMiniatureCreateDto("Goblin", CreatureSize.Small));
 
         var result = await _service.SearchAsync(null!);
 
@@ -248,7 +228,7 @@ public class MiniatureServiceTests
     [Test]
     public async Task SearchAsync_CaseInsensitive_ShouldMatch()
     {
-        await _service.AddAsync(CreateMiniatureCreateDto("Goblin", CreatureSize.Small, null));
+        await _service.AddAsync(CreateMiniatureCreateDto("Goblin", CreatureSize.Small));
 
         var result = await _service.SearchAsync("GOBLIN");
 
@@ -264,6 +244,6 @@ public class MiniatureServiceTests
         result.Should().BeEmpty();
     }
 
-    static MiniatureCreateDto CreateMiniatureCreateDto(string name, CreatureSize size, CropRegion? cropRegion) =>
-        new(name, size, Array.Empty<byte>(), cropRegion);
+    static MiniatureCreateDto CreateMiniatureCreateDto(string name, CreatureSize size, int printedCount = 0) =>
+        new(name, size, [], printedCount);
 }

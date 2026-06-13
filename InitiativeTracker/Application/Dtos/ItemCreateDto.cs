@@ -6,4 +6,5 @@ public record ItemCreateDto(
     string Name,
     ItemRarity Rarity,
     bool RequiresAttunement,
-    string Description);
+    string Description,
+    int PrintedCount);

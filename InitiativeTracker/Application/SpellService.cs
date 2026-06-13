@@ -32,6 +32,7 @@ public class SpellService(
                 MaterialComponent = dto.MaterialComponent,
                 Class = dto.Class,
                 Description = dto.Description,
+                PrintedCount = dto.PrintedCount,
             };
 
             dbContext.Spells.Add(entity);
@@ -66,6 +67,8 @@ public class SpellService(
                 entity.Class = dto.Class.Value;
             if (dto.Description != null)
                 entity.Description = dto.Description;
+            if (dto.PrintedCount.HasValue)
+                entity.PrintedCount = dto.PrintedCount.Value;
 
             await dbContext.SaveChangesAsync();
         }

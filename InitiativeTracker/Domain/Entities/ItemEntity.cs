@@ -9,4 +9,5 @@ public class ItemEntity
     public ItemRarity Rarity { get; set; }
     public bool RequiresAttunement { get; set; }
     public string Description { get; set; } = string.Empty;
+    public int PrintedCount { get; set; }
 }

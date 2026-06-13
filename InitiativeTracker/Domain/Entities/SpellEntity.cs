@@ -12,4 +12,5 @@ public class SpellEntity
     public bool MaterialComponent { get; set; }
     public SpellClass Class { get; set; }
     public string Description { get; set; } = string.Empty;
+    public int PrintedCount { get; set; }
 }

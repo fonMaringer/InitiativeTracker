@@ -43,6 +43,11 @@
         }
     </div>
 
+    <div class="mb-2">
+        <label class="form-label"><b>Printed count</b></label>
+        <NumberInput TValue="int?" Min="0" @bind-Value="_printedCount" class="form-control"/>
+    </div>
+
     <Button Color="ButtonColor.Primary" Disabled="@_isDisabled" Class="me-2" @onclick="OnSave">
         @(_editMiniature != null ? "Save" : "Add Miniature")
     </Button>
@@ -73,6 +78,7 @@
     private bool _isProcessing;
     private string? _errorMessage;
     private string? _successMessage;
+    private int? _printedCount;
 
     private readonly CreatureSize[] _sizeOptions = Enum.GetValues<CreatureSize>().ToArray();
     private bool _isDisabled => _isProcessing || string.IsNullOrWhiteSpace(_name) || (_editMiniature == null && _imageData == null);
@@ -92,6 +98,7 @@
             _size = _editMiniature.Size;
             _errorMessage = null;
             _successMessage = null;
+            _printedCount = _editMiniature.PrintedCount;
         }
         else
         {
@@ -127,7 +134,7 @@
                 var dto = new MiniatureUpdateDto(
                     Name: _name,
                     Size: _size,
-                    CropRegion: null);
+                    PrintedCount:  _printedCount);
                 await MiniatureService.UpdateAsync(_editMiniature.Id, dto);
 
                 _successMessage = $"'{_name}' updated successfully.";
@@ -140,7 +147,7 @@
                     Name: _name,
                     Size: _size,
                     ImageData: _imageData!,
-                    CropRegion: null));
+                    PrintedCount: _printedCount ?? 0));
 
                 _successMessage = $"'{_name}' added successfully.";
                 ResetForm();
@@ -168,5 +175,6 @@
         _size = CreatureSize.Small;
         _imageData = null;
         _imageDataSrc = null;
+        _printedCount = null;
     }
 }

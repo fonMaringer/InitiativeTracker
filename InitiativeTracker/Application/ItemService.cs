@@ -29,6 +29,7 @@ public class ItemService(
                 Rarity = dto.Rarity,
                 RequiresAttunement = dto.RequiresAttunement,
                 Description = dto.Description,
+                PrintedCount = dto.PrintedCount,
             };
 
             dbContext.Items.Add(entity);
@@ -57,6 +58,8 @@ public class ItemService(
                 entity.RequiresAttunement = dto.RequiresAttunement.Value;
             if (dto.Description != null)
                 entity.Description = dto.Description;
+            if (dto.PrintedCount.HasValue)
+                entity.PrintedCount = dto.PrintedCount.Value;
 
             await dbContext.SaveChangesAsync();
         }

@@ -1,4 +1,3 @@
-using InitiativeTracker.Domain;
 using System.Text;
 using System.Web;
 using InitiativeTracker.Domain.Enums;
@@ -13,16 +12,17 @@ public record MiniaturePrintDataDto(
 
 public class MiniaturePrintGenerator
 {
-    const int ColumnsOnPage = 5;
-
+    private const int BaseWidth = 25;
+    private const int BaseHeight = 32;
+    
     static readonly Dictionary<CreatureSize, (int WidthMm, int HeightMm)> SizeDimensions = new()
     {
-        [CreatureSize.Tiny]       = (16,  13),
-        [CreatureSize.Small]      = (32,  25),
-        [CreatureSize.Medium]     = (32,  25),
-        [CreatureSize.Large]      = (64,  50),
-        [CreatureSize.Huge]       = (96,  75),
-        [CreatureSize.Gargantuan]  = (128, 100)
+        [CreatureSize.Tiny]       = (BaseWidth / 2, BaseHeight / 2),
+        [CreatureSize.Small]      = (BaseWidth, BaseHeight),
+        [CreatureSize.Medium]     = (BaseWidth, BaseHeight),
+        [CreatureSize.Large]      = (BaseWidth * 2, BaseHeight * 2),
+        [CreatureSize.Huge]       = (BaseWidth * 3, BaseHeight * 3),
+        [CreatureSize.Gargantuan]  = (BaseWidth * 4, BaseHeight * 4),
     };
 
     static readonly CreatureSize[] SizeSortOrder = Enum.GetValues<CreatureSize>();
@@ -62,14 +62,12 @@ public class MiniaturePrintGenerator
         sb.AppendLine("@page { size:A4 portrait; margin:10mm; }");
         sb.AppendLine("body { font-family:Arial,sans-serif; font-size:12px; }");
         sb.AppendLine(".sheet { break-inside-page:avoid; display:flex; flex-wrap:wrap; ");
-        sb.AppendLine("         justify-content:center; gap:1mm; margin-bottom:10mm; }");
-        sb.AppendLine(".lbl { width:100%; text-align:center; font-weight:bold; background:#eee; ");
-        sb.AppendLine("       padding:3px 6px; border-radius:4px; margin:4px 2px; font-size:11px; }");
-        sb.AppendLine(".cell { border:1.25px solid #000; overflow:hidden; display:flex; ");
-        sb.AppendLine("        flex-direction:column; break-inside-page:avoid; }");
-        sb.AppendLine(".slot { flex:1; overflow:hidden; }");
-        sb.AppendLine(".flipped { transform:rotate(180deg); }");
-         sb.AppendLine("img   { width:100%; height:100%; object-fit:cover; display:block; }");
+        sb.AppendLine("         justify-content:center; margin-top:5mm; margin-bottom:5mm; }");
+        sb.AppendLine(".cell { overflow:hidden; display:flex; ");
+        sb.AppendLine("        flex-direction:column; page-break-inside:avoid; }");
+        sb.AppendLine(".slot { flex:1; overflow:hidden; border: 1px solid #000; }");
+        sb.AppendLine(".flipped { transform: rotateX(180deg); }");
+        sb.AppendLine("img   { width:100%; height:100%; object-fit:cover; display:block; }");
         sb.AppendLine("</style>");
         sb.AppendLine("</head>");
         sb.AppendLine("<body>");
@@ -82,17 +80,13 @@ public class MiniaturePrintGenerator
         List<MiniaturePrintDataDto> items)
     {
         var imgCells = new List<string>();
-        string cellDims = $"width:{widthMm}mm; height:{heightMm}mm;";
+        string cellDims = $"width:{widthMm}mm; height:{heightMm * 2}mm;";
 
         foreach (var item in items)
         {
-            string safeName = HttpUtility.HtmlEncode(item.Name ?? "Unnamed");
-            sb.AppendLine($"<label class=\"lbl\">{safeName} &times;  {item.Quantity}</label>");
-
-            int cellsNeeded = (item.Quantity + 1) / 2;
             string b64Src = $"data:image/png;base64,{item.ImageBase64}";
 
-            for (int c = 0; c < cellsNeeded; c++)
+            for (int c = 0; c < item.Quantity; c++)
             {
                 var cellSb = new StringBuilder();
                 cellSb.Append($"<div class=\"cell\" style=\"{cellDims}\">");
@@ -103,18 +97,10 @@ public class MiniaturePrintGenerator
             }
         }
 
-        int remainder = imgCells.Count % ColumnsOnPage;
-        int padCount = remainder == 0 ? 0 : ColumnsOnPage - remainder;
-
-        int maxW = ColumnsOnPage * widthMm + (ColumnsOnPage - 1);
-
-        sb.Append($"<section class=\"sheet\" style=\"max-width:{maxW}mm;\">");
+        sb.Append($"<section class=\"sheet\">");
 
         foreach (string cellHtml in imgCells)
             sb.Append(cellHtml);
-
-        for (int i = 0; i < padCount; i++)
-            sb.Append($"<div class=\"cell\" style=\"{cellDims}\"></div>");
 
         sb.AppendLine("</section>");
     }

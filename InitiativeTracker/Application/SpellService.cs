@@ -26,6 +26,7 @@ public class SpellService(
             var entity = new SpellEntity
             {
                 Name = dto.Name,
+                Type = dto.Type,
                 VerbalComponent = dto.VerbalComponent,
                 SomaticComponent = dto.SomaticComponent,
                 MaterialComponent = dto.MaterialComponent,
@@ -53,6 +54,8 @@ public class SpellService(
 
             if (!string.IsNullOrEmpty(dto.Name))
                 entity.Name = dto.Name;
+            if (!string.IsNullOrEmpty(dto.Type))
+                entity.Type = dto.Type;
             if (dto.VerbalComponent.HasValue)
                 entity.VerbalComponent = dto.VerbalComponent.Value;
             if (dto.SomaticComponent.HasValue)

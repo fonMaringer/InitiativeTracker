@@ -1,18 +1,20 @@
 using System.Text;
 using System.Web;
-using InitiativeTracker.Domain.Enums;
 
 namespace InitiativeTracker.Application.PrintHtmlGenerators;
 
-public record ItemPrintDataDto(
-    string Name,
-    ItemRarity Rarity,
-    bool RequiresAttunement,
-    string DescriptionHtml);
+public record PokerCardPrintDataDto
+(
+    string Title,
+    string? Subtitle,
+    IReadOnlyCollection<string> Flags,
+    string Content,
+    string? Footer
+);
 
-public class ItemPrintGenerator
+public class PokerCardPrintGenerator
 {
-    public string Generate(IEnumerable<ItemPrintDataDto> items)
+    public string Generate(IEnumerable<PokerCardPrintDataDto> items)
     {
         var sb = new StringBuilder();
 
@@ -20,7 +22,7 @@ public class ItemPrintGenerator
         sb.AppendLine("<html lang=\"en\">");
         sb.AppendLine("<head>");
         sb.AppendLine("  <meta charset=\"utf-8\" />");
-        sb.AppendLine("  <title>InitiativeTracker - Item Cards Print</title>");
+        sb.AppendLine("  <title>InitiativeTracker - Cards Print</title>");
         sb.AppendLine("  <style>");
         sb.AppendLine("* { margin:0; padding:0; box-sizing:border-box; }");
         sb.AppendLine("@page { size:A4 portrait; margin:10mm; }");
@@ -35,10 +37,7 @@ public class ItemPrintGenerator
         sb.AppendLine("              background-color: white; border-radius: 4px 4px 0 0; padding-left: 3px; }");
         sb.AppendLine(".card-subtitle { font-size:8px; margin-bottom:2px; flex-shrink:0; padding-left: 4px; ");
         sb.AppendLine("              background-color: white; }");
-        sb.AppendLine(".card-components { font-size:10px; color:#444; margin-bottom:4px; flex-shrink:0; }");
-        sb.AppendLine(".component-badge { display:inline-block; background:#2980b9; color:#fff; ");
-        sb.AppendLine("                     font-size:8px; padding:1px 4px; border-radius:3px; margin-right:4px; }");
-        sb.AppendLine(".attunement-badge { display:inline-block; background:#c0392b; color:#fff; ");
+        sb.AppendLine(".flag-badge { display:inline-block; background:#c0392b; color:#fff; ");
         sb.AppendLine("                     font-size:8px; padding:1px 4px; border-radius:3px; margin-right:4px; }");
         sb.AppendLine(".card-content { flex:1; overflow:hidden; font-size:8px; ");
         sb.AppendLine("                     background-color: white; padding: 3px; }");
@@ -61,21 +60,25 @@ public class ItemPrintGenerator
         return sb.ToString();
     }
 
-    static void WritePokerCard(StringBuilder sb, ItemPrintDataDto item)
+    private static void WritePokerCard(StringBuilder sb, PokerCardPrintDataDto item)
     {
-        string safeName = HttpUtility.HtmlEncode(item.Name);
-        string rarityLabel = item.Rarity.ToString();
-        bool hasAttunement = item.RequiresAttunement;
-        string description = item.DescriptionHtml ?? "";
-
         sb.Append($"<div class=\"poker-card\">");
-        sb.Append($"  <div class=\"card-title\">{safeName}</div>");
+        sb.Append($"  <div class=\"card-title\">{HttpUtility.HtmlEncode(item.Title)}</div>");
         sb.Append($"  <div class=\"card-subtitle\">");
-        if (hasAttunement)
-            sb.Append($"<span class=\"attunement-badge\">ATT</span>");
-        sb.Append($"{HttpUtility.HtmlEncode(rarityLabel)}");
+        foreach (var flag in item.Flags)
+        {
+            sb.Append($"<span class=\"flag-badge\">{flag}</span>");
+        }
+        if (item.Subtitle is not null)
+        {
+            sb.Append($"{HttpUtility.HtmlEncode(item.Subtitle)}");
+        }
         sb.AppendLine("</div>");
-        sb.AppendLine($"  <div class=\"card-content\">{description}</div>");
+        sb.AppendLine($"  <div class=\"card-content\">{item.Content}</div>");
+        if (item.Footer is not null)
+        {
+            sb.AppendLine($"  <div class=\"card-footer\">{item.Footer}</div>");
+        }
         sb.AppendLine("</div>");
     }
 }

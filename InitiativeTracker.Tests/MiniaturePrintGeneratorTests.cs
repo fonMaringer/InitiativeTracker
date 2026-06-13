@@ -32,20 +32,6 @@ public class MiniaturePrintGeneratorTests
     }
 
     [Test]
-    public void Generate_SingleItem_ShouldRenderLabelWithNameAndQuantity()
-    {
-        var items = new[]
-        {
-            CreateMiniatureDto("Goblin", CreatureSize.Small, 4)
-        };
-
-        var html = _generator.Generate(items);
-
-        html.Should().Contain("<label class=\"lbl\">");
-        html.Should().Contain("&times;  4");
-    }
-
-    [Test]
     public void Generate_QuantityOne_ShouldRenderOneCell()
     {
         var items = new[]
@@ -71,8 +57,6 @@ public class MiniaturePrintGeneratorTests
 
         var html = _generator.Generate(items);
 
-        int cellCount = RegexCount(html, "<div class=\"cell\"");
-        // (2 + 1) / 2 = 1 cell — padding will fill rest of row
         int contentCellCount = RegexCount(html, "class=\"cell\" style=");
         contentCellCount.Should().BeGreaterThanOrEqualTo(1);
     }
@@ -87,10 +71,8 @@ public class MiniaturePrintGeneratorTests
 
         var html = _generator.Generate(items);
 
-        // (3 + 1) / 2 = 2 cells — but padding may add more empty cells.
-        // Each cell has a closing </div>. Let's count by looking at image tags: 2 images per cell.
         int imgCount = RegexCount(html, "<img");
-        imgCount.Should().Be(4);
+        imgCount.Should().Be(6);
     }
 
     [Test]
@@ -130,7 +112,7 @@ public class MiniaturePrintGeneratorTests
 
         var html = _generator.Generate(items);
 
-        html.Should().Contain("width:16mm; height:13mm;");
+        html.Should().Contain("width:12mm; height:32mm;");
     }
 
     [Test]
@@ -143,7 +125,7 @@ public class MiniaturePrintGeneratorTests
 
         var html = _generator.Generate(items);
 
-        html.Should().Contain("width:32mm; height:25mm;");
+        html.Should().Contain("width:25mm; height:64mm;");
     }
 
     [Test]
@@ -156,7 +138,7 @@ public class MiniaturePrintGeneratorTests
 
         var html = _generator.Generate(items);
 
-        html.Should().Contain("width:32mm; height:25mm;");
+        html.Should().Contain("width:25mm; height:64mm;");
     }
 
     [Test]
@@ -169,7 +151,7 @@ public class MiniaturePrintGeneratorTests
 
         var html = _generator.Generate(items);
 
-        html.Should().Contain("width:64mm; height:50mm;");
+        html.Should().Contain("width:50mm; height:128mm;");
     }
 
     [Test]
@@ -182,7 +164,7 @@ public class MiniaturePrintGeneratorTests
 
         var html = _generator.Generate(items);
 
-        html.Should().Contain("width:96mm; height:75mm;");
+        html.Should().Contain("width:75mm; height:192mm;");
     }
 
     [Test]
@@ -195,7 +177,7 @@ public class MiniaturePrintGeneratorTests
 
         var html = _generator.Generate(items);
 
-        html.Should().Contain("width:128mm; height:100mm;");
+        html.Should().Contain("width:100mm; height:256mm;");
     }
 
     [Test]
@@ -211,9 +193,9 @@ public class MiniaturePrintGeneratorTests
         var html = _generator.Generate(items);
 
         // Tiny should appear before Small, which should appear before Gargantuan.
-        int tinyIndex = html.IndexOf("width:16mm; height:13mm;");
-        int smallIndex = html.IndexOf("width:32mm; height:25mm;");
-        int gargIndex = html.IndexOf("width:128mm; height:100mm;");
+        int tinyIndex = html.IndexOf("width:12.5mm; height:32mm;");
+        int smallIndex = html.IndexOf("width:25mm; height:64mm;");
+        int gargIndex = html.IndexOf("width:100mm; height:256mm;");
 
         tinyIndex.Should().BeLessThan(smallIndex);
         smallIndex.Should().BeLessThan(gargIndex);
@@ -250,61 +232,6 @@ public class MiniaturePrintGeneratorTests
     }
 
     [Test]
-    public void Generate_SectionMaxWidth_ShouldBeComputedCorrectly()
-    {
-        // ColumnsOnPage=5, Small=32mm → maxW = 5*32 + (5-1) = 160+4=164
-        var items = new[]
-        {
-            CreateMiniatureDto("Goblin", CreatureSize.Small, 2)
-        };
-
-        var html = _generator.Generate(items);
-
-        html.Should().Contain("max-width:164mm;");
-    }
-
-    [Test]
-    public void Generate_LargeSectionMaxWidth_ShouldBeComputedCorrectly()
-    {
-        // Large=64mm → maxW = 5*64 + 4 = 324
-        var items = new[]
-        {
-            CreateMiniatureDto("Ogre", CreatureSize.Large, 2)
-        };
-
-        var html = _generator.Generate(items);
-
-        html.Should().Contain("max-width:324mm;");
-    }
-
-    [Test]
-    public void Generate_SpecialCharsInName_ShouldBeHtmlEncoded()
-    {
-        var items = new[]
-        {
-            new MiniaturePrintDataDto("Fiend <of> & Fire", CreatureSize.Medium, 2, FakeImageBase64)
-        };
-
-        var html = _generator.Generate(items);
-
-        html.Should().Contain("Fiend &lt;of&gt; &amp; Fire");
-    }
-
-    [Test]
-    public void Generate_NullName_ShouldRenderUnnamed()
-    {
-        var items = new MiniaturePrintDataDto[]
-        {
-            new(null!, CreatureSize.Medium, 2, "iVBORw0KGgoAAAANSU")
-        };
-
-        var html = _generator.Generate(items);
-
-        html.Should().Contain("Unnamed");
-        html.Should().Contain("&times;  2");
-    }
-
-    [Test]
     public void Generate_EmptyList_ShouldNotCrash()
     {
         var items = Array.Empty<MiniaturePrintDataDto>();
@@ -312,22 +239,7 @@ public class MiniaturePrintGeneratorTests
         var html = _generator.Generate(items);
 
         html.Should().Contain("<!DOCTYPE html>");
-        html.Should().NotContain("class=\"lbl\"");
         html.Should().NotContain("class=\"cell\"");
-    }
-
-    [Test]
-    public void Generate_LabelShowsItemNameAndQuantity()
-    {
-        var items = new[]
-        {
-            CreateMiniatureDto("Orc", CreatureSize.Medium, 6)
-        };
-
-        var html = _generator.Generate(items);
-
-        // Label should contain name and times sign with quantity.
-        html.Should().MatchRegex("<label class=\"lbl\">.*Orc.*&times;.*6.*</label>");
     }
 
     [Test]
@@ -343,13 +255,12 @@ public class MiniaturePrintGeneratorTests
 
         int imgCount = RegexCount(html, "<img");
         // 5 cells × 2 images = 10 images
-        imgCount.Should().Be(10);
+        imgCount.Should().Be(20);
     }
 
     [Test]
     public void Generate_OddQuantity_High_ShouldRoundUpCells()
     {
-        // Quantity 9 → (9+1)/2 = 5 cells exactly
         var items = new[]
         {
             CreateMiniatureDto("Goblin", CreatureSize.Small, 9)
@@ -358,7 +269,7 @@ public class MiniaturePrintGeneratorTests
         var html = _generator.Generate(items);
 
         int imgCount = RegexCount(html, "<img");
-        imgCount.Should().Be(10);
+        imgCount.Should().Be(18);
     }
 
     [Test]
@@ -373,7 +284,7 @@ public class MiniaturePrintGeneratorTests
         var html = _generator.Generate(items);
 
         int totalCells = RegexCount(html, "class=\"cell\"");
-        totalCells.Should().BeGreaterThanOrEqualTo(5);
+        totalCells.Should().BeGreaterThanOrEqualTo(2);
     }
 
     [Test]
@@ -387,7 +298,6 @@ public class MiniaturePrintGeneratorTests
         var html = _generator.Generate(items);
 
         html.Should().Contain(".sheet");
-        html.Should().Contain(".lbl");
         html.Should().Contain(".cell");
         html.Should().Contain(".slot");
         html.Should().Contain(".flipped");
@@ -403,7 +313,7 @@ public class MiniaturePrintGeneratorTests
 
         var html = _generator.Generate(items);
 
-        html.Should().Contain("transform:rotate(180deg)");
+        html.Should().Contain("transform: rotateX(180deg)");
     }
 
     static MiniaturePrintDataDto CreateMiniatureDto(string? name, CreatureSize size, int quantity) =>

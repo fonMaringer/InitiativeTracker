@@ -1,5 +1,4 @@
 @rendermode InteractiveServer
-@using InitiativeTracker.Application
 @using InitiativeTracker.Application.PrintHtmlGenerators
 @using InitiativeTracker.Domain.Entities
 
@@ -40,13 +39,13 @@
     }
 </div>
 
-@inject Microsoft.JSInterop.IJSRuntime JSRuntime;
+@inject IJSRuntime JsRuntime;
 
 @code
 {
 
-    List<PrintListSpellEntry> _printItems = new();
-    readonly SpellPrintGenerator _printGenerator = new();
+    readonly List<PrintListSpellEntry> _printItems = [];
+    readonly PokerCardPrintGenerator _printGenerator = new();
 
     public void AddItem(SpellEntity spell, int quantity)
     {
@@ -73,26 +72,29 @@
 
     async Task GenerateAndOpenPrintHtml()
     {
-        var printDataList = new List<SpellPrintDataDto>();
+        var printDataList = new List<PokerCardPrintDataDto>();
 
         foreach (var printItem in _printItems)
         {
             var entity = printItem.Spell;
 
-            for (int n = 0; n < printItem.Quantity; n++)
+            for (var n = 0; n < printItem.Quantity; n++)
             {
-                printDataList.Add(new SpellPrintDataDto(
-                    Name: entity.Name,
-                    VerbalComponent: entity.VerbalComponent,
-                    SomaticComponent: entity.SomaticComponent,
-                    MaterialComponent: entity.MaterialComponent,
-                    SpellClass: entity.Class,
-                    DescriptionHtml: entity.Description));
+                var flags = new List<string>();
+                if (entity.VerbalComponent) flags.Add("V");
+                if (entity.SomaticComponent) flags.Add("S");
+                if (entity.MaterialComponent) flags.Add("M");
+                printDataList.Add(new PokerCardPrintDataDto(
+                    entity.Name,
+                    entity.Type,
+                    flags,
+                    entity.Description,
+                    entity.Class.ToString()));
             }
         }
 
-        string html = _printGenerator.Generate(printDataList);
-        await JSRuntime.InvokeVoidAsync("openHtmlInNewTab", html);
+        var html = _printGenerator.Generate(printDataList);
+        await JsRuntime.InvokeVoidAsync("openHtmlInNewTab", html);
     }
 
     public class PrintListSpellEntry(SpellEntity spell, int quantity)

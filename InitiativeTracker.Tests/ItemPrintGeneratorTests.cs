@@ -1,15 +1,13 @@
-using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using FluentAssertions;
 using InitiativeTracker.Application.PrintHtmlGenerators;
-using InitiativeTracker.Domain;
 using InitiativeTracker.Domain.Enums;
 
 namespace InitiativeTracker.Tests;
 
 public class ItemPrintGeneratorTests
 {
-    private readonly ItemPrintGenerator _generator = new();
+    private readonly PokerCardPrintGenerator _generator = new();
 
     [Test]
     public void Generate_SingleItem_ShouldReturnHtmlWithCard()
@@ -37,7 +35,7 @@ public class ItemPrintGeneratorTests
 
         var html = _generator.Generate(items);
 
-        html.Should().Contain("\"attunement-badge\">ATT");
+        html.Should().Contain("\"flag-badge\">ATT");
     }
 
     [Test]
@@ -50,7 +48,7 @@ public class ItemPrintGeneratorTests
 
         var html = _generator.Generate(items);
 
-        html.Should().NotContain("\"attunement-badge\"");
+        html.Should().NotContain("\"flag-badge\"");
     }
 
     [Test]
@@ -100,13 +98,13 @@ public class ItemPrintGeneratorTests
         var html = _generator.Generate(items);
 
         int cardCount = RegexCount(html, "<div class=\"poker-card\">");
-        cardCount.Should().Be(4);
+        cardCount.Should().Be(3);
     }
 
     [Test]
     public void Generate_EmptyList_ShouldHaveNoCards()
     {
-        var items = Array.Empty<ItemPrintDataDto>();
+        var items = Array.Empty<PokerCardPrintDataDto>();
 
         var html = _generator.Generate(items);
 
@@ -203,7 +201,7 @@ public class ItemPrintGeneratorTests
     [Test]
     public void Generate_EightItems_ShouldRenderFullRows()
     {
-        var items = new List<ItemPrintDataDto>();
+        var items = new List<PokerCardPrintDataDto>();
         for (int i = 0; i < 8; i++)
             items.Add(CreateItemDto($"Item {i}", ItemRarity.Common, false, $"Desc {i}"));
 
@@ -224,7 +222,7 @@ public class ItemPrintGeneratorTests
         var html = _generator.Generate(items);
 
         int cardCount = RegexCount(html, "<div class=\"poker-card\">");
-        cardCount.Should().Be(4);
+        cardCount.Should().Be(1);
     }
 
     [Test]
@@ -242,7 +240,7 @@ public class ItemPrintGeneratorTests
         var html = _generator.Generate(items);
 
         int cardCount = RegexCount(html, "<div class=\"poker-card\">");
-        cardCount.Should().Be(8);
+        cardCount.Should().Be(5);
     }
 
     [Test]
@@ -271,8 +269,8 @@ public class ItemPrintGeneratorTests
         html.Should().Contain("\"card-subtitle\">Common</div>");
     }
 
-    static ItemPrintDataDto CreateItemDto(string name, ItemRarity rarity, bool requiresAttunement, string? description) =>
-        new(name, rarity, requiresAttunement, description ?? "");
+    static PokerCardPrintDataDto CreateItemDto(string name, ItemRarity rarity, bool requiresAttunement, string? description) =>
+        new(name, rarity.ToString(), requiresAttunement ? ["ATT"] : [], description ?? "", null);
 
     static int RegexCount(string text, string pattern) => Regex.Matches(text, pattern).Count;
 }

@@ -1,5 +1,4 @@
 @rendermode InteractiveServer
-@using InitiativeTracker.Application
 @using InitiativeTracker.Application.PrintHtmlGenerators
 @using InitiativeTracker.Domain.Entities
 
@@ -40,12 +39,12 @@
     }
 </div>
 
-@inject Microsoft.JSInterop.IJSRuntime JSRuntime;
+@inject IJSRuntime JsRuntime;
 
 @code
 {
-    List<PrintListItemEntry> _printItems = new();
-    readonly ItemPrintGenerator _printGenerator = new();
+    readonly List<PrintListItemEntry> _printItems = [];
+    readonly PokerCardPrintGenerator _printGenerator = new();
 
     public void AddItem(ItemEntity item, int quantity)
     {
@@ -72,24 +71,25 @@
 
     async Task GenerateAndOpenPrintHtml()
     {
-        var printDataList = new List<ItemPrintDataDto>();
+        var printDataList = new List<PokerCardPrintDataDto>();
 
         foreach (var printItem in _printItems)
         {
             var entity = printItem.Item;
 
-            for (int n = 0; n < printItem.Quantity; n++)
+            for (var n = 0; n < printItem.Quantity; n++)
             {
-                printDataList.Add(new ItemPrintDataDto(
-                    Name: entity.Name,
-                    Rarity: entity.Rarity,
-                    RequiresAttunement: entity.RequiresAttunement,
-                    DescriptionHtml: entity.Description));
+                printDataList.Add(new PokerCardPrintDataDto(
+                    entity.Name,
+                    entity.Rarity.ToString(),
+                    entity.RequiresAttunement ? ["ATT"] : [],
+                    entity.Description,
+                    null));
             }
         }
 
-        string html = _printGenerator.Generate(printDataList);
-        await JSRuntime.InvokeVoidAsync("openHtmlInNewTab", html);
+        var html = _printGenerator.Generate(printDataList);
+        await JsRuntime.InvokeVoidAsync("openHtmlInNewTab", html);
     }
 
     public class PrintListItemEntry(ItemEntity item, int quantity)

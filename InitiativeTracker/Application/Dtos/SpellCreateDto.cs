@@ -4,6 +4,7 @@ namespace InitiativeTracker.Application.Dtos;
 
 public record SpellCreateDto(
     string Name,
+    string Type,
     bool VerbalComponent,
     bool SomaticComponent,
     bool MaterialComponent,

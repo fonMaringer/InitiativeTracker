@@ -27,6 +27,7 @@
             <div class="row mb-2 align-items-center catalog-row" style="cursor: pointer;" @onclick="() => SelectForEdit(spell)">
                 <div class="col-md-5">
                     <b>@spell.Name</b>
+                    <span class="badge bg-secondary ms-2">@spell.Type</span>
                     <span class="badge bg-secondary ms-2">@spell.Class</span>
                     @if (spell.VerbalComponent)
                     {

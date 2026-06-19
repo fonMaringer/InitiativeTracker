@@ -27,4 +27,16 @@ public static class BestiaryDetailsAdapter
 
         return res;
     }
+
+    public static MiniatureEntity ToMiniatureEntity(
+        this BestiaryDetailsResponse s,
+        string link,
+        byte[]? imageData)
+        => new()
+        {
+            Name = s.Name.Rus,
+            Link = link,
+            ImageData = imageData,
+            Size = s.Size.CreatureSize,
+        };
 }

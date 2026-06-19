@@ -3,11 +3,51 @@
 @using InitiativeTracker.Application.Dtos
 @using InitiativeTracker.Domain.Entities
 @using InitiativeTracker.Domain.Enums
+@using InitiativeTracker.Integration.RestClients.TtgClub
+@using InitiativeTracker.Integration.RestClients.TtgClub.Contracts.V1
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.JSInterop
 
 <div id="addMiniatureForm" tabindex="0">
     <h5>@(_editMiniature != null ? "Edit miniature" : "Add miniature")</h5>
+
+    @if (_editMiniature == null)
+    {
+        <div style="margin-bottom: 15px;">
+            <h6>Search from ttg.club bestiary</h6>
+            <div style="display: flex">
+                <TextInput @bind-Value="@_searchPattern" @onkeyup="OnKeyUpSearch" style="width: 200px; margin-right: 10px"/>
+                <Button Color="ButtonColor.Dark" @onclick="SearchBestiary">
+                    <Icon Name="IconName.Search" Size="IconSize.x6"/>
+                </Button>
+            </div>
+
+            @if (_searchResults != null)
+            {
+                <div class="grid-table" style="grid-template-columns: 400px 200px 120px 80px; margin-top: 10px;">
+                    <div class="grid-header">
+                        <div>Name</div>
+                        <div>Type</div>
+                        <div>CR</div>
+                        <div>Select</div>
+                    </div>
+                    @foreach (var result in _searchResults)
+                    {
+                        <div class="grid-row">
+                            <div class="grid-cell">@result.Name.Rus</div>
+                            <div class="grid-cell">@result.Type</div>
+                            <div class="grid-cell">@result.ChallengeRating</div>
+                            <div class="grid-cell">
+                                <Button Color="ButtonColor.Dark" @onclick="() => SelectMiniature(result)" TooltipPlacement="TooltipPlacement.Bottom" TooltipTitle="Select to fill form fields">
+                                    <Icon Name="IconName.Check" Size="IconSize.x6"/>
+                                </Button>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
 
     @if (_isProcessing)
     {
@@ -26,14 +66,12 @@
 
     <div class="mb-2">
         <label class="form-label"><b>Size</b></label>
-        @foreach (var option in _sizeOptions)
-        {
-            var sizeId = SizeId(option);
-            <div style="display:inline-block; margin-right:10px;">
-                <input type="radio" id="@sizeId" name="miniatureSize" checked="@(_size == option)" @onchange="() => _size = option"/>
-                <label for="@sizeId">@option</label>
-            </div>
-        }
+        <select class="form-select" @bind="_size">
+            @foreach (var option in _sizeOptions)
+            {
+                <option value="@option">@option</option>
+            }
+        </select>
     </div>
 
     <div class="mb-2">
@@ -97,11 +135,98 @@
 
     private MiniatureEntity? _editMiniature;
 
+    public void Dispose()
+    {
+        _searchCts.Cancel();
+        _searchCts.Dispose();
+    }
+
     [Inject] IMiniatureService MiniatureService { get; set; } = default!;
     [Inject] IJSRuntime JSRuntime { get; set; } = default!;
+    [Inject] IBestiaryClient BestiaryClient { get; set; } = default!;
 
-    private string SizeId(CreatureSize size) => "size_" + ((int)size).ToString();
+    private string _searchPattern = string.Empty;
+    private BestiarySearchResponseItem[]? _searchResults;
+    private readonly CancellationTokenSource _searchCts = new();
 
+    private async Task OnKeyUpSearch(KeyboardEventArgs? e)
+    {
+        if (e?.Code is "Enter" or "NumpadEnter")
+        {
+            await SearchBestiary();
+        }
+    }
+
+    private async Task SearchBestiary()
+    {
+        _searchResults = null;
+        StateHasChanged();
+
+        if (string.IsNullOrEmpty(_searchPattern))
+        {
+            return;
+        }
+
+        try
+        {
+            _searchResults = await BestiaryClient.SearchV1Async(_searchPattern, _searchCts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            // Ignored due to re-search throttling
+        }
+    }
+
+    private async Task SelectMiniature(BestiarySearchResponseItem item)
+    {
+        var url = item.Url;
+        if (string.IsNullOrEmpty(url))
+        {
+            return;
+        }
+
+        try
+        {
+            var details = await BestiaryClient.GetDetailsV1Async(url, _searchCts.Token);
+
+            if (details is null)
+                return;
+
+            var link = BestiaryClient.BuildDirectLink(item.Url);
+
+            _name = details.Name.Rus;
+            _link = link;
+            _size = details.Size.CreatureSize;
+            _printedCount = 1;
+
+            // Find first image URL that doesn't contain "tokens"
+            var imageUrl = details.Images.FirstOrDefault(img => !img.Contains("tokens", StringComparison.OrdinalIgnoreCase));
+            if (!string.IsNullOrEmpty(imageUrl))
+            {
+                await DownloadImageAsync(imageUrl);
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Failed to load bestiary details: {ex.Message}";
+        }
+    }
+
+    private async Task DownloadImageAsync(string imageUrl)
+    {
+        try
+        {
+            using var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0");
+            _imageData = await httpClient.GetByteArrayAsync(imageUrl);
+            _imageDataSrc = $"data:image/jpeg;base64,{Convert.ToBase64String(_imageData)}";
+            _errorMessage = null;
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Failed to download image: {ex.Message}";
+        }
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

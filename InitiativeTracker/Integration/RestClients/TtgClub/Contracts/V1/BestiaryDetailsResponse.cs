@@ -1,3 +1,5 @@
+using InitiativeTracker.Domain.Enums;
+
 namespace InitiativeTracker.Integration.RestClients.TtgClub.Contracts.V1;
 
 public class Size
@@ -5,6 +7,17 @@ public class Size
     public string Rus { get; set; }
     public string Eng { get; set; }
     public string Cell { get; set; }
+
+    public CreatureSize CreatureSize => Eng.ToUpper() switch
+    {
+        "TINY" => CreatureSize.Tiny,
+        "SMALL" => CreatureSize.Small,
+        "MEDIUM" => CreatureSize.Medium,
+        "LARGE" => CreatureSize.Large,
+        "HUGE" => CreatureSize.Huge,
+        "GARGANTUAN" => CreatureSize.Gargantuan,
+        _ => CreatureSize.Unknown,
+    };
 }
 
 public class Hits
@@ -44,5 +57,6 @@ public class BestiaryDetailsResponse
     public Hits Hits { get; set; }
     public Speed[] Speed { get; set; }
     public Ability Ability { get; set; }
+    public string[] Images { get; set; } = [];
 }
 

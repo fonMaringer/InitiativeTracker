@@ -1,8 +1,6 @@
 using FluentAssertions;
 using InitiativeTracker.Application;
 using InitiativeTracker.Application.Dtos;
-using InitiativeTracker.Domain;
-using InitiativeTracker.Domain.Entities;
 using InitiativeTracker.Domain.Enums;
 using InitiativeTracker.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
@@ -310,13 +308,13 @@ public class ItemServiceTests
     [Test]
     public async Task AddAsync_UndefinedRarity_ShouldPersist()
     {
-        var dto = CreateItemCreateDto("Mystery Item", ItemRarity.Undefined, false, "Unknown description.");
+        var dto = CreateItemCreateDto("Mystery Item", ItemRarity.Unknown, false, "Unknown description.");
 
         await _service.AddAsync(dto);
 
         var result = await _dbContext.Items.ToListAsync();
         result.Should().HaveCount(1);
-        result[0].Rarity.Should().Be(ItemRarity.Undefined);
+        result[0].Rarity.Should().Be(ItemRarity.Unknown);
     }
 
     [Test]

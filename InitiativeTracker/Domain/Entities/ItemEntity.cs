@@ -11,4 +11,5 @@ public class ItemEntity
     public string Description { get; set; } = string.Empty;
     public int PrintedCount { get; set; }
     public string? Link { get; set; } = string.Empty;
+    public Source Source { get; set; }
 }

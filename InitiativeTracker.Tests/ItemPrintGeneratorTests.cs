@@ -132,7 +132,7 @@ public class ItemPrintGeneratorTests
     {
         var items = new[]
         {
-            CreateItemDto("Blank Item", ItemRarity.Undefined, false, null)
+            CreateItemDto("Blank Item", ItemRarity.Unknown, false, null)
         };
 
         var html = _generator.Generate(items);
@@ -159,7 +159,7 @@ public class ItemPrintGeneratorTests
     {
         var items = new[]
         {
-            CreateItemDto("Godsbane", ItemRarity.Relic, true, "Divine weapon.")
+            CreateItemDto("Godsbane", ItemRarity.Artifact, true, "Divine weapon.")
         };
 
         var html = _generator.Generate(items);

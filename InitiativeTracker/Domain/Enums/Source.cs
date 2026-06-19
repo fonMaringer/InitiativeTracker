@@ -4,4 +4,5 @@ public enum Source
 {
     Manual,
     Bestiary,
+    MagicItems,
 }

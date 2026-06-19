@@ -44,6 +44,7 @@ public class PokerCardPrintGenerator
         sb.AppendLine(".card-footer { font-weight:bold; font-size:12px; text-align:center; ");
         sb.AppendLine("                margin-top:4px; padding-top:3px; border-top:1px solid #ccc; flex-shrink:0; }");
         sb.AppendLine(".card-content img { max-width:100%; height:auto; }");
+        sb.AppendLine("a { color: inherit; text-decoration: inherit; }");
         sb.AppendLine("</style>");
         sb.AppendLine("</head>");
         sb.AppendLine("<body>");

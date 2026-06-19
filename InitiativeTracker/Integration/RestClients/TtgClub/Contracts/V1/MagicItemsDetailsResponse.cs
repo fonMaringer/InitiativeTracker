@@ -8,6 +8,8 @@ public class MagicItemsDetailsResponse
     public Rarity Rarity { get; set; }
     public bool Customization { get; set; }
     public string Description { get; set; }
+
+    public DetailType[] DetailType { get; set; } = [];
     /// <summary>
     /// List of image urls
     /// </summary>

@@ -11,6 +11,9 @@ public static class MagicItemDetailsAdapter
         => new()
         {
             Name = s.Name.Rus,
+            Type = s.DetailType.Any()
+                ? $"{s.Type.Name} ({string.Join(", ", s.DetailType.Select(d => d.Name))})"
+                : s.Type.Name,
             Description = s.Description,
             Link = link,
             Rarity = s.Rarity.ItemRarity,

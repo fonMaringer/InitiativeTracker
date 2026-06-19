@@ -8,7 +8,7 @@ namespace InitiativeTracker.Integration.RestClients.TtgClub;
 public interface IMagicItemsClient
 {
     Task<MagicItemsSearchResponseItem[]> SearchV1Async(string query, CancellationToken ct);
-    
+
     Task<MagicItemsDetailsResponse?> GetDetailsV1Async(string url, CancellationToken ct);
 
     string BuildDirectLink(string url);
@@ -20,10 +20,10 @@ public class MagicItemsClient(IOptions<TtgClubClientOptions> options) : IMagicIt
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
     };
-    
+
     private const string MediaType = "application/json";
     private readonly string _apiV1Path = options.Value.ApiV1Path;
-    
+
     private readonly HttpClient _magicItemsV1Client = new()
     {
         BaseAddress = new Uri(options.Value.Host),
@@ -63,9 +63,9 @@ public class MagicItemsClient(IOptions<TtgClubClientOptions> options) : IMagicIt
     public async Task<MagicItemsDetailsResponse?> GetDetailsV1Async(string url, CancellationToken ct)
     {
         var requestMessage = new HttpRequestMessage(HttpMethod.Post, _apiV1Path + url);
-        
+
         var response = await _magicItemsV1Client.SendAsync(requestMessage, ct);
-        
+
         var responseItem = await response.Content.ReadFromJsonAsync<MagicItemsDetailsResponse>(ct);
 
         return responseItem;

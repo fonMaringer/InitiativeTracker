@@ -26,11 +26,13 @@ public class ItemService(
             var entity = new ItemEntity
             {
                 Name = dto.Name,
+                Type = dto.Type,
                 Rarity = dto.Rarity,
                 RequiresAttunement = dto.RequiresAttunement,
                 Description = dto.Description,
                 PrintedCount = dto.PrintedCount,
                 Link = dto.Link,
+                Source = dto.Source,
             };
 
             dbContext.Items.Add(entity);
@@ -53,6 +55,8 @@ public class ItemService(
 
             if (!string.IsNullOrEmpty(dto.Name))
                 entity.Name = dto.Name;
+            if (!string.IsNullOrEmpty(dto.Type))
+                entity.Type = dto.Type;
             if (dto.Rarity.HasValue)
                 entity.Rarity = dto.Rarity.Value;
             if (dto.RequiresAttunement.HasValue)

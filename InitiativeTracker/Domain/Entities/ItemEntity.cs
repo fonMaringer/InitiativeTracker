@@ -6,6 +6,7 @@ public class ItemEntity
 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
+    public string? Type { get; set; }
     public ItemRarity Rarity { get; set; }
     public bool RequiresAttunement { get; set; }
     public string Description { get; set; } = string.Empty;

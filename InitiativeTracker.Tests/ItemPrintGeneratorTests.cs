@@ -164,7 +164,7 @@ public class ItemPrintGeneratorTests
 
         var html = _generator.Generate(items);
 
-        html.Should().Contain("Relic");
+        html.Should().Contain("Artifact");
     }
 
     [Test]

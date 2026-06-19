@@ -4,9 +4,53 @@
 @using InitiativeTracker.Domain.Entities
 @using InitiativeTracker.Domain
 @using InitiativeTracker.Domain.Enums
+@using InitiativeTracker.Integration.RestClients.TtgClub
+@using InitiativeTracker.Integration.RestClients.TtgClub.Adapters
+@using InitiativeTracker.Integration.RestClients.TtgClub.Contracts.V1
+@using Source = InitiativeTracker.Domain.Enums.Source
 
 <div>
     <h5>@(_editItem != null ? "Edit item" : "Add item")</h5>
+
+    @if (_editItem == null)
+    {
+        <div style="margin-bottom: 15px;">
+            <h6>Search from ttg.club</h6>
+            <div style="display: flex">
+                <TextInput @bind-Value="@_searchPattern" @onkeyup="OnKeyUpSearch" style="width: 200px; margin-right: 10px"/>
+                <Button Color="ButtonColor.Dark" @onclick="SearchItems">
+                    <Icon Name="IconName.Search" Size="IconSize.x6"/>
+                </Button>
+            </div>
+
+            @if (_searchResults != null)
+            {
+                <div class="grid-table" style="grid-template-columns: 400px 100px 200px; margin-top: 10px;">
+                    <div class="grid-header">
+                        <div>Name</div>
+                        <div>Source</div>
+                        <div>Select</div>
+                    </div>
+                    @foreach (var result in _searchResults)
+                    {
+                        <div class="grid-row">
+                            <div class="grid-cell">@result.Name.Rus</div>
+                            <div class="grid-cell">
+                                <Button Color="ButtonColor.None" TooltipPlacement="TooltipPlacement.Bottom" TooltipTitle="@result.Source.Name">
+                                    @result.Source.ShortName
+                                </Button>
+                            </div>
+                            <div class="grid-cell">
+                                <Button Color="ButtonColor.Dark" @onclick="() => SelectItem(result)" TooltipPlacement="TooltipPlacement.Bottom" TooltipTitle="Select to fill form fields">
+                                    <Icon Name="IconName.Check" Size="IconSize.x6"/>
+                                </Button>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
 
     @if (_isProcessing)
     {
@@ -21,6 +65,11 @@
     <div class="mb-2">
         <label class="form-label"><b>Name</b></label>
         <InputText @bind-Value="_name" class="form-control"/>
+    </div>
+
+    <div class="mb-2">
+        <label class="form-label"><b>Type</b></label>
+        <InputText @bind-Value="_type" class="form-control"/>
     </div>
 
     <div class="mb-2">
@@ -73,6 +122,7 @@
 @code
 {
     private string _name = string.Empty;
+    private string? _type;
     private string? _link;
     private ItemRarity _rarity = ItemRarity.Common;
     private bool _requiresAttunement = false;
@@ -81,6 +131,7 @@
     private string? _errorMessage;
     private string? _successMessage;
     private int? _printedCount = 0;
+    private Source _source;
 
     private readonly ItemRarity[] _rarityOptions = Enum.GetValues<ItemRarity>().ToArray();
     private bool _isDisabled => _isProcessing || string.IsNullOrWhiteSpace(_name);
@@ -90,6 +141,7 @@
     [Parameter] public EventCallback<ItemEntity?> OnEditItemChanged { get; set; }
 
     private ItemEntity? _editItem;
+    private readonly CancellationTokenSource _cts = new();
 
     protected override void OnParametersSet()
     {
@@ -97,6 +149,7 @@
         if (_editItem != null)
         {
             _name = _editItem.Name;
+            _type = _editItem.Type;
             _link = _editItem.Link;
             _rarity = _editItem.Rarity;
             _requiresAttunement = _editItem.RequiresAttunement;
@@ -104,6 +157,7 @@
             _errorMessage = null;
             _successMessage = null;
             _printedCount = _editItem.PrintedCount;
+            _source = default;
         }
         else
         {
@@ -111,7 +165,64 @@
         }
     }
 
+    [Inject] IMagicItemsClient MagicItemsClient { get; set; } = default!;
     [Inject] IItemService ItemService { get; set; } = default!;
+
+    private string? _searchPattern;
+    private MagicItemsSearchResponseItem[]? _searchResults;
+
+    private async Task OnKeyUpSearch(KeyboardEventArgs? e)
+    {
+        if (e?.Code is "Enter" or "NumpadEnter")
+        {
+            await SearchItems();
+        }
+    }
+
+    private async Task SearchItems()
+    {
+        _searchResults = null;
+        StateHasChanged();
+
+        if (string.IsNullOrEmpty(_searchPattern))
+        {
+            return;
+        }
+
+        try
+        {
+            _searchResults = await MagicItemsClient.SearchV1Async(_searchPattern, _cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            // Ignored due to re-search throttling
+        }
+    }
+
+    private async Task SelectItem(MagicItemsSearchResponseItem item)
+    {
+        var url = item.Url;
+        if (string.IsNullOrEmpty(url))
+        {
+            return;
+        }
+
+        var details = await MagicItemsClient.GetDetailsV1Async(url, _cts.Token);
+
+        if (details is null)
+            return;
+
+        var link = MagicItemsClient.BuildDirectLink(item.Url);
+        var entity = details.ToItemEntity(link);
+
+        _name = entity.Name;
+        _type = entity.Type;
+        _link = entity.Link;
+        _rarity = entity.Rarity;
+        _requiresAttunement = entity.RequiresAttunement;
+        _description = entity.Description;
+        _source = entity.Source;
+    }
 
     private async Task OnSave()
     {
@@ -125,6 +236,7 @@
             {
                 await ItemService.UpdateAsync(_editItem.Id, new ItemUpdateDto(
                     Name: _name,
+                    Type: _type,
                     Rarity: _rarity,
                     RequiresAttunement: _requiresAttunement,
                     Description: _description,
@@ -139,11 +251,13 @@
             {
                 await ItemService.AddAsync(new ItemCreateDto(
                     Name: _name,
+                    Type: _type,
                     Rarity: _rarity,
                     RequiresAttunement: _requiresAttunement,
                     Description: _description,
                     PrintedCount: _printedCount ?? 0,
-                    Link: _link));
+                    Link: _link,
+                    Source: _source));
 
                 _successMessage = $"'{_name}' added successfully.";
                 ResetForm();
@@ -168,10 +282,12 @@
     private void ResetForm()
     {
         _name = string.Empty;
+        _type = null;
         _link = null;
         _printedCount = null;
         _rarity = ItemRarity.Common;
         _requiresAttunement = false;
         _description = string.Empty;
+        _source = default;
     }
 }

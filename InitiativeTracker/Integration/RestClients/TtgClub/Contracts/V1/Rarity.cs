@@ -8,7 +8,7 @@ public class Rarity
     public string Name { get; set; }
     public string Short { get; set; }
 
-    public ItemRarity ItemRarity => Type switch
+    public ItemRarity ItemRarity => Type.ToUpper() switch
     {
         "VARIES" => ItemRarity.Varies,
         "COMMON" => ItemRarity.Common,

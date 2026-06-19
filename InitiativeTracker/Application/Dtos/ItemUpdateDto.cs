@@ -4,6 +4,7 @@ namespace InitiativeTracker.Application.Dtos;
 
 public record ItemUpdateDto(
     string? Name,
+    string? Type,
     ItemRarity? Rarity,
     bool? RequiresAttunement,
     string? Description,

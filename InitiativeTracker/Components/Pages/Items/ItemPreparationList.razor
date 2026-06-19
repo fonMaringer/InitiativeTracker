@@ -79,9 +79,13 @@
 
             for (var n = 0; n < printItem.Quantity; n++)
             {
+                var subtitle = string.IsNullOrEmpty(printItem.Item.Type)
+                    ? printItem.Item.Rarity.ToString()
+                    : $"{printItem.Item.Type}, {printItem.Item.Rarity}";
+                
                 printDataList.Add(new PokerCardPrintDataDto(
                     entity.Name,
-                    entity.Rarity.ToString(),
+                    subtitle,
                     entity.RequiresAttunement ? ["ATT"] : [],
                     entity.Description,
                     null));

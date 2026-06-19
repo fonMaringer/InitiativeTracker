@@ -7,8 +7,16 @@ public record SpellCreateDto(
     string Type,
     bool VerbalComponent,
     bool SomaticComponent,
-    bool MaterialComponent,
-    SpellClass Class,
+    string? MaterialComponent,
+    string Class,
     string Description,
     int PrintedCount,
-    string? Link);
+    string? Link,
+    string Range,
+    string Duration,
+    string Time,
+    int Level,
+    string? Upper,
+    bool Concentration,
+    Source Source
+);

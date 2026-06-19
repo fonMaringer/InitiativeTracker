@@ -30,10 +30,17 @@ public class SpellService(
                 VerbalComponent = dto.VerbalComponent,
                 SomaticComponent = dto.SomaticComponent,
                 MaterialComponent = dto.MaterialComponent,
-                Class = dto.Class,
+                Classes = [dto.Class],
                 Description = dto.Description,
                 PrintedCount = dto.PrintedCount,
                 Link = dto.Link,
+                Duration = dto.Duration,
+                Range = dto.Range,
+                Time = dto.Time,
+                Concentration = dto.Concentration,
+                Level = dto.Level,
+                Upper = dto.Upper,
+                Source = dto.Source,
             };
 
             dbContext.Spells.Add(entity);
@@ -62,10 +69,10 @@ public class SpellService(
                 entity.VerbalComponent = dto.VerbalComponent.Value;
             if (dto.SomaticComponent.HasValue)
                 entity.SomaticComponent = dto.SomaticComponent.Value;
-            if (dto.MaterialComponent.HasValue)
-                entity.MaterialComponent = dto.MaterialComponent.Value;
-            if (dto.Class.HasValue)
-                entity.Class = dto.Class.Value;
+            if (!string.IsNullOrEmpty(dto.MaterialComponent))
+                entity.MaterialComponent = dto.MaterialComponent;
+            if (!string.IsNullOrEmpty(dto.Class))
+                entity.Classes = [dto.Class];
             if (dto.Description != null)
                 entity.Description = dto.Description;
             if (dto.PrintedCount.HasValue)

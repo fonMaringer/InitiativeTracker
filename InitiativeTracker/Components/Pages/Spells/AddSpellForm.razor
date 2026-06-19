@@ -1,8 +1,12 @@
 @rendermode InteractiveServer
+@implements IDisposable;
 @using InitiativeTracker.Application
 @using InitiativeTracker.Application.Dtos
 @using InitiativeTracker.Domain.Entities
 @using InitiativeTracker.Domain.Enums
+@using InitiativeTracker.Integration.RestClients.TtgClub
+@using InitiativeTracker.Integration.RestClients.TtgClub.Adapters
+@using InitiativeTracker.Integration.RestClients.TtgClub.Contracts.V1
 
 <div>
     <h5>@(_editSpell != null ? "Edit spell" : "Add spell")</h5>
@@ -10,6 +14,44 @@
     @if (_isProcessing)
     {
         <Spinner Color="SpinnerColor.Primary" Style="margin-bottom: 15px; width: 30px; height: 30px"/>
+    }
+
+    @if (_editSpell == null)
+    {
+        <div style="margin-bottom: 15px;">
+            <h6>Search from ttg.club</h6>
+            <div style="display: flex">
+                <TextInput @bind-Value="@_searchPattern" @onkeyup="OnKeyUpSearch" style="width: 200px; margin-right: 10px"/>
+                <Button Color="ButtonColor.Dark" @onclick="SearchSpells">
+                    <Icon Name="IconName.Search" Size="IconSize.x6"/>
+                </Button>
+            </div>
+
+            @if (_searchResults != null)
+            {
+                <div class="grid-table" style="grid-template-columns: 300px 80px 120px 100px; margin-top: 10px;">
+                    <div class="grid-header">
+                        <div>Name</div>
+                        <div>Level</div>
+                        <div>School</div>
+                        <div>Select</div>
+                    </div>
+                    @foreach (var result in _searchResults)
+                    {
+                        <div class="grid-row">
+                            <div class="grid-cell">@result.Name.Rus</div>
+                            <div class="grid-cell">@(result.Level == 0 ? "Cantrip" : result.Level)</div>
+                            <div class="grid-cell">@result.School</div>
+                            <div class="grid-cell">
+                                <Button Color="ButtonColor.Dark" @onclick="() => SelectSpell(result)" TooltipPlacement="TooltipPlacement.Bottom" TooltipTitle="Select to fill form fields">
+                                    <Icon Name="IconName.Check" Size="IconSize.x6"/>
+                                </Button>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
     }
 
     <div class="mb-2">
@@ -23,18 +65,33 @@
     </div>
 
     <div class="mb-2">
-        <label class="form-label"><b>Type</b></label>
+        <label class="form-label"><b>Type (School)</b></label>
         <InputText @bind-Value="_type" class="form-control"/>
     </div>
 
     <div class="mb-2">
-        <label class="form-label"><b>Class</b></label>
-        <select class="form-select" @bind="_spellClass">
-            @foreach (var option in _classOptions)
-            {
-                <option value="@((int)option)">@option</option>
-            }
-        </select>
+        <label class="form-label"><b>Level</b></label>
+        <NumberInput TValue="int" Min="0" @bind-Value="_level" class="form-control"/>
+    </div>
+
+    <div class="mb-2">
+        <label class="form-label"><b>Casting Time</b></label>
+        <InputText @bind-Value="_time" class="form-control"/>
+    </div>
+
+    <div class="mb-2">
+        <label class="form-label"><b>Range</b></label>
+        <InputText @bind-Value="_range" class="form-control"/>
+    </div>
+
+    <div class="mb-2">
+        <label class="form-label"><b>Duration</b></label>
+        <InputText @bind-Value="_duration" class="form-control"/>
+    </div>
+
+    <div class="mb-2 form-check">
+        <InputCheckbox @bind-Value="_concentration" class="form-check-input"/>
+        <label class="form-check-label"><b>Concentration</b></label>
     </div>
 
     <div class="mb-2 form-check">
@@ -47,9 +104,14 @@
         <label class="form-check-label"><b>Somatic (S)</b></label>
     </div>
 
-    <div class="mb-2 form-check">
-        <InputCheckbox @bind-Value="_materialComponent" class="form-check-input"/>
-        <label class="form-check-label"><b>Material (M)</b></label>
+    <div class="mb-2">
+        <label class="form-label"><b>Material (M)</b></label>
+        <InputText @bind-Value="_materialComponent" class="form-control"/>
+    </div>
+
+    <div class="mb-2">
+        <label class="form-label"><b>Class</b></label>
+        <InputText @bind-Value="_class" class="form-control"/>
     </div>
 
     <div class="mb-2">
@@ -89,17 +151,26 @@
     private string _name = string.Empty;
     private string? _link;
     private string _type = string.Empty;
-    private SpellClass _spellClass = SpellClass.Wizard;
+    private int _level;
+    private string _range = string.Empty;
+    private string _duration = string.Empty;
+    private string _time = string.Empty;
+    private bool _concentration = false;
+    private string _class = string.Empty;
+    private string _upper = string.Empty;
     private bool _verbalComponent = false;
     private bool _somaticComponent = false;
-    private bool _materialComponent = false;
+    private string? _materialComponent;
     private string _description = string.Empty;
     private bool _isProcessing;
     private string? _errorMessage;
     private string? _successMessage;
     private int? _printedCount;
 
-    private readonly SpellClass[] _classOptions = Enum.GetValues<SpellClass>().ToArray();
+    private CancellationTokenSource _searchCts = new();
+    private string? _searchPattern;
+    private SpellsSearchResponseItem[]? _searchResults;
+
     private bool _isDisabled => _isProcessing || string.IsNullOrWhiteSpace(_name);
 
     [Parameter] public EventCallback OnDataChanged { get; set; }
@@ -115,7 +186,13 @@
         {
             _name = _editSpell.Name;
             _type = _editSpell.Type;
-            _spellClass = _editSpell.Class;
+            _level = _editSpell.Level;
+            _range = _editSpell.Range;
+            _duration = _editSpell.Duration;
+            _time = _editSpell.Time;
+            _concentration = _editSpell.Concentration;
+            _class = _editSpell.Classes.FirstOrDefault();
+            _upper = _editSpell.Upper ?? string.Empty;
             _verbalComponent = _editSpell.VerbalComponent;
             _somaticComponent = _editSpell.SomaticComponent;
             _materialComponent = _editSpell.MaterialComponent;
@@ -131,7 +208,68 @@
         }
     }
 
+    [Inject] ISpellsClient SpellsClient { get; set; } = default!;
     [Inject] ISpellService SpellService { get; set; } = default!;
+
+    private async Task OnKeyUpSearch(KeyboardEventArgs? e)
+    {
+        if (e?.Code is "Enter" or "NumpadEnter")
+        {
+            await SearchSpells();
+        }
+    }
+
+    private async Task SearchSpells()
+    {
+        _searchResults = null;
+        StateHasChanged();
+
+        if (string.IsNullOrEmpty(_searchPattern))
+            return;
+
+        _searchCts.Cancel();
+        _searchCts.Token.Register(() => StateHasChanged());
+        _searchCts.Dispose();
+        _searchCts = new();
+
+        try
+        {
+            _searchResults = await SpellsClient.SearchV1Async(_searchPattern, _searchCts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            // Ignored due to re-search throttling
+        }
+    }
+
+    private async Task SelectSpell(SpellsSearchResponseItem item)
+    {
+        var url = item.Url;
+        if (string.IsNullOrEmpty(url))
+            return;
+
+        var details = await SpellsClient.GetDetailsV1Async(url, _searchCts.Token);
+        if (details is null)
+            return;
+
+        var link = SpellsClient.BuildDirectLink(details.Url);
+        var entity = details.ToSpellEntity(link);
+
+        _name = entity.Name;
+        _link = entity.Link;
+        _type = entity.Type;
+        _level = entity.Level;
+        _range = entity.Range;
+        _duration = entity.Duration;
+        _time = entity.Time;
+        _concentration = entity.Concentration;
+        _class = entity.Classes.FirstOrDefault() ?? string.Empty;
+        _upper = entity.Upper ?? string.Empty;
+        _verbalComponent = entity.VerbalComponent;
+        _somaticComponent = entity.SomaticComponent;
+        _materialComponent = entity.MaterialComponent;
+        _description = entity.Description;
+    }
 
     private async Task OnSave()
     {
@@ -149,7 +287,7 @@
                     VerbalComponent: _verbalComponent,
                     SomaticComponent: _somaticComponent,
                     MaterialComponent: _materialComponent,
-                    Class: _spellClass,
+                    Class: _class,
                     Description: _description,
                     PrintedCount: _printedCount,
                     Link: _link));
@@ -166,10 +304,17 @@
                     VerbalComponent: _verbalComponent,
                     SomaticComponent: _somaticComponent,
                     MaterialComponent: _materialComponent,
-                    Class: _spellClass,
+                    Class: _class,
                     Description: _description,
                     PrintedCount: _printedCount ?? 0,
-                    Link: _link));
+                    Link: _link,
+                    Range: _range,
+                    Duration: _duration,
+                    Time: _time,
+                    Level: _level,
+                    Upper: string.IsNullOrWhiteSpace(_upper) ? null : _upper,
+                    Concentration: _concentration,
+                    Source: Domain.Enums.Source.Manual));
 
                 _successMessage = $"'{_name}' added successfully.";
                 ResetForm();
@@ -195,12 +340,24 @@
     {
         _name = string.Empty;
         _type = string.Empty;
-        _spellClass = SpellClass.Wizard;
+        _level = 0;
+        _range = string.Empty;
+        _duration = string.Empty;
+        _time = string.Empty;
+        _concentration = false;
+        _class = string.Empty;
+        _upper = string.Empty;
         _verbalComponent = false;
         _somaticComponent = false;
-        _materialComponent = false;
+        _materialComponent = null;
         _description = string.Empty;
         _printedCount = null;
         _link = null;
+    }
+
+    public void Dispose()
+    {
+        _searchCts.Cancel();
+        _searchCts.Dispose();
     }
 }

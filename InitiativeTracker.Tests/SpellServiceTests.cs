@@ -38,7 +38,7 @@ public class SpellServiceTests
     [Test]
     public async Task AddAsync_ValidDto_ShouldAddSpell()
     {
-        var dto = CreateSpellCreateDto("Fireball", "Type", true, true, false, SpellClass.Wizard, "A bright streak flashes.");
+        var dto = CreateSpellCreateDto("Fireball", "Type", true, true, null, null, "A bright streak flashes.");
 
         await _service.AddAsync(dto);
 
@@ -47,15 +47,15 @@ public class SpellServiceTests
         result[0].Name.Should().Be("Fireball");
         result[0].VerbalComponent.Should().BeTrue();
         result[0].SomaticComponent.Should().BeTrue();
-        result[0].MaterialComponent.Should().BeFalse();
-        result[0].Class.Should().Be(SpellClass.Wizard);
+        result[0].MaterialComponent.Should().BeNull();
+        result[0].Classes.Should().ContainSingle(string.Empty);
         result[0].Description.Should().Be("A bright streak flashes.");
     }
 
     [Test]
     public async Task AddAsync_AllComponentsTrue_ShouldPersistAll()
     {
-        var dto = CreateSpellCreateDto("Lightning Bolt", "Type", true, true, true, SpellClass.Wizard, "A stroke of lightning.");
+        var dto = CreateSpellCreateDto("Lightning Bolt", "Type", true, true, "Some", null, "A stroke of lightning.");
 
         await _service.AddAsync(dto);
 
@@ -63,13 +63,13 @@ public class SpellServiceTests
         result.Should().HaveCount(1);
         result[0].VerbalComponent.Should().BeTrue();
         result[0].SomaticComponent.Should().BeTrue();
-        result[0].MaterialComponent.Should().BeTrue();
+        result[0].MaterialComponent.Should().Be("Some");
     }
 
     [Test]
     public async Task AddAsync_NoComponents_ShouldPersist()
     {
-        var dto = CreateSpellCreateDto("Shield", "Type", false, false, false, SpellClass.Wizard, "An invisible barrier.");
+        var dto = CreateSpellCreateDto("Shield", "Type", false, false, null, null, "An invisible barrier.");
 
         await _service.AddAsync(dto);
 
@@ -77,14 +77,14 @@ public class SpellServiceTests
         result.Should().HaveCount(1);
         result[0].VerbalComponent.Should().BeFalse();
         result[0].SomaticComponent.Should().BeFalse();
-        result[0].MaterialComponent.Should().BeFalse();
+        result[0].MaterialComponent.Should().BeNull();
     }
 
     [Test]
     public async Task AddAsync_MultipleSpells_ShouldPersistAll()
     {
-        await _service.AddAsync(CreateSpellCreateDto("Fireball", "Type", true, true, false, SpellClass.Wizard, "Fire."));
-        await _service.AddAsync(CreateSpellCreateDto("Cure Wounds", "Type", true, false, false, SpellClass.Cleric, "Healing."));
+        await _service.AddAsync(CreateSpellCreateDto("Fireball", "Type", true, true, null, null, "Fire."));
+        await _service.AddAsync(CreateSpellCreateDto("Cure Wounds", "Type", true, false, null, "Cleric", "Healing."));
 
         var result = await _dbContext.Spells.ToListAsync();
         result.Should().HaveCount(2);
@@ -93,44 +93,44 @@ public class SpellServiceTests
     [Test]
     public async Task AddAsync_ClericClass_ShouldPersist()
     {
-        var dto = CreateSpellCreateDto("Heal", "Type", true, false, true, SpellClass.Cleric, "Restores 70 HP.");
+        var dto = CreateSpellCreateDto("Heal", "Type", true, false, "Some", "Cleric", "Restores 70 HP.");
 
         await _service.AddAsync(dto);
 
         var result = await _dbContext.Spells.ToListAsync();
         result.Should().HaveCount(1);
-        result[0].Class.Should().Be(SpellClass.Cleric);
+        result[0].Classes.Should().Contain("Cleric");
     }
 
     [Test]
     public async Task AddAsync_BarbarianClass_ShouldPersist()
     {
-        var dto = CreateSpellCreateDto("Heroism", "Type", true, false, false, SpellClass.Barbarian, "Grants advantage.");
+        var dto = CreateSpellCreateDto("Heroism", "Type", true, false, null, "Barbarian", "Grants advantage.");
 
         await _service.AddAsync(dto);
 
         var result = await _dbContext.Spells.ToListAsync();
         result.Should().HaveCount(1);
-        result[0].Class.Should().Be(SpellClass.Barbarian);
+        result[0].Classes.Should().Contain("Barbarian");
     }
 
     [Test]
     public async Task AddAsync_DruidClass_ShouldPersist()
     {
-        var dto = CreateSpellCreateDto("Call Lightning", "Type", true, true, false, SpellClass.Druid, "Summons lightning.");
+        var dto = CreateSpellCreateDto("Call Lightning", "Type", true, true, null, "Druid", "Summons lightning.");
 
         await _service.AddAsync(dto);
 
         var result = await _dbContext.Spells.ToListAsync();
         result.Should().HaveCount(1);
-        result[0].Class.Should().Be(SpellClass.Druid);
+        result[0].Classes.Should().Contain("Druid");
     }
 
     [Test]
     public async Task AddAsync_HtmlDescription_ShouldPersist()
     {
         var htmlDesc = "<h4>Effect</h4><p>You hurl a <strong>veritable wand</strong> of thin flame.</p>";
-        var dto = CreateSpellCreateDto("Firebolt", "Type", true, true, false, SpellClass.Wizard, htmlDesc);
+        var dto = CreateSpellCreateDto("Firebolt", "Type", true, true, null, null, htmlDesc);
 
         await _service.AddAsync(dto);
 
@@ -144,7 +144,7 @@ public class SpellServiceTests
     [Test]
     public async Task GetByIdAsync_ExistingId_ShouldReturnSpell()
     {
-        var dto = CreateSpellCreateDto("Fireball", "Type", true, true, false, SpellClass.Wizard, "A bright streak flashes.");
+        var dto = CreateSpellCreateDto("Fireball", "Type", true, true, null, null, "A bright streak flashes.");
         await _service.AddAsync(dto);
 
         var entity = (await _dbContext.Spells.ToListAsync())[0];
@@ -152,7 +152,7 @@ public class SpellServiceTests
 
         found.Should().NotBeNull();
         found!.Name.Should().Be("Fireball");
-        found.Class.Should().Be(SpellClass.Wizard);
+        found.Classes.Should().ContainSingle(string.Empty);
     }
 
     [Test]
@@ -168,7 +168,7 @@ public class SpellServiceTests
     [Test]
     public async Task UpdateAsync_ExistingName_ShouldUpdateName()
     {
-        var dto = CreateSpellCreateDto("Fireball", "Type", true, true, false, SpellClass.Wizard, "Fire.");
+        var dto = CreateSpellCreateDto("Fireball", "Type", true, true, null, null, "Fire.");
         await _service.AddAsync(dto);
 
         var entity = (await _dbContext.Spells.ToListAsync())[0];
@@ -182,7 +182,7 @@ public class SpellServiceTests
     [Test]
     public async Task UpdateAsync_NullName_ShouldNotChangeName()
     {
-        var dto = CreateSpellCreateDto("Fireball", "Type", true, true, false, SpellClass.Wizard, "Fire.");
+        var dto = CreateSpellCreateDto("Fireball", "Type", true, true, null, null, "Fire.");
         await _service.AddAsync(dto);
 
         var entity = (await _dbContext.Spells.ToListAsync())[0];
@@ -196,7 +196,7 @@ public class SpellServiceTests
     [Test]
     public async Task UpdateAsync_EmptyName_ShouldNotChangeName()
     {
-        var dto = CreateSpellCreateDto("Fireball", "Type", true, true, false, SpellClass.Wizard, "Fire.");
+        var dto = CreateSpellCreateDto("Fireball", "Type", true, true, null, null, "Fire.");
         await _service.AddAsync(dto);
 
         var entity = (await _dbContext.Spells.ToListAsync())[0];
@@ -210,7 +210,7 @@ public class SpellServiceTests
     [Test]
     public async Task UpdateAsync_WithVerbalComponent_ShouldUpdate()
     {
-        var dto = CreateSpellCreateDto("Shield", "Type", false, false, false, SpellClass.Wizard, "Barrier.");
+        var dto = CreateSpellCreateDto("Shield", "Type", false, false, null, null, "Barrier.");
         await _service.AddAsync(dto);
 
         var entity = (await _dbContext.Spells.ToListAsync())[0];
@@ -224,7 +224,7 @@ public class SpellServiceTests
     [Test]
     public async Task UpdateAsync_WithSomaticComponent_ShouldUpdate()
     {
-        var dto = CreateSpellCreateDto("Shield", "Type", false, false, false, SpellClass.Wizard, "Barrier.");
+        var dto = CreateSpellCreateDto("Shield", "Type", false, false, null, null, "Barrier.");
         await _service.AddAsync(dto);
 
         var entity = (await _dbContext.Spells.ToListAsync())[0];
@@ -238,35 +238,35 @@ public class SpellServiceTests
     [Test]
     public async Task UpdateAsync_WithMaterialComponent_ShouldUpdate()
     {
-        var dto = CreateSpellCreateDto("Shield", "Type", false, false, false, SpellClass.Wizard, "Barrier.");
+        var dto = CreateSpellCreateDto("Shield", "Type", false, false, null, null, "Barrier.");
         await _service.AddAsync(dto);
 
         var entity = (await _dbContext.Spells.ToListAsync())[0];
 
-        await _service.UpdateAsync(entity.Id, new SpellUpdateDto(null, null, null, null, true, null, null, null, null));
+        await _service.UpdateAsync(entity.Id, new SpellUpdateDto(null, null, null, null, "Some", null, null, null, null));
 
         var updated = await _service.GetByIdAsync(entity.Id);
-        updated!.MaterialComponent.Should().BeTrue();
+        updated!.MaterialComponent.Should().Be("Some");
     }
 
     [Test]
     public async Task UpdateAsync_WithClass_ShouldUpdateClass()
     {
-        var dto = CreateSpellCreateDto("Heroism", "Type", true, false, false, SpellClass.Paladin, "Courage.");
+        var dto = CreateSpellCreateDto("Heroism", "Type", true, false, null, "Paladin", "Courage.");
         await _service.AddAsync(dto);
 
         var entity = (await _dbContext.Spells.ToListAsync())[0];
 
-        await _service.UpdateAsync(entity.Id, new SpellUpdateDto(null, null, null, null, null, SpellClass.Bard, null, null, null));
+        await _service.UpdateAsync(entity.Id, new SpellUpdateDto(null, null, null, null, null, "Bard", null, null, null));
 
         var updated = await _service.GetByIdAsync(entity.Id);
-        updated!.Class.Should().Be(SpellClass.Bard);
+        updated!.Classes.Should().Contain("Bard");
     }
 
     [Test]
     public async Task UpdateAsync_WithDescription_ShouldUpdateDescription()
     {
-        var dto = CreateSpellCreateDto("Fireball", "Type", true, true, false, SpellClass.Wizard, "Fire.");
+        var dto = CreateSpellCreateDto("Fireball", "Type", true, true, null, null, "Fire.");
         await _service.AddAsync(dto);
 
         var entity = (await _dbContext.Spells.ToListAsync())[0];
@@ -280,7 +280,7 @@ public class SpellServiceTests
     [Test]
     public async Task UpdateAsync_WithPrintedCount_ShouldUpdatePrintedCount()
     {
-        var dto = CreateSpellCreateDto("Fireball", "Type", true, true, false, SpellClass.Wizard, "Fire.");
+        var dto = CreateSpellCreateDto("Fireball", "Type", true, true, null, null, "Fire.");
         await _service.AddAsync(dto);
 
         var entity = (await _dbContext.Spells.ToListAsync())[0];
@@ -294,7 +294,7 @@ public class SpellServiceTests
     [Test]
     public async Task UpdateAsync_WithLink_ShouldUpdateLink()
     {
-        var dto = CreateSpellCreateDto("Fireball", "Type", true, true, false, SpellClass.Wizard, "Fire.");
+        var dto = CreateSpellCreateDto("Fireball", "Type", true, true, null, null, "Fire.");
         await _service.AddAsync(dto);
 
         var entity = (await _dbContext.Spells.ToListAsync())[0];
@@ -308,7 +308,7 @@ public class SpellServiceTests
     [Test]
     public async Task UpdateAsync_NonExistentId_ShouldNotThrow()
     {
-        var act = () => _service.UpdateAsync(999, new SpellUpdateDto("Name", "Type", true, false, false, SpellClass.Wizard, null, null, null));
+        var act = () => _service.UpdateAsync(999, new SpellUpdateDto("Name", "Type", true, false, null, null, null, null, null));
 
         await act.Should().NotThrowAsync();
 
@@ -318,19 +318,19 @@ public class SpellServiceTests
     [Test]
     public async Task UpdateAsync_PartialUpdate_ShouldOnlyChangeProvidedFields()
     {
-        var dto = CreateSpellCreateDto("Fireball", "Type", true, true, false, SpellClass.Wizard, "Fire.");
+        var dto = CreateSpellCreateDto("Fireball", "Type", true, true, null, null, "Fire.");
         await _service.AddAsync(dto);
 
         var entity = (await _dbContext.Spells.ToListAsync())[0];
 
-        await _service.UpdateAsync(entity.Id, new SpellUpdateDto(null, null, null, null, true, SpellClass.Sorcerer, null, null, null));
+        await _service.UpdateAsync(entity.Id, new SpellUpdateDto(null, null, null, null, "Some", "Sorcerer", null, null, null));
 
         var updated = await _service.GetByIdAsync(entity.Id);
         updated!.Name.Should().Be("Fireball");
         updated.VerbalComponent.Should().BeTrue();
         updated.SomaticComponent.Should().BeTrue();
-        updated.MaterialComponent.Should().BeTrue();
-        updated.Class.Should().Be(SpellClass.Sorcerer);
+        updated.MaterialComponent.Should().NotBeEmpty();
+        updated.Classes.Should().Contain("Sorcerer");
         updated.Description.Should().Be("Fire.");
     }
 
@@ -339,7 +339,7 @@ public class SpellServiceTests
     [Test]
     public async Task DeleteAsync_ExistingId_ShouldRemoveSpell()
     {
-        var dto = CreateSpellCreateDto("Fireball", "Type", true, true, false, SpellClass.Wizard, "Fire.");
+        var dto = CreateSpellCreateDto("Fireball", "Type", true, true, null, null, "Fire.");
         await _service.AddAsync(dto);
 
         var entity = (await _dbContext.Spells.ToListAsync())[0];
@@ -362,9 +362,9 @@ public class SpellServiceTests
     [Test]
     public async Task SearchAsync_MatchingQuery_ShouldReturnSubset()
     {
-        await _service.AddAsync(CreateSpellCreateDto("Fireball", "Type", true, true, false, SpellClass.Wizard, "Fire."));
-        await _service.AddAsync(CreateSpellCreateDto("Fire Shield", "Type", true, true, false, SpellClass.Wizard, "Shield."));
-        await _service.AddAsync(CreateSpellCreateDto("Cure Wounds", "Type", true, false, false, SpellClass.Cleric, "Heal."));
+        await _service.AddAsync(CreateSpellCreateDto("Fireball", "Type", true, true, null, null, "Fire."));
+        await _service.AddAsync(CreateSpellCreateDto("Fire Shield", "Type", true, true, null, null, "Shield."));
+        await _service.AddAsync(CreateSpellCreateDto("Cure Wounds", "Type", true, false, null, "Cleric", "Heal."));
 
         var result = await _service.SearchAsync("fire");
 
@@ -375,7 +375,7 @@ public class SpellServiceTests
     [Test]
     public async Task SearchAsync_NoMatch_ShouldReturnEmpty()
     {
-        await _service.AddAsync(CreateSpellCreateDto("Fireball", "Type", true, true, false, SpellClass.Wizard, "Fire."));
+        await _service.AddAsync(CreateSpellCreateDto("Fireball", "Type", true, true, null, null, "Fire."));
 
         var result = await _service.SearchAsync("healing");
 
@@ -385,8 +385,8 @@ public class SpellServiceTests
     [Test]
     public async Task SearchAsync_EmptyQuery_ShouldReturnAll()
     {
-        await _service.AddAsync(CreateSpellCreateDto("Fireball", "Type", true, true, false, SpellClass.Wizard, "Fire."));
-        await _service.AddAsync(CreateSpellCreateDto("Cure Wounds", "Type", true, false, false, SpellClass.Cleric, "Heal."));
+        await _service.AddAsync(CreateSpellCreateDto("Fireball", "Type", true, true, null, null, "Fire."));
+        await _service.AddAsync(CreateSpellCreateDto("Cure Wounds", "Type", true, false, null, "Cleric", "Heal."));
 
         var result = await _service.SearchAsync("");
 
@@ -396,7 +396,7 @@ public class SpellServiceTests
     [Test]
     public async Task SearchAsync_NullQuery_ShouldReturnAll()
     {
-        await _service.AddAsync(CreateSpellCreateDto("Fireball", "Type", true, true, false, SpellClass.Wizard, "Fire."));
+        await _service.AddAsync(CreateSpellCreateDto("Fireball", "Type", true, true, null, null, "Fire."));
 
         var result = await _service.SearchAsync(null!);
 
@@ -406,7 +406,7 @@ public class SpellServiceTests
     [Test]
     public async Task SearchAsync_CaseInsensitive_ShouldMatch()
     {
-        await _service.AddAsync(CreateSpellCreateDto("Fireball", "Type", true, true, false, SpellClass.Wizard, "Fire."));
+        await _service.AddAsync(CreateSpellCreateDto("Fireball", "Type", true, true, null, null, "Fire."));
 
         var result = await _service.SearchAsync("FIREBALL");
 
@@ -417,7 +417,7 @@ public class SpellServiceTests
     [Test]
     public async Task SearchAsync_WhitespaceQuery_ShouldReturnAll()
     {
-        await _service.AddAsync(CreateSpellCreateDto("Fireball", "Type", true, true, false, SpellClass.Wizard, "Fire."));
+        await _service.AddAsync(CreateSpellCreateDto("Fireball", "Type", true, true, null, null, "Fire."));
 
         var result = await _service.SearchAsync("   ");
 
@@ -429,10 +429,35 @@ public class SpellServiceTests
         string type,
         bool verbal,
         bool somatic,
-        bool material,
-        SpellClass spellClass,
+        string? material,
+        string? spellClass,
         string description,
         int printedCount = 0,
-        string? link = null) =>
-        new(name, type, verbal, somatic, material, spellClass, description, printedCount, link);
+        string? link = null,
+        string range = default,
+        string duration = default,
+        string time = default,
+        int level = default,
+        string? upper = default,
+        bool concentration = default,
+        Source source = default
+    ) =>
+        new(
+            name,
+            type,
+            verbal,
+            somatic,
+            material,
+            spellClass ?? string.Empty,
+            description,
+            printedCount,
+            link,
+            range ?? string.Empty,
+            duration ?? string.Empty,
+            time ?? string.Empty,
+            level,
+            upper,
+            concentration,
+            source
+        );
 }

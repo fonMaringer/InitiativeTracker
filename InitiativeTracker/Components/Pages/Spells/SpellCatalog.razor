@@ -33,18 +33,18 @@
                         @spell.Name
                     }
                     <span class="badge bg-secondary ms-2">@spell.Type</span>
-                    <span class="badge bg-secondary ms-2">@spell.Class</span>
+                    <span class="badge bg-secondary ms-2">@spell.Classes.FirstOrDefault()</span>
                     @if (spell.VerbalComponent)
                     {
                         <span class="badge bg-info ms-1">V</span>
                     }
                     @if (spell.SomaticComponent)
                     {
-                        <span class="badge bg-info ms-1">J</span>
+                        <span class="badge bg-info ms-1">S</span>
                     }
-                    @if (spell.MaterialComponent)
+                    @if (!string.IsNullOrEmpty(spell.MaterialComponent))
                     {
-                        <span class="badge bg-info ms-1">R</span>
+                        <span class="badge bg-info ms-1">M</span>
                     }
                 </div>
                 <div class="col-md-4">

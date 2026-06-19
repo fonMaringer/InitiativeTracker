@@ -14,6 +14,7 @@ public static class DiExtensions
             services.Configure<TtgClubClientOptions>(configuration.GetSection(nameof(TtgClubClientOptions)));
             services.AddSingleton<IBestiaryClient, BestiaryClient>();
             services.AddSingleton<IMagicItemsClient, MagicItemsClient>();
+            services.AddSingleton<ISpellsClient, SpellsClient>();
 
             return services;
         }

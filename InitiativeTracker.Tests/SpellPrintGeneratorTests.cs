@@ -14,7 +14,7 @@ public class SpellPrintGeneratorTests
     {
         var spells = new[]
         {
-            CreateSpellDto("Fireball", "Type", true, true, false, SpellClass.Wizard, "A bright streak flashes.")
+            CreateSpellDto("Fireball", "Type", true, true, null, "Wizard", "A bright streak flashes.")
         };
 
         var html = _generator.Generate(spells);
@@ -33,7 +33,7 @@ public class SpellPrintGeneratorTests
     {
         var spells = new[]
         {
-            CreateSpellDto("Lightning Bolt", "Type", true, true, true, SpellClass.Wizard, "A stroke of lightning.")
+            CreateSpellDto("Lightning Bolt", "Type", true, true, "Some", null, "A stroke of lightning.")
         };
 
         var html = _generator.Generate(spells);
@@ -48,7 +48,7 @@ public class SpellPrintGeneratorTests
     {
         var spells = new[]
         {
-            CreateSpellDto("Shield", "Type", false, false, false, SpellClass.Wizard, "An invisible barrier.")
+            CreateSpellDto("Shield", "Type", false, false, null, null, "An invisible barrier.")
         };
 
         var html = _generator.Generate(spells);
@@ -61,8 +61,8 @@ public class SpellPrintGeneratorTests
     {
         var spells = new[]
         {
-            CreateSpellDto("Fireball", "Type", true, true, false, SpellClass.Wizard, "Fire."),
-            CreateSpellDto("Cure Wounds", "Type", true, false, false, SpellClass.Cleric, "Healing.")
+            CreateSpellDto("Fireball", "Type", true, true, null, "Wizard", "Fire."),
+            CreateSpellDto("Cure Wounds", "Type", true, false, null, "Cleric", "Healing.")
         };
 
         var html = _generator.Generate(spells);
@@ -78,10 +78,10 @@ public class SpellPrintGeneratorTests
     {
         var spells = new[]
         {
-            CreateSpellDto("Fireball", "Type", true, true, false, SpellClass.Wizard, "1"),
-            CreateSpellDto("Cure Wounds", "Type", true, false, false, SpellClass.Cleric, "2"),
-            CreateSpellDto("Shield", "Type", false, false, false, SpellClass.Wizard, "3"),
-            CreateSpellDto("Mage Armor", "Type", false, true, false, SpellClass.Wizard, "4")
+            CreateSpellDto("Fireball", "Type", true, true, null, null, "1"),
+            CreateSpellDto("Cure Wounds", "Type", true, false, null, "Some", "2"),
+            CreateSpellDto("Shield", "Type", false, false, null, null, "3"),
+            CreateSpellDto("Mage Armor", "Type", false, true, null, null, "4")
         };
 
         var html = _generator.Generate(spells);
@@ -95,9 +95,9 @@ public class SpellPrintGeneratorTests
     {
         var spells = new[]
         {
-            CreateSpellDto("Fireball", "Type", true, true, false, SpellClass.Wizard, "1"),
-            CreateSpellDto("Cure Wounds", "Type", true, false, false, SpellClass.Cleric, "2"),
-            CreateSpellDto("Shield", "Type", false, false, false, SpellClass.Wizard, "3")
+            CreateSpellDto("Fireball", "Type", true, true, null, null, "1"),
+            CreateSpellDto("Cure Wounds", "Type", true, false, null, "Some", "2"),
+            CreateSpellDto("Shield", "Type", false, false, null, null, "3")
         };
 
         var html = _generator.Generate(spells);
@@ -123,7 +123,7 @@ public class SpellPrintGeneratorTests
     {
         var spells = new[]
         {
-            CreateSpellDto("Heal", "Type", true, false, true, SpellClass.Druid, "Long description.")
+            CreateSpellDto("Heal", "Type", true, false, "Some", "Druid", "Long description.")
         };
 
         var html = _generator.Generate(spells);
@@ -138,7 +138,7 @@ public class SpellPrintGeneratorTests
         var htmlDesc = "<h4>Effect</h4><p>You hurl a <strong>wand</strong> of flame.</p>";
         var spells = new[]
         {
-            CreateSpellDto("Firebolt", "Type", true, true, false, SpellClass.Sorcerer, htmlDesc)
+            CreateSpellDto("Firebolt", "Type", true, true, null, null, htmlDesc)
         };
 
         var html = _generator.Generate(spells);
@@ -151,7 +151,7 @@ public class SpellPrintGeneratorTests
     {
         var spells = new[]
         {
-            CreateSpellDto("Blank Spell", "Type", false, false, false, SpellClass.Bard, null)
+            CreateSpellDto("Blank Spell", "Type", false, false, null, null, null)
         };
 
         var html = _generator.Generate(spells);
@@ -165,7 +165,7 @@ public class SpellPrintGeneratorTests
     {
         var spells = new[]
         {
-            CreateSpellDto("Heroism", "Type", true, false, false, SpellClass.Barbarian, "Courage aura.")
+            CreateSpellDto("Heroism", "Type", true, false, null, "Barbarian", "Courage aura.")
         };
 
         var html = _generator.Generate(spells);
@@ -178,7 +178,7 @@ public class SpellPrintGeneratorTests
     {
         var spells = new[]
         {
-            CreateSpellDto("Fireball", "Type", true, true, false, SpellClass.Wizard, "Fire.")
+            CreateSpellDto("Fireball", "Type", true, true, null, null, "Fire.")
         };
 
         var html = _generator.Generate(spells);
@@ -196,7 +196,7 @@ public class SpellPrintGeneratorTests
     {
         var spells = new List<PokerCardPrintDataDto>();
         for (var i = 0; i < 8; i++)
-            spells.Add(CreateSpellDto($"Spell {i}", "Type", true, false, false, SpellClass.Wizard, $"Desc {i}"));
+            spells.Add(CreateSpellDto($"Spell {i}", "Type", true, false, null, null, $"Desc {i}"));
 
         var html = _generator.Generate(spells);
 
@@ -204,13 +204,13 @@ public class SpellPrintGeneratorTests
         cardCount.Should().Be(8);
     }
 
-    static PokerCardPrintDataDto CreateSpellDto(string name, string type, bool verbal, bool somatic, bool material, SpellClass spellClass, string description)
+    static PokerCardPrintDataDto CreateSpellDto(string name, string type, bool verbal, bool somatic, string? material, string spellClass, string description)
     {
         var flags = new List<string>();
         if (verbal) flags.Add("V");
         if (somatic) flags.Add("S");
-        if (material) flags.Add("M");
-        return new(name, type, flags, description ?? "", spellClass.ToString());
+        if (!string.IsNullOrEmpty(material)) flags.Add("M");
+        return new(name, type, flags, description ?? "", spellClass);
     }
 
     static int RegexCount(string text, string pattern) => Regex.Matches(text, pattern).Count;

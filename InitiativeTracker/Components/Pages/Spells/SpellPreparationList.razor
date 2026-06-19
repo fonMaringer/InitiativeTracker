@@ -20,7 +20,7 @@
             {
                 <div class="grid-row">
                     <div class="grid-cell">@printItem.Spell.Name</div>
-                    <div class="grid-cell">@printItem.Spell.Class</div>
+                    <div class="grid-cell">@printItem.Spell.Classes.FirstOrDefault()</div>
                     <div class="grid-cell">
                         <NumberInput TValue="int" 
                                      @bind-Value="@printItem.Quantity"
@@ -83,13 +83,13 @@
                 var flags = new List<string>();
                 if (entity.VerbalComponent) flags.Add("V");
                 if (entity.SomaticComponent) flags.Add("S");
-                if (entity.MaterialComponent) flags.Add("M");
+                if (!string.IsNullOrEmpty(entity.MaterialComponent)) flags.Add("M");
                 printDataList.Add(new PokerCardPrintDataDto(
                     entity.Name,
                     entity.Type,
                     flags,
                     entity.Description,
-                    entity.Class.ToString()));
+                    entity.Classes.FirstOrDefault()));
             }
         }
 

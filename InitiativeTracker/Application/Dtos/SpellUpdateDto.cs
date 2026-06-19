@@ -1,5 +1,3 @@
-using InitiativeTracker.Domain.Enums;
-
 namespace InitiativeTracker.Application.Dtos;
 
 public record SpellUpdateDto(
@@ -7,8 +5,8 @@ public record SpellUpdateDto(
     string? Type,
     bool? VerbalComponent,
     bool? SomaticComponent,
-    bool? MaterialComponent,
-    SpellClass? Class,
+    string? MaterialComponent,
+    string? Class,
     string? Description,
     int? PrintedCount,
     string? Link);

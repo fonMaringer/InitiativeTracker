@@ -2,8 +2,10 @@
   <Folder Name="/common/">
     <File Path=".gitignore" />
     <File Path=".gitmodules" />
-    <File Path="PLAN.md" />
+    <File Path="AGENTS.md" />
+    <File Path="Context.md" />
     <File Path="readme.md" />
+    <File Path="SYSTEM_DESIGN.md" />
   </Folder>
   <Project Path="InitiativeTracker.Tests/InitiativeTracker.Tests.csproj" />
   <Project Path="InitiativeTracker/InitiativeTracker.csproj" />

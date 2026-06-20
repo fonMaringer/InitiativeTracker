@@ -9,10 +9,9 @@
     }
     else
     {
-        <div class="grid-table" style="grid-template-columns: 250px 120px 80px 80px">
+        <div class="grid-table" style="grid-template-columns: 250px 80px 80px">
             <div class="grid-header">
                 <div>Name</div>
-                <div>Class</div>
                 <div>Qty</div>
                 <div></div>
             </div>
@@ -20,7 +19,6 @@
             {
                 <div class="grid-row">
                     <div class="grid-cell">@printItem.Spell.Name</div>
-                    <div class="grid-cell">@printItem.Spell.Classes.FirstOrDefault()</div>
                     <div class="grid-cell">
                         <NumberInput TValue="int" 
                                      @bind-Value="@printItem.Quantity"
@@ -82,21 +80,25 @@
             for (var n = 0; n < printItem.Quantity; n++)
             {
                 var flags = new List<string>();
-                if (entity.VerbalComponent) flags.Add("V");
-                if (entity.SomaticComponent) flags.Add("S");
-                if (!string.IsNullOrEmpty(entity.MaterialComponent)) flags.Add($"M ({entity.MaterialComponent})");
+                if (entity.Concentration)
+                    flags.Add("C");
+                
+                var components = new List<string>();
+                if (entity.VerbalComponent) components.Add("<b>V</b>");
+                if (entity.SomaticComponent) components.Add("<b>S</b>");
+                if (!string.IsNullOrEmpty(entity.MaterialComponent)) components.Add($"<b>M</b> ({entity.MaterialComponent})");
                 var additionalInfo = new[]
                 {
-                    string.Join(", ", flags),
-                    entity.Time,
-                    entity.Range,
-                    entity.Duration,
+                    $"<b>Time:</b> {entity.Time}",
+                    $"<b>Distance:</b> {entity.Range}",
+                    $"<b>Components:</b> {string.Join(", ", components)}",
+                    $"<b>Duration:</b> {entity.Duration}",
                 };
                 printDataList.Add(
                     new PokerCardPrintDataDto(
                         entity.Name,
                         $"{entity.LevelDescription}, {entity.Type}",
-                        [],
+                        flags,
                         additionalInfo,
                         entity.Description,
                         entity.Upper,

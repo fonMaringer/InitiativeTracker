@@ -1,12 +1,11 @@
 @rendermode InteractiveServer
+@implements IDisposable;
 @using InitiativeTracker.Application
 @using InitiativeTracker.Application.Dtos
 @using InitiativeTracker.Domain.Entities
 @using InitiativeTracker.Domain.Enums
 @using InitiativeTracker.Integration.RestClients.TtgClub
 @using InitiativeTracker.Integration.RestClients.TtgClub.Contracts.V1
-@using Microsoft.AspNetCore.Components.Forms
-@using Microsoft.JSInterop
 
 <div id="addMiniatureForm" tabindex="0">
     <h5>@(_editMiniature != null ? "Edit miniature" : "Add miniature")</h5>
@@ -14,9 +13,9 @@
     @if (_editMiniature == null)
     {
         <div style="margin-bottom: 15px;">
-            <h6>Search from ttg.club bestiary</h6>
+            <h6>Add from ttg.club bestiary</h6>
             <div style="display: flex">
-                <TextInput @bind-Value="@_searchPattern" @onkeyup="OnKeyUpSearch" style="width: 200px; margin-right: 10px"/>
+                <TextInput @bind-Value="@_searchPattern" @onkeyup="OnKeyUpSearch" style="width: 300px; margin-right: 10px"/>
                 <Button Color="ButtonColor.Dark" @onclick="SearchBestiary">
                     <Icon Name="IconName.Search" Size="IconSize.x6"/>
                 </Button>
@@ -39,7 +38,7 @@
                             <div class="grid-cell">@result.ChallengeRating</div>
                             <div class="grid-cell">
                                 <Button Color="ButtonColor.Dark" @onclick="() => SelectMiniature(result)" TooltipPlacement="TooltipPlacement.Bottom" TooltipTitle="Select to fill form fields">
-                                    <Icon Name="IconName.Check" Size="IconSize.x6"/>
+                                    <Icon Name="IconName.Plus" Size="IconSize.x6"/>
                                 </Button>
                             </div>
                         </div>
@@ -124,9 +123,9 @@
     private bool _isProcessing;
     private string? _errorMessage;
     private string? _successMessage;
-    private int? _printedCount;
+    private int? _printedCount = 0;
 
-    private readonly CreatureSize[] _sizeOptions = Enum.GetValues<CreatureSize>().ToArray();
+    private readonly CreatureSize[] _sizeOptions = Enum.GetValues<CreatureSize>();
     private bool _isDisabled => _isProcessing || string.IsNullOrWhiteSpace(_name) || (_editMiniature == null && _imageData == null);
 
     [Parameter] public EventCallback OnDataChanged { get; set; }
@@ -147,7 +146,7 @@
 
     private string _searchPattern = string.Empty;
     private BestiarySearchResponseItem[]? _searchResults;
-    private readonly CancellationTokenSource _searchCts = new();
+    private CancellationTokenSource _searchCts = new();
 
     private async Task OnKeyUpSearch(KeyboardEventArgs? e)
     {
@@ -166,6 +165,11 @@
         {
             return;
         }
+
+        await _searchCts.CancelAsync();
+        _searchCts.Token.Register(StateHasChanged);
+        _searchCts.Dispose();
+        _searchCts = new();
 
         try
         {
@@ -197,7 +201,6 @@
             _name = details.Name.Rus;
             _link = link;
             _size = details.Size.CreatureSize;
-            _printedCount = 1;
 
             // Find first image URL that doesn't contain "tokens"
             var imageUrl = details.Images.FirstOrDefault(img => !img.Contains("tokens", StringComparison.OrdinalIgnoreCase));

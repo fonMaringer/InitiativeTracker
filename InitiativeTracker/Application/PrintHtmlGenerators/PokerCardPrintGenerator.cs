@@ -38,14 +38,14 @@ public class PokerCardPrintGenerator
         sb.AppendLine(".poker-card > div:last-child { border-radius: 0 0 4px 4px; }");
         sb.AppendLine(".card-title { font-weight:bold; font-size:10px; margin-bottom:2px; ");
         sb.AppendLine("              background-color: white; border-radius: 4px 4px 0 0; padding-left: 3px; }");
-        sb.AppendLine(".card-subtitle { font-size:7px; margin-bottom:2px; flex-shrink:0; padding: 0px 2px; ");
-        sb.AppendLine("              background-color: white; }");
-        sb.AppendLine(".flag-badge { display: inline-block; background: #10399b; color:#fff; font-weight:bold; ");
-        sb.AppendLine("              font-size: 7px; padding: 0px 2px; border-radius:2px; margin-right:2px; margin-left: -2px; }");
-        sb.AppendLine(".card-additional-info { font-size: 7px; margin-bottom:2px; flex-shrink:0; padding: 0px 2px; ");
-        sb.AppendLine("              background-color: white; }");
-        sb.AppendLine(".additional-info-badge { display:inline-block; ");
-        sb.AppendLine("                         font-size: 7px; padding:1px 2px; border-radius:2px; margin-right:2px; }");
+        sb.AppendLine(".card-subtitle { font-size:7px; margin-bottom:2px; flex-shrink:0; padding-left: 2px; ");
+        sb.AppendLine("                 background-color: white; display: flex; }");
+        sb.AppendLine(".card-subtitle-text { flex: 1; }");
+        sb.AppendLine(".flag-badge { flex-shrink: 0; background: #c0392b; color:#fff; font-weight:bold; ");
+        sb.AppendLine("              font-size: 7px; padding: 0px 2px; }");
+        sb.AppendLine(".card-additional-info { font-size: 7px; margin-bottom:2px; gap: 2px; ");
+        sb.AppendLine("              display: grid; grid-template-columns: repeat(2, 1fr); }");
+        sb.AppendLine(".card-additional-info > span { padding: 0px 2px; background-color: white; }");
         sb.AppendLine(".card-content { flex:1; overflow:hidden; font-size: 7px; ");
         sb.AppendLine("                background-color: white; padding: 2px; }");
         sb.AppendLine(".card-subfooter { font-size: 7px; margin-top:2px; flex-shrink:0; padding: 2px; ");
@@ -84,13 +84,13 @@ public class PokerCardPrintGenerator
         sb.Append($"<div class=\"poker-card\">");
         sb.Append($"  <div class=\"card-title\">{HttpUtility.HtmlEncode(item.Title)}</div>");
         sb.Append($"  <div class=\"card-subtitle\">");
+        if (item.Subtitle is not null)
+        {
+            sb.Append($"<span class=\"card-subtitle-text\">{HttpUtility.HtmlEncode(item.Subtitle)}</span>");
+        }
         foreach (var flag in item.Flags)
         {
             sb.Append($"<span class=\"flag-badge\">{flag}</span>");
-        }
-        if (item.Subtitle is not null)
-        {
-            sb.Append($"{HttpUtility.HtmlEncode(item.Subtitle)}");
         }
         sb.AppendLine("</div>");
         if (item.AdditionalInfo.Any())
@@ -98,7 +98,7 @@ public class PokerCardPrintGenerator
             sb.Append($"  <div class=\"card-additional-info\">");
             foreach (var info in item.AdditionalInfo)
             {
-                sb.Append($"<span class=\"additional-info-badge\">{info}</span>");
+                sb.Append($"<span>{info}</span>");
             }
             sb.AppendLine("</div>");
         }

@@ -174,7 +174,7 @@
 
 @code
 {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _searchCts = new();
 
     private BestiarySearchResponseItem[]? _searchResults;
 
@@ -200,7 +200,12 @@
             return;
         }
 
-        _searchResults = await BestiaryClient.SearchV1Async(_searchPattern, _cts.Token);
+        await _searchCts.CancelAsync();
+        _searchCts.Token.Register(StateHasChanged);
+        _searchCts.Dispose();
+        _searchCts = new();
+
+        _searchResults = await BestiaryClient.SearchV1Async(_searchPattern, _searchCts.Token);
     }
 
     private async Task Add(BestiarySearchResponseItem item, HitsMode hitsMode)
@@ -211,7 +216,7 @@
             return;
         }
 
-        var details = await BestiaryClient.GetDetailsV1Async(url, _cts.Token);
+        var details = await BestiaryClient.GetDetailsV1Async(url, _searchCts.Token);
         
         if (details is null)
             return;
@@ -246,8 +251,8 @@
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _searchCts.Cancel();
+        _searchCts.Dispose();
     }
     
     private static string GetItemStyle(InitiativeListItem item)

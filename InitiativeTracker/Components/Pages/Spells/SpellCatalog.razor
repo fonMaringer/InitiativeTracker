@@ -4,7 +4,7 @@
 
 <div>
     <div class="mb-3" style="display: flex; align-items: center;">
-        <TextInput @bind-Value="_searchQuery" @onkeyup="OnKeyUpSearch" Style="flex-grow: 1; margin-right: 10px"/>
+        <TextInput @bind-Value="_searchQuery" @onkeyup="OnKeyUpSearch" Style="width: 300px; margin-right: 10px"/>
         <Button Color="ButtonColor.Dark" @onclick="(_ => _onSearch())">
             <Icon Name="IconName.Search" Size="IconSize.x6"/>
         </Button>
@@ -20,6 +20,10 @@
     }
     else
     {
+        <div class="row mb-2">
+            <div class="col-md-5">Name</div>
+            <div class="col-md-2">Printed count</div>
+        </div>
         @foreach (var spell in _spells)
         {
             <div class="row mb-2 align-items-center catalog-row" style="cursor: pointer;" @onclick="() => SelectForEdit(spell)">
@@ -47,20 +51,17 @@
                         <span class="badge bg-info ms-1">M</span>
                     }
                 </div>
-                <div class="col-md-4">
-                    @(Truncate(spell.Description, 60))
-                </div>
-                <div class="col-md-4">
+                <div class="col-md-2">
                     @(spell.PrintedCount)
                 </div>
                 <div class="col-md-3 d-flex gap-1 align-items-center justify-content-end" @onclick:stopPropagation="true">
-                    <Button Color="ButtonColor.Success" Outline="true" Size="ButtonSize.Small" 
-                            @onclick="() => OnAddToPrint(spell)">
-                        <Icon Name="IconName.Plus" Size="IconSize.x6"/> Add to print list
+                    <Button Color="ButtonColor.Success" Outline="true" Size="ButtonSize.Small" @onclick="() => OnAddToPrint(spell)"
+                            TooltipPlacement="TooltipPlacement.Bottom" TooltipTitle="Add to print list">
+                        <Icon Name="IconName.Printer" Size="IconSize.x6"/>
                     </Button>
                     <Button Color="ButtonColor.Danger" Outline="true" Size="ButtonSize.Small"
                             @onclick="() => OnDelete(spell)">
-                        <Icon Name="IconName.Trash" Size="IconSize.x6"/> Delete
+                        <Icon Name="IconName.Trash" Size="IconSize.x6"/>
                     </Button>
                 </div>
             </div>

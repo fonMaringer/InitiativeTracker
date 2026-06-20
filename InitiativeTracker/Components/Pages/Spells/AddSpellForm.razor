@@ -3,7 +3,6 @@
 @using InitiativeTracker.Application
 @using InitiativeTracker.Application.Dtos
 @using InitiativeTracker.Domain.Entities
-@using InitiativeTracker.Domain.Enums
 @using InitiativeTracker.Integration.RestClients.TtgClub
 @using InitiativeTracker.Integration.RestClients.TtgClub.Adapters
 @using InitiativeTracker.Integration.RestClients.TtgClub.Contracts.V1
@@ -19,9 +18,9 @@
     @if (_editSpell == null)
     {
         <div style="margin-bottom: 15px;">
-            <h6>Search from ttg.club</h6>
+            <h6>Search in ttg.club</h6>
             <div style="display: flex">
-                <TextInput @bind-Value="@_searchPattern" @onkeyup="OnKeyUpSearch" style="width: 200px; margin-right: 10px"/>
+                <TextInput @bind-Value="@_searchPattern" @onkeyup="OnKeyUpSearch" style="width: 300px; margin-right: 10px"/>
                 <Button Color="ButtonColor.Dark" @onclick="SearchSpells">
                     <Icon Name="IconName.Search" Size="IconSize.x6"/>
                 </Button>
@@ -45,6 +44,9 @@
                             <div class="grid-cell">
                                 <Button Color="ButtonColor.Dark" @onclick="() => SelectSpell(result)" TooltipPlacement="TooltipPlacement.Bottom" TooltipTitle="Select to fill form fields">
                                     <Icon Name="IconName.Check" Size="IconSize.x6"/>
+                                </Button>
+                                <Button Color="ButtonColor.Dark" @onclick="() => SaveFromItem(result)" TooltipPlacement="TooltipPlacement.Bottom" TooltipTitle="Select to save">
+                                    <Icon Name="IconName.Plus" Size="IconSize.x6"/>
                                 </Button>
                             </div>
                         </div>
@@ -71,7 +73,7 @@
 
     <div class="mb-2">
         <label class="form-label"><b>Level</b></label>
-        <NumberInput TValue="int" Min="0" @bind-Value="_level" class="form-control"/>
+        <NumberInput TValue="int" Min="0" Max="9" @bind-Value="_level" class="form-control"/>
     </div>
 
     <div class="mb-2">
@@ -227,8 +229,8 @@
         if (string.IsNullOrEmpty(_searchPattern))
             return;
 
-        _searchCts.Cancel();
-        _searchCts.Token.Register(() => StateHasChanged());
+        await _searchCts.CancelAsync();
+        _searchCts.Token.Register(StateHasChanged);
         _searchCts.Dispose();
         _searchCts = new();
 
@@ -240,6 +242,12 @@
         {
             // Ignored due to re-search throttling
         }
+    }
+
+    private async Task SaveFromItem(SpellsSearchResponseItem item)
+    {
+        await SelectSpell(item);
+        await OnSave();
     }
 
     private async Task SelectSpell(SpellsSearchResponseItem item)

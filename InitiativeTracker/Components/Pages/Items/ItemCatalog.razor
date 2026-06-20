@@ -1,11 +1,10 @@
 @rendermode InteractiveServer
 @using InitiativeTracker.Application
-@using InitiativeTracker.Application.Dtos
 @using InitiativeTracker.Domain.Entities
 
 <div>
     <div class="mb-3" style="display: flex; align-items: center;">
-        <TextInput @bind-Value="_searchQuery" @onkeyup="OnKeyUpSearch" Style="flex-grow: 1; margin-right: 10px"/>
+        <TextInput @bind-Value="_searchQuery" @onkeyup="OnKeyUpSearch" Style="width: 300px; margin-right: 10px"/>
         <Button Color="ButtonColor.Dark" @onclick="(_ => _onSearch())">
             <Icon Name="IconName.Search" Size="IconSize.x6"/>
         </Button>
@@ -21,6 +20,10 @@
     }
     else
     {
+        <div class="row mb-2">
+            <div class="col-md-5">Name</div>
+            <div class="col-md-2">Printed count</div>
+        </div>
         @foreach (var item in _items)
         {
             <div class="row mb-2 align-items-center catalog-row" style="cursor: pointer;" @onclick="() => SelectForEdit(item)">
@@ -38,23 +41,20 @@
                     <span class="badge bg-secondary ms-2">@item.Rarity</span>
                     @if (item.RequiresAttunement)
                     {
-                        <span class="badge bg-warning text-dark ms-1">Attuned</span>
+                        <span class="badge bg-warning text-dark ms-1">Attunement</span>
                     }
                 </div>
-                <div class="col-md-4">
-                    @(Truncate(item.Description, 60))
-                </div>
-                <div class="col-md-4">
+                <div class="col-md-2">
                     @(item.PrintedCount)
                 </div>
-                <div class="col-md-3 d-flex gap-1 align-items-center justify-content-end" @onclick:stopPropagation="true">
-                    <Button Color="ButtonColor.Success" Outline="true" Size="ButtonSize.Small" 
-                            @onclick="() => OnAddToPrint(item)">
-                        <Icon Name="IconName.Plus" Size="IconSize.x6"/> Add to print list
+                <div class="col-md-2 d-flex gap-1 align-items-center justify-content-end" @onclick:stopPropagation="true">
+                    <Button Color="ButtonColor.Success" Outline="true" Size="ButtonSize.Small" @onclick="() => OnAddToPrint(item)"
+                            TooltipPlacement="TooltipPlacement.Bottom" TooltipTitle="Add to print list">
+                        <Icon Name="IconName.Printer" Size="IconSize.x6"/>
                     </Button>
                     <Button Color="ButtonColor.Danger" Outline="true" Size="ButtonSize.Small"
                             @onclick="() => OnDelete(item)">
-                        <Icon Name="IconName.Trash" Size="IconSize.x6"/> Delete
+                        <Icon Name="IconName.Trash" Size="IconSize.x6"/>
                     </Button>
                 </div>
             </div>

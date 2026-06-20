@@ -24,7 +24,7 @@
         <div class="col-md-4">
             <div>
                 <h5>Print miniatures</h5>
-                <PreparationList @ref="PreparationListRef" />
+                <MiniaturePreparationList @ref="PreparationListRef" />
             </div>
         </div>
     </div>
@@ -34,7 +34,7 @@
 {
     private int _catalogKey;
     private MiniatureEntity? _editMiniature;
-    private PreparationList? PreparationListRef;
+    private MiniaturePreparationList? PreparationListRef;
 
     private Task OnEditSelected(MiniatureEntity? miniature) => OnEditMiniatureChanged(miniature);
 

@@ -9,10 +9,9 @@
     }
     else
     {
-        <div class="grid-table" style="grid-template-columns: 250px 100px 80px 80px">
+        <div class="grid-table" style="grid-template-columns: 250px 80px 80px">
             <div class="grid-header">
                 <div>Name</div>
-                <div>Rarity</div>
                 <div>Qty</div>
                 <div></div>
             </div>
@@ -20,7 +19,6 @@
             {
                 <div class="grid-row">
                     <div class="grid-cell">@printItem.Item.Name</div>
-                    <div class="grid-cell">@printItem.Item.Rarity</div>
                     <div class="grid-cell">
                         <NumberInput TValue="int" 
                                      @bind-Value="@printItem.Quantity"
@@ -87,7 +85,7 @@
                 printDataList.Add(new PokerCardPrintDataDto(
                     entity.Name,
                     subtitle,
-                    entity.RequiresAttunement ? ["ATT"] : [],
+                    entity.RequiresAttunement ? ["A"] : [],
                         [],
                     entity.Description,
                     null,

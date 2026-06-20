@@ -1,8 +1,8 @@
 @rendermode InteractiveServer
+@implements IDisposable;
 @using InitiativeTracker.Application
 @using InitiativeTracker.Application.Dtos
 @using InitiativeTracker.Domain.Entities
-@using InitiativeTracker.Domain
 @using InitiativeTracker.Domain.Enums
 @using InitiativeTracker.Integration.RestClients.TtgClub
 @using InitiativeTracker.Integration.RestClients.TtgClub.Adapters
@@ -15,9 +15,9 @@
     @if (_editItem == null)
     {
         <div style="margin-bottom: 15px;">
-            <h6>Search from ttg.club</h6>
+            <h6>Search in ttg.club</h6>
             <div style="display: flex">
-                <TextInput @bind-Value="@_searchPattern" @onkeyup="OnKeyUpSearch" style="width: 200px; margin-right: 10px"/>
+                <TextInput @bind-Value="@_searchPattern" @onkeyup="OnKeyUpSearch" style="width: 300px; margin-right: 10px"/>
                 <Button Color="ButtonColor.Dark" @onclick="SearchItems">
                     <Icon Name="IconName.Search" Size="IconSize.x6"/>
                 </Button>
@@ -43,6 +43,9 @@
                             <div class="grid-cell">
                                 <Button Color="ButtonColor.Dark" @onclick="() => SelectItem(result)" TooltipPlacement="TooltipPlacement.Bottom" TooltipTitle="Select to fill form fields">
                                     <Icon Name="IconName.Check" Size="IconSize.x6"/>
+                                </Button>
+                                <Button Color="ButtonColor.Dark" @onclick="() => SaveFromItem(result)" TooltipPlacement="TooltipPlacement.Bottom" TooltipTitle="Select to save">
+                                    <Icon Name="IconName.Plus" Size="IconSize.x6"/>
                                 </Button>
                             </div>
                         </div>
@@ -141,7 +144,7 @@
     [Parameter] public EventCallback<ItemEntity?> OnEditItemChanged { get; set; }
 
     private ItemEntity? _editItem;
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _searchCts = new();
 
     protected override void OnParametersSet()
     {
@@ -178,7 +181,13 @@
             await SearchItems();
         }
     }
-
+    
+    public void Dispose()
+    {
+        _searchCts.Cancel();
+        _searchCts.Dispose();
+    }
+    
     private async Task SearchItems()
     {
         _searchResults = null;
@@ -189,14 +198,25 @@
             return;
         }
 
+        await _searchCts.CancelAsync();
+        _searchCts.Token.Register(StateHasChanged);
+        _searchCts.Dispose();
+        _searchCts = new();
+
         try
         {
-            _searchResults = await MagicItemsClient.SearchV1Async(_searchPattern, _cts.Token);
+            _searchResults = await MagicItemsClient.SearchV1Async(_searchPattern, _searchCts.Token);
         }
         catch (OperationCanceledException)
         {
             // Ignored due to re-search throttling
         }
+    }
+
+    private async Task SaveFromItem(MagicItemsSearchResponseItem item)
+    {
+        await SelectItem(item);
+        await OnSave();
     }
 
     private async Task SelectItem(MagicItemsSearchResponseItem item)
@@ -207,7 +227,7 @@
             return;
         }
 
-        var details = await MagicItemsClient.GetDetailsV1Async(url, _cts.Token);
+        var details = await MagicItemsClient.GetDetailsV1Async(url, _searchCts.Token);
 
         if (details is null)
             return;

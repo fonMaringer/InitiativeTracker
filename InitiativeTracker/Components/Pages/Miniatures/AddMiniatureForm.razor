@@ -118,7 +118,7 @@
 {
     private string _name = string.Empty;
     private string? _link;
-    private CreatureSize _size = CreatureSize.Small;
+    private CreatureSize _size = CreatureSize.Medium;
     private byte[]? _imageData;
     private string? _imageDataSrc;
     private bool _isProcessing;
@@ -338,7 +338,7 @@
     private void ResetForm()
     {
         _name = string.Empty;
-        _size = CreatureSize.Small;
+        _size = CreatureSize.Medium;
         _imageData = null;
         _printedCount = null;
         _link = null;

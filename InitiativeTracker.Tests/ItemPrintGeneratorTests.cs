@@ -270,7 +270,7 @@ public class ItemPrintGeneratorTests
     }
 
     static PokerCardPrintDataDto CreateItemDto(string name, ItemRarity rarity, bool requiresAttunement, string? description) =>
-        new(name, rarity.ToString(), requiresAttunement ? ["ATT"] : [], description ?? "", null);
+        new(name, rarity.ToString(), requiresAttunement ? ["ATT"] : [], [], description ?? "", null, null);
 
     static int RegexCount(string text, string pattern) => Regex.Matches(text, pattern).Count;
 }

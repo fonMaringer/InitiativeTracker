@@ -8,7 +8,9 @@ public record PokerCardPrintDataDto
     string Title,
     string? Subtitle,
     IReadOnlyCollection<string> Flags,
+    IReadOnlyCollection<string> AdditionalInfo,
     string Content,
+    string? Subfooter,
     string? Footer
 );
 
@@ -39,10 +41,16 @@ public class PokerCardPrintGenerator
         sb.AppendLine("              background-color: white; }");
         sb.AppendLine(".flag-badge { display:inline-block; background:#c0392b; color:#fff; ");
         sb.AppendLine("                     font-size:8px; padding:1px 4px; border-radius:3px; margin-right:4px; }");
+        sb.AppendLine(".card-additional-info { font-size:8px; margin-bottom:2px; flex-shrink:0; padding-left: 4px; ");
+        sb.AppendLine("              background-color: white; }");
+        sb.AppendLine(".additional-info-badge { display:inline-block; ");
+        sb.AppendLine("                     font-size:8px; padding:1px 4px; border-radius:3px; margin-right:4px; }");
         sb.AppendLine(".card-content { flex:1; overflow:hidden; font-size:8px; ");
         sb.AppendLine("                     background-color: white; padding: 3px; }");
-        sb.AppendLine(".card-footer { font-weight:bold; font-size:12px; text-align:center; ");
-        sb.AppendLine("                margin-top:4px; padding-top:3px; border-top:1px solid #ccc; flex-shrink:0; }");
+        sb.AppendLine(".card-subfooter { font-size:8px; margin-top:2px; flex-shrink:0; padding: 3px; ");
+        sb.AppendLine("              background-color: white; }");
+        sb.AppendLine(".card-footer { font-weight:bold; font-size:8px; text-align:center; ");
+        sb.AppendLine("                margin-top:2px; flex-shrink:0; background-color: white; }");
         sb.AppendLine(".card-content img { max-width:100%; height:auto; }");
         sb.AppendLine("a { color: inherit; text-decoration: inherit; }");
         sb.AppendLine("</style>");
@@ -75,7 +83,20 @@ public class PokerCardPrintGenerator
             sb.Append($"{HttpUtility.HtmlEncode(item.Subtitle)}");
         }
         sb.AppendLine("</div>");
+        if (item.AdditionalInfo.Any())
+        {
+            sb.Append($"  <div class=\"card-additional-info\">");
+            foreach (var info in item.AdditionalInfo)
+            {
+                sb.Append($"<span class=\"additional-info-badge\">{info}</span>");
+            }
+            sb.AppendLine("</div>");
+        }
         sb.AppendLine($"  <div class=\"card-content\">{item.Content}</div>");
+        if (item.Subfooter is not null)
+        {
+            sb.AppendLine($"  <div class=\"card-subfooter\">{item.Subfooter}</div>");
+        }
         if (item.Footer is not null)
         {
             sb.AppendLine($"  <div class=\"card-footer\">{item.Footer}</div>");

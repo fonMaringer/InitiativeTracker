@@ -22,4 +22,10 @@ public class SpellEntity
     public string? Link { get; set; }
     public bool Concentration { get; set; }
     public Source Source { get; set; }
+
+    public string LevelDescription => Level switch
+    {
+        0 => "cantrip",
+        _ => $"{Level} level",
+    };
 }

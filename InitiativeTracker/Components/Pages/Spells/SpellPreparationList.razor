@@ -83,13 +83,21 @@
                 var flags = new List<string>();
                 if (entity.VerbalComponent) flags.Add("V");
                 if (entity.SomaticComponent) flags.Add("S");
-                if (!string.IsNullOrEmpty(entity.MaterialComponent)) flags.Add("M");
+                if (!string.IsNullOrEmpty(entity.MaterialComponent)) flags.Add($"M ({entity.MaterialComponent})");
+                var additionalInfo = new[]
+                {
+                    entity.Time,
+                    entity.Range,
+                    entity.Duration,
+                };
                 printDataList.Add(new PokerCardPrintDataDto(
                     entity.Name,
                     entity.Type,
                     flags,
+                    additionalInfo,
                     entity.Description,
-                    entity.Classes.FirstOrDefault()));
+                    entity.Upper,
+                    $"{entity.LevelDescription}, {entity.Classes.FirstOrDefault()}"));
             }
         }
 

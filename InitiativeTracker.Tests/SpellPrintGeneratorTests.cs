@@ -210,7 +210,7 @@ public class SpellPrintGeneratorTests
         if (verbal) flags.Add("V");
         if (somatic) flags.Add("S");
         if (!string.IsNullOrEmpty(material)) flags.Add("M");
-        return new(name, type, flags, description ?? "", spellClass);
+        return new(name, type, flags, [], description ?? "", null, spellClass);
     }
 
     static int RegexCount(string text, string pattern) => Regex.Matches(text, pattern).Count;

@@ -36,6 +36,11 @@ builder.Services
     .AddDatabase(builder.Configuration)
     .AddApplication();
 
+builder.Services.AddSignalR(options =>
+{
+    options.MaximumReceiveMessageSize = 10 * 1024 * 1024; // 10 MB for large images
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

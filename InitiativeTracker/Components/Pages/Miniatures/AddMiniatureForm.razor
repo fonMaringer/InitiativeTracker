@@ -216,8 +216,12 @@
     {
         try
         {
-            using var httpClient = new HttpClient();
+            using var httpClient = new HttpClient()
+            {
+                Timeout = TimeSpan.FromSeconds(30),
+            };
             httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0");
+
             _imageData = await httpClient.GetByteArrayAsync(imageUrl);
             _imageDataSrc = $"data:image/jpeg;base64,{Convert.ToBase64String(_imageData)}";
             _errorMessage = null;

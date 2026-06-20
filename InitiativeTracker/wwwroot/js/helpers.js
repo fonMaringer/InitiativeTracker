@@ -5,13 +5,13 @@ window.openHtmlInNewTab = function (htmlContent) {
     newTab.document.close();
 };
 
-let _pasteDotNetHelper = null;
+window._pasteDotNetHelper = null;
 
 window.registerPasteListener = function (elementId, dotNetHelper) {
     const element = document.getElementById(elementId);
     if (!element) return;
 
-    _pasteDotNetHelper = dotNetHelper;
+    window._pasteDotNetHelper = dotNetHelper;
 
     element.addEventListener("paste", async (e) => {
         try {

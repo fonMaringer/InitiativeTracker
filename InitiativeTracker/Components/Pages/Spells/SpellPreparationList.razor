@@ -36,6 +36,7 @@
         </div>
         <hr/>
         <Button Color="ButtonColor.Primary" @onclick="GenerateAndOpenPrintHtml">Preview and Print</Button>
+        <p class="text-muted" style="font-size: 0.8em;">Better print on A4 without fields</p>
     }
 </div>
 
@@ -86,18 +87,20 @@
                 if (!string.IsNullOrEmpty(entity.MaterialComponent)) flags.Add($"M ({entity.MaterialComponent})");
                 var additionalInfo = new[]
                 {
+                    string.Join(", ", flags),
                     entity.Time,
                     entity.Range,
                     entity.Duration,
                 };
-                printDataList.Add(new PokerCardPrintDataDto(
-                    entity.Name,
-                    entity.Type,
-                    flags,
-                    additionalInfo,
-                    entity.Description,
-                    entity.Upper,
-                    $"{entity.LevelDescription}, {entity.Classes.FirstOrDefault()}"));
+                printDataList.Add(
+                    new PokerCardPrintDataDto(
+                        entity.Name,
+                        $"{entity.LevelDescription}, {entity.Type}",
+                        [],
+                        additionalInfo,
+                        entity.Description,
+                        entity.Upper,
+                        string.Join(", ", entity.Classes)));
             }
         }
 

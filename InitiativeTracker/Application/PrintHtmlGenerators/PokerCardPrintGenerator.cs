@@ -16,7 +16,7 @@ public record PokerCardPrintDataDto
 
 public class PokerCardPrintGenerator
 {
-    public string Generate(IEnumerable<PokerCardPrintDataDto> items)
+    public string Generate(IList<PokerCardPrintDataDto> items)
     {
         var sb = new StringBuilder();
 
@@ -29,27 +29,28 @@ public class PokerCardPrintGenerator
         sb.AppendLine("* { margin:0; padding:0; box-sizing:border-box; }");
         sb.AppendLine("@page { size:A4 portrait; margin:10mm; }");
         sb.AppendLine("body { font-family:Arial,sans-serif; font-size:12px; }");
+        sb.AppendLine("@media print { .pagebreak { page-break-before: always; } }");
         sb.AppendLine(".sheet { display:flex; flex-wrap:wrap; justify-content:center; gap:0mm; ");
-        sb.AppendLine("          margin-bottom:10mm; margin-top:10mm }");
+        sb.AppendLine("         margin-bottom:10mm; margin-top:10mm }");
         sb.AppendLine(".poker-card { width:2.5in; height:3.5in; border-radius:8px; padding: 5px; ");
-        sb.AppendLine("              border:2px solid #000; display:flex; flex-direction:column; ");
-        sb.AppendLine("              break-inside:avoid; overflow:hidden; background-color: #ccc; }");
+        sb.AppendLine("              border:1px solid #000; display:flex; flex-direction:column; ");
+        sb.AppendLine("              break-inside:avoid; overflow:hidden; background-color: #bbb; }");
         sb.AppendLine(".poker-card > div:last-child { border-radius: 0 0 4px 4px; }");
-        sb.AppendLine(".card-title { font-weight:bold; font-size:12px; margin-bottom:2px; ");
+        sb.AppendLine(".card-title { font-weight:bold; font-size:10px; margin-bottom:2px; ");
         sb.AppendLine("              background-color: white; border-radius: 4px 4px 0 0; padding-left: 3px; }");
-        sb.AppendLine(".card-subtitle { font-size:8px; margin-bottom:2px; flex-shrink:0; padding-left: 4px; ");
+        sb.AppendLine(".card-subtitle { font-size:7px; margin-bottom:2px; flex-shrink:0; padding: 0px 2px; ");
         sb.AppendLine("              background-color: white; }");
-        sb.AppendLine(".flag-badge { display:inline-block; background:#c0392b; color:#fff; ");
-        sb.AppendLine("                     font-size:8px; padding:1px 4px; border-radius:3px; margin-right:4px; }");
-        sb.AppendLine(".card-additional-info { font-size:8px; margin-bottom:2px; flex-shrink:0; padding-left: 4px; ");
+        sb.AppendLine(".flag-badge { display: inline-block; background: #10399b; color:#fff; font-weight:bold; ");
+        sb.AppendLine("              font-size: 7px; padding: 0px 2px; border-radius:2px; margin-right:2px; margin-left: -2px; }");
+        sb.AppendLine(".card-additional-info { font-size: 7px; margin-bottom:2px; flex-shrink:0; padding: 0px 2px; ");
         sb.AppendLine("              background-color: white; }");
         sb.AppendLine(".additional-info-badge { display:inline-block; ");
-        sb.AppendLine("                     font-size:8px; padding:1px 4px; border-radius:3px; margin-right:4px; }");
-        sb.AppendLine(".card-content { flex:1; overflow:hidden; font-size:8px; ");
-        sb.AppendLine("                     background-color: white; padding: 3px; }");
-        sb.AppendLine(".card-subfooter { font-size:8px; margin-top:2px; flex-shrink:0; padding: 3px; ");
-        sb.AppendLine("              background-color: white; }");
-        sb.AppendLine(".card-footer { font-weight:bold; font-size:8px; text-align:center; ");
+        sb.AppendLine("                         font-size: 7px; padding:1px 2px; border-radius:2px; margin-right:2px; }");
+        sb.AppendLine(".card-content { flex:1; overflow:hidden; font-size: 7px; ");
+        sb.AppendLine("                background-color: white; padding: 2px; }");
+        sb.AppendLine(".card-subfooter { font-size: 7px; margin-top:2px; flex-shrink:0; padding: 2px; ");
+        sb.AppendLine("                  background-color: white; }");
+        sb.AppendLine(".card-footer { font-weight:bold; font-size: 7px; text-align:center; ");
         sb.AppendLine("                margin-top:2px; flex-shrink:0; background-color: white; }");
         sb.AppendLine(".card-content img { max-width:100%; height:auto; }");
         sb.AppendLine("a { color: inherit; text-decoration: inherit; }");
@@ -57,10 +58,19 @@ public class PokerCardPrintGenerator
         sb.AppendLine("</head>");
         sb.AppendLine("<body>");
 
-        sb.Append($"<section class=\"sheet\">");
+        sb.Append("<section class=\"sheet\">");
 
-        foreach (var item in items)
+        for (var i = 0; i < items.Count; i++)
+        {
+            var item = items[i];
             WritePokerCard(sb, item);
+            if ((i + 1) % 9 == 0 && i + 1 < items.Count)
+            {
+                sb.AppendLine("</section>");
+                sb.AppendLine("<div class=\"pagebreak\"></div>");
+                sb.Append("<section class=\"sheet\">");
+            }
+        }
 
         sb.AppendLine("</section>");
         sb.AppendLine("</body>");

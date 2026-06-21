@@ -20,45 +20,48 @@
     }
     else
     {
-        <div class="row mb-2">
-            <div class="col-md-5">Name</div>
-            <div class="col-md-2">Printed count</div>
-        </div>
-        @foreach (var item in _items)
-        {
-            <div class="row mb-2 align-items-center catalog-row" style="cursor: pointer;" @onclick="() => SelectForEdit(item)">
-                <div class="col-md-5">
-                    <b>
-                        @if (item.Link is not null)
-                        {
-                            <a href="@item.Link" target="_blank">@item.Name</a>
-                        }
-                        else
-                        {
-                            @item.Name
-                        }
-                    </b>
-                    <span class="badge bg-secondary ms-2">@item.Rarity</span>
-                    @if (item.RequiresAttunement)
-                    {
-                        <span class="badge bg-warning text-dark ms-1">Attunement</span>
-                    }
-                </div>
-                <div class="col-md-2">
-                    @(item.PrintedCount)
-                </div>
-                <div class="col-md-2 d-flex gap-1 align-items-center justify-content-end" @onclick:stopPropagation="true">
-                    <Button Color="ButtonColor.Success" Outline="true" Size="ButtonSize.Small" @onclick="() => OnAddToPrint(item)"
-                            TooltipPlacement="TooltipPlacement.Bottom" TooltipTitle="Add to print list">
-                        <Icon Name="IconName.Printer" Size="IconSize.x6"/>
-                    </Button>
-                    <Button Color="ButtonColor.Danger" Outline="true" Size="ButtonSize.Small"
-                            @onclick="() => OnDelete(item)">
-                        <Icon Name="IconName.Trash" Size="IconSize.x6"/>
-                    </Button>
-                </div>
+        <div class="catalog-scroll-area d-flex flex-column">
+            <div class="catalog-header d-flex mb-2">
+                <div style="flex: 0.75">Name</div>
+                <div style="flex: 0.15">Printed count</div>
+                <div style="flex: 0.1"></div>
             </div>
-        }
+            @foreach (var item in _items)
+            {
+                <div class="d-flex align-items-center catalog-row mb-2" style="cursor: pointer;" @onclick="() => SelectForEdit(item)">
+                    <div style="flex: 0.75; min-width: 0;">
+                        <b>
+                            @if (item.Link is not null)
+                            {
+                                <a href="@item.Link" target="_blank">@item.Name</a>
+                            }
+                            else
+                            {
+                                @item.Name
+                            }
+                        </b>
+                        <span class="badge bg-secondary ms-2">@item.Rarity</span>
+                        @if (item.RequiresAttunement)
+                        {
+                            <span class="badge bg-warning text-dark ms-1">Attunement</span>
+                        }
+                    </div>
+                    <div style="flex: 0.15;">
+                        @(item.PrintedCount)
+                    </div>
+                    <div class="d-flex gap-1 align-items-center justify-content-end" style="flex: 0.1;" @onclick:stopPropagation="true">
+                        <Button Color="ButtonColor.Success" Outline="true" Size="ButtonSize.Small" @onclick="() => OnAddToPrint(item)"
+                                TooltipPlacement="TooltipPlacement.Bottom" TooltipTitle="Add to print list">
+                            <Icon Name="IconName.Printer" Size="IconSize.x6"/>
+                        </Button>
+                        <Button Color="ButtonColor.Danger" Outline="true" Size="ButtonSize.Small"
+                                @onclick="() => OnDelete(item)">
+                            <Icon Name="IconName.Trash" Size="IconSize.x6"/>
+                        </Button>
+                    </div>
+                </div>
+            }
+        </div>
     }
 </div>
 
@@ -94,7 +97,7 @@
         try
         {
             var allItems = await ItemService.SearchAsync(string.Empty);
-            _items = new List<ItemEntity>(allItems);
+            _items = allItems.OrderBy(i => i.Name).ToList();
         }
         catch (Exception ex)
         {
@@ -126,7 +129,7 @@
             StateHasChanged();
             var results = await ItemService.SearchAsync(_searchQuery);
             if (version == _pendingSearchVersion)
-                _items = new List<ItemEntity>(results);
+                _items = results.OrderBy(i => i.Name).ToList();
             StateHasChanged();
         }
         catch (Exception ex)

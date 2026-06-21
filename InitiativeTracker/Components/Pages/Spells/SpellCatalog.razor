@@ -20,52 +20,55 @@
     }
     else
     {
-        <div class="row mb-2">
-            <div class="col-md-5">Name</div>
-            <div class="col-md-2">Printed count</div>
-        </div>
-        @foreach (var spell in _spells)
-        {
-            <div class="row mb-2 align-items-center catalog-row" style="cursor: pointer;" @onclick="() => SelectForEdit(spell)">
-                <div class="col-md-5">
-                    @if (spell.Link is not null)
-                    {
-                        <a href="@spell.Link" target="_blank">@spell.Name</a>
-                    }
-                    else
-                    {
-                        @spell.Name
-                    }
-                    <span class="badge bg-secondary ms-2">@spell.Type</span>
-                    <span class="badge bg-secondary ms-2">@spell.Classes.FirstOrDefault()</span>
-                    @if (spell.VerbalComponent)
-                    {
-                        <span class="badge bg-info ms-1">V</span>
-                    }
-                    @if (spell.SomaticComponent)
-                    {
-                        <span class="badge bg-info ms-1">S</span>
-                    }
-                    @if (!string.IsNullOrEmpty(spell.MaterialComponent))
-                    {
-                        <span class="badge bg-info ms-1">M</span>
-                    }
-                </div>
-                <div class="col-md-2">
-                    @(spell.PrintedCount)
-                </div>
-                <div class="col-md-3 d-flex gap-1 align-items-center justify-content-end" @onclick:stopPropagation="true">
-                    <Button Color="ButtonColor.Success" Outline="true" Size="ButtonSize.Small" @onclick="() => OnAddToPrint(spell)"
-                            TooltipPlacement="TooltipPlacement.Bottom" TooltipTitle="Add to print list">
-                        <Icon Name="IconName.Printer" Size="IconSize.x6"/>
-                    </Button>
-                    <Button Color="ButtonColor.Danger" Outline="true" Size="ButtonSize.Small"
-                            @onclick="() => OnDelete(spell)">
-                        <Icon Name="IconName.Trash" Size="IconSize.x6"/>
-                    </Button>
-                </div>
+        <div class="catalog-scroll-area d-flex flex-column">
+            <div class="catalog-header d-flex mb-2">
+                <div style="flex: 0.75">Name</div>
+                <div style="flex: 0.15">Printed count</div>
+                <div style="flex: 0.1"></div>
             </div>
-        }
+            @foreach (var spell in _spells)
+            {
+                <div class="d-flex align-items-center catalog-row mb-2" style="cursor: pointer;" @onclick="() => SelectForEdit(spell)">
+                    <div style="flex: 0.75; min-width: 0;">
+                        @if (spell.Link is not null)
+                        {
+                            <a href="@spell.Link" target="_blank">@spell.Name</a>
+                        }
+                        else
+                        {
+                            @spell.Name
+                        }
+                        <span class="badge bg-secondary ms-2">@spell.Type</span>
+                        <span class="badge bg-secondary ms-2">@spell.Classes.FirstOrDefault()</span>
+                        @if (spell.VerbalComponent)
+                        {
+                            <span class="badge bg-info ms-1">V</span>
+                        }
+                        @if (spell.SomaticComponent)
+                        {
+                            <span class="badge bg-info ms-1">S</span>
+                        }
+                        @if (!string.IsNullOrEmpty(spell.MaterialComponent))
+                        {
+                            <span class="badge bg-info ms-1">M</span>
+                        }
+                    </div>
+                    <div style="flex: 0.15;">
+                        @(spell.PrintedCount)
+                    </div>
+                    <div class="d-flex gap-1 align-items-center justify-content-end" style="flex: 0.1;" @onclick:stopPropagation="true">
+                        <Button Color="ButtonColor.Success" Outline="true" Size="ButtonSize.Small" @onclick="() => OnAddToPrint(spell)"
+                                TooltipPlacement="TooltipPlacement.Bottom" TooltipTitle="Add to print list">
+                            <Icon Name="IconName.Printer" Size="IconSize.x6"/>
+                        </Button>
+                        <Button Color="ButtonColor.Danger" Outline="true" Size="ButtonSize.Small"
+                                @onclick="() => OnDelete(spell)">
+                            <Icon Name="IconName.Trash" Size="IconSize.x6"/>
+                        </Button>
+                    </div>
+                </div>
+            }
+        </div>
     }
 </div>
 

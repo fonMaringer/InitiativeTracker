@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using InitiativeTracker.Domain.Enums;
 
@@ -7,7 +8,10 @@ public record MiniaturePrintDataDto(
     string Name,
     CreatureSize Size,
     int Quantity,
-    string ImageBase64);
+    string ImageBase64,
+    float? CropXOffset,
+    float? CropYOffset,
+    float? CropZoom);
 
 public class MiniaturePrintGenerator
 {
@@ -48,9 +52,9 @@ public class MiniaturePrintGenerator
         sb.AppendLine("         justify-content:center; margin-top:5mm; margin-bottom:5mm; }");
         sb.AppendLine(".cell { overflow:hidden; display:flex; ");
         sb.AppendLine("        flex-direction:column; page-break-inside:avoid; }");
-        sb.AppendLine(".slot { flex:1; overflow:hidden; border: 0.5px solid #000; }");
+        sb.AppendLine(".slot { flex:1; overflow:hidden; border: 0.5px solid #000; position:relative; }");
         sb.AppendLine(".flipped { transform: rotateX(180deg); }");
-        sb.AppendLine("img   { width:100%; height:100%; object-fit:cover; display:block; }");
+        sb.AppendLine(".crop-img { height:100%; width:auto; display:block; object-fit:cover; }");
         sb.AppendLine("</style>");
         sb.AppendLine("</head>");
         sb.AppendLine("<body>");
@@ -79,13 +83,21 @@ public class MiniaturePrintGenerator
         foreach (var item in items)
         {
             var b64Src = $"data:image/png;base64,{item.ImageBase64}";
+            
+            float cx = item.CropXOffset ?? 0f;
+            float cy = item.CropYOffset ?? 0f;
+            float cz = MathF.Max(1f, item.CropZoom ?? 1f);
+            string wPct = (cz * 100).ToString("F4", CultureInfo.InvariantCulture);
+            string tx = (-cx * 100).ToString("F4", CultureInfo.InvariantCulture);
+            string ty = (-cy * 100).ToString("F4", CultureInfo.InvariantCulture);
+            string imgStyle = $"width:{wPct}%; height:auto; display:block; position:absolute; transform-origin:top left; transform:translate({tx}%,{ty}%);";
 
             for (var c = 0; c < item.Quantity; c++)
             {
                 var cellSb = new StringBuilder();
                 cellSb.Append($"<div class=\"cell\" style=\"{cellDims}\">");
-                cellSb.Append($"<div class=\"slot flipped\"><img src=\"{b64Src}\"/></div>");
-                cellSb.AppendLine($"<div class=\"slot\"><img src=\"{b64Src}\"/></div>");
+                cellSb.Append($"<div class=\"slot flipped\"><div style=\"width:100%; height:100%; overflow:hidden; position:relative;\"><img src=\"{b64Src}\" class=\"crop-img\" style=\"{imgStyle}\"/></div></div>");
+                cellSb.AppendLine($"<div class=\"slot\"><div style=\"width:100%; height:100%; overflow:hidden; position:relative;\"><img src=\"{b64Src}\" class=\"crop-img\" style=\"{imgStyle}\"/></div></div>");
                 cellSb.AppendLine("</div>");
                 imgCells.Add(cellSb.ToString());
             }

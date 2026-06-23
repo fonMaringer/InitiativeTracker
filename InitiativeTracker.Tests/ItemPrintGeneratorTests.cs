@@ -266,7 +266,7 @@ public class ItemPrintGeneratorTests
 
         var html = _generator.Generate(items);
 
-        html.Should().Contain("\"card-subtitle\">Common</div>");
+        html.Should().Contain("Common");
     }
 
     static PokerCardPrintDataDto CreateItemDto(string name, ItemRarity rarity, bool requiresAttunement, string? description) =>

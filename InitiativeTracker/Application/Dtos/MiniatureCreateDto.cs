@@ -7,4 +7,7 @@ public record MiniatureCreateDto(
     CreatureSize Size,
     byte[] ImageData,
     int PrintedCount,
-    string? Link);
+    string? Link,
+    float? CropXOffset,
+    float? CropYOffset,
+    float? CropZoom);

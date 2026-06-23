@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using Cropper.Blazor.Extensions;
 using InitiativeTracker.Components;
 using InitiativeTracker.Infrastructure.Extensions;
 using InitiativeTracker.Infrastructure.Options;
@@ -30,6 +31,8 @@ builder.Services.AddLogging(c =>
     c.ClearProviders()
         .AddSerilog();
 });
+
+builder.Services.AddCropper();
 
 builder.Services
     .AddHttpClients(builder.Configuration)

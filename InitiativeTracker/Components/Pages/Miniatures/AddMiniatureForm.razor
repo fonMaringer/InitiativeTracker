@@ -1,11 +1,16 @@
 @rendermode InteractiveServer
 @implements IDisposable;
+@using Cropper.Blazor.Components
 @using InitiativeTracker.Application
 @using InitiativeTracker.Application.Dtos
 @using InitiativeTracker.Domain.Entities
 @using InitiativeTracker.Domain.Enums
 @using InitiativeTracker.Integration.RestClients.TtgClub
 @using InitiativeTracker.Integration.RestClients.TtgClub.Contracts.V1
+@using Cropper.Blazor.Models
+@using Cropper.Blazor.Events.CropReadyEvent
+@using Cropper.Blazor.Events.CropEndEvent
+@using Cropper.Blazor.Events
 
 <div id="addMiniatureForm" tabindex="0">
     <h5>@(_editMiniature != null ? "Edit miniature" : "Add miniature")</h5>
@@ -83,8 +88,15 @@
     <div class="mb-2">
         @if (_imageDataSrc != null)
         {
-            <img src="@_imageDataSrc" style="width: 250px; height: 320px; object-fit: cover; display: block;" alt="Preview"/>
-            <p class="text-muted" style="font-size: 0.8em;">Image will be cropped to 25:32 ratio.</p>
+            <CropperComponent
+                Class="cropper-container"
+                ErrorLoadImageClass="cropper-error-load"
+                @ref="_cropperComponent"
+                OnCropEndEvent="OnCropEnd"
+                OnReadyEvent="OnCropperReady"
+                Src="@_imageDataSrc"
+                Options="CropperOptions">
+            </CropperComponent>
         }
     </div>
 
@@ -125,6 +137,24 @@
     private string? _errorMessage;
     private string? _successMessage;
     private int? _printedCount = 0;
+
+    // Crop region (normalized 0–1). Defaults: center + fill viewport for 25:32.
+    private float _cropXOffset = 0f;
+    private float _cropYOffset = 0f;
+    private float _cropZoom = 1f;
+    
+    private CropperComponent? _cropperComponent;
+    private decimal? _naturalImageWidth;
+    private decimal? _naturalImageHeight;
+
+    private readonly Options CropperOptions = new()
+    {
+        AspectRatio = 25m / 32m,
+        ViewMode = ViewMode.Vm0,
+        AutoCropArea = 1m,
+        Scalable = true,
+        CropBoxResizable = true,
+    };
 
     private readonly CreatureSize[] _sizeOptions = Enum.GetValues<CreatureSize>();
     private bool _isDisabled => _isProcessing || string.IsNullOrWhiteSpace(_name) || (_editMiniature == null && _imageData == null);
@@ -236,6 +266,22 @@
         }
     }
 
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+        OnParametersSet();
+
+        if (_editMiniature != null && string.IsNullOrEmpty(_imageDataSrc))
+        {
+            var imageBytes = await MiniatureService.GetImageAsync(_editMiniature.Id);
+            if (imageBytes != null && imageBytes.Length > 0)
+            {
+                _imageData = imageBytes;
+                _imageDataSrc = $"data:image/jpeg;base64,{Convert.ToBase64String(imageBytes)}";
+            }
+        }
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -262,6 +308,61 @@
         InvokeAsync(StateHasChanged);
     }
 
+    private void OnCropperReady(JSEventData<CropReadyEvent>? data)
+    {
+        _ = HandleCropperReadyAsync();
+    }
+
+    private async Task HandleCropperReadyAsync()
+    {
+        if (_cropperComponent == null) return;
+
+        var imageData = await _cropperComponent.GetImageDataAsync();
+        _naturalImageWidth = imageData.NaturalWidth;
+        _naturalImageHeight = imageData.NaturalHeight;
+
+        if (_editMiniature != null && _editMiniature.CropXOffset.HasValue)
+        {
+            await RestoreCropRegionToCropper();
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void OnCropEnd(JSEventData<CropEndEvent>? data)
+    {
+        _ = HandleCropEndAsync();
+    }
+
+    private async Task HandleCropEndAsync()
+    {
+        if (_cropperComponent == null) return;
+
+        var cropperData = await _cropperComponent.GetDataAsync(true);
+        UpdateCropFromCropperData(cropperData);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void UpdateCropFromCropperData(CropperData data)
+    {
+        if (!_naturalImageWidth.HasValue || !_naturalImageHeight.HasValue)
+            return;
+
+        var imgW = _naturalImageWidth.Value;
+        var imgH = _naturalImageHeight.Value;
+
+        if (imgW == 0m || imgH == 0m)
+            return;
+
+        decimal cropX = data.X ?? 0m;
+        decimal cropY = data.Y ?? 0m;
+        decimal cropW = data.Width ?? imgW;
+
+        _cropXOffset = (float)(cropX / imgW);
+        _cropYOffset = (float)(cropY / imgH);
+        _cropZoom = MathF.Max(0.01f, (float)(imgW / cropW));
+    }
+
     protected override void OnParametersSet()
     {
         _editMiniature = EditMiniature;
@@ -273,11 +374,53 @@
             _errorMessage = null;
             _successMessage = null;
             _printedCount = _editMiniature.PrintedCount;
+
+            // Load existing crop region, or compute defaults
+            if (_editMiniature.CropXOffset.HasValue && _editMiniature.CropYOffset.HasValue && _editMiniature.CropZoom.HasValue)
+            {
+                _cropXOffset = _editMiniature.CropXOffset.Value;
+                _cropYOffset = _editMiniature.CropYOffset.Value;
+                _cropZoom = _editMiniature.CropZoom.Value;
+            }
+            else
+            {
+                _cropXOffset = 0f;
+                _cropYOffset = 0f;
+                _cropZoom = 1f;
+            }
         }
         else
         {
             ResetForm();
         }
+    }
+
+    private async Task RestoreCropRegionToCropper()
+    {
+        if (!_naturalImageWidth.HasValue || !_naturalImageHeight.HasValue)
+            return;
+
+        var imgW = _naturalImageWidth.Value;
+        var imgH = _naturalImageHeight.Value;
+
+        if (imgW == 0m || imgH == 0m)
+            return;
+
+        if (_cropZoom < 0.1f)
+            return;
+
+        var cropW = imgW / (decimal)_cropZoom;
+        var cropH = imgH / (decimal)_cropZoom;
+        var cropX = imgW * (decimal)_cropXOffset;
+        var cropY = imgH * (decimal)_cropYOffset;
+
+        _cropperComponent!.SetData(new SetDataOptions
+        {
+            X = cropX,
+            Y = cropY,
+            Width = cropW,
+            Height = cropH,
+        });
     }
 
     private async Task OnImageSelected(InputFileChangeEventArgs e)
@@ -307,7 +450,10 @@
                     Name: _name,
                     Size: _size,
                     PrintedCount:  _printedCount,
-                    Link: _link);
+                    Link: _link,
+                    CropXOffset: _cropXOffset,
+                    CropYOffset: _cropYOffset,
+                    CropZoom: _cropZoom);
                 await MiniatureService.UpdateAsync(_editMiniature.Id, dto);
 
                 _successMessage = $"'{_name}' updated successfully.";
@@ -321,7 +467,10 @@
                     Size: _size,
                     ImageData: _imageData!,
                     PrintedCount: _printedCount ?? 0,
-                    Link: _link));
+                    Link: _link,
+                    CropXOffset: _cropXOffset,
+                    CropYOffset: _cropYOffset,
+                    CropZoom: _cropZoom));
 
                 _successMessage = $"'{_name}' added successfully.";
                 ResetForm();
@@ -351,5 +500,10 @@
         _printedCount = null;
         _link = null;
         _imageDataSrc = null;
+        _cropXOffset = 0f;
+        _cropYOffset = 0f;
+        _cropZoom = 1f;
+        _naturalImageWidth = null;
+        _naturalImageHeight = null;
     }
 }

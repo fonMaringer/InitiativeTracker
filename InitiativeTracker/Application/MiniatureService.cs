@@ -31,6 +31,9 @@ public class MiniatureService(
                 ImageData = dto.ImageData,
                 PrintedCount = dto.PrintedCount,
                 Link = dto.Link,
+                CropXOffset = dto.CropXOffset,
+                CropYOffset = dto.CropYOffset,
+                CropZoom = dto.CropZoom,
             };
 
             dbContext.Miniatures.Add(entity);
@@ -58,6 +61,12 @@ public class MiniatureService(
             if (dto.PrintedCount.HasValue)
                 entity.PrintedCount = dto.PrintedCount.Value;
             entity.Link = dto.Link;
+            if (dto.CropXOffset.HasValue)
+                entity.CropXOffset = dto.CropXOffset.Value;
+            if (dto.CropYOffset.HasValue)
+                entity.CropYOffset = dto.CropYOffset.Value;
+            if (dto.CropZoom.HasValue)
+                entity.CropZoom = dto.CropZoom.Value;
 
             await dbContext.SaveChangesAsync();
         }

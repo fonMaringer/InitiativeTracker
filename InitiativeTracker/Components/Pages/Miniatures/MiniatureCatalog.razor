@@ -1,4 +1,5 @@
 @rendermode InteractiveServer
+@using System.Globalization
 @using InitiativeTracker.Application
 @using InitiativeTracker.Domain.Entities
 
@@ -42,11 +43,14 @@
                         <span class="badge bg-secondary ms-2">@miniature.Size</span>
                     </div>
                     <div style="flex: 0.25;" @onclick:stopPropagation="true">
-                        @if (_imageSources.TryGetValue(miniature.Id, out string? imgSrc))
+                        @if (_imageSources.TryGetValue(miniature.Id, out var imgSrc))
                         {
-                            <img src="@imgSrc"
-                                 alt="@miniature.Name"
-                                 style="max-width: 80px; max-height: 80px; object-fit: contain;" @onclick:stopPropagation="true"/>
+                            <div style="width:50px; height:64px; overflow:hidden; position:relative;">
+                                <img src="@imgSrc"
+                                     alt="@miniature.Name"
+                                     style="@BuildCropStyle(miniature)"
+                                     @onclick:stopPropagation="true"/>
+                            </div>
                         }
                     </div>
                     <div style="flex: 0.15;">
@@ -194,5 +198,19 @@
         {
             Console.WriteLine($"Failed to delete miniature: {ex.Message}");
         }
+    }
+
+    private static string BuildCropStyle(MiniatureEntity m)
+    {
+        float cx = m.CropXOffset ?? 0f;
+        float cy = m.CropYOffset ?? 0f;
+        float cz = MathF.Max(1f, m.CropZoom ?? 1f);
+
+        // Width/height % are relative to container dims. translate() % are relative to element size.
+        // This correctly handles arbitrary image aspect ratios and crop regions outside image bounds (Vm0).
+        string wPct = (cz * 100).ToString("F4", CultureInfo.InvariantCulture);
+        string tx = (-cx * 100).ToString("F4", CultureInfo.InvariantCulture);
+        string ty = (-cy * 100).ToString("F4", CultureInfo.InvariantCulture);
+        return $"width:{wPct}%; height:auto; display:block; position:absolute; transform-origin:top left; transform:translate({tx}%,{ty}%);";
     }
 }

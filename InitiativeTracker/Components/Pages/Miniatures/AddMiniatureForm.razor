@@ -53,14 +53,15 @@
         <Spinner Color="SpinnerColor.Primary" Style="margin-bottom: 15px; width: 30px; height: 30px"/>
     }
 
-    <div class="mb-2">
-        <label class="form-label"><b>Link</b></label>
-        <InputText @bind-Value="_link" class="form-control"/>
-    </div>
-
-    <div class="mb-2">
-        <label class="form-label"><b>Name</b></label>
-        <InputText @bind-Value="_name" class="form-control"/>
+    <div class="mb-2" style="display: flex; gap: 10px;">
+        <div style="flex: 1;">
+            <label class="form-label"><b>Name</b></label>
+            <InputText @bind-Value="_name" class="form-control"/>
+        </div>
+        <div style="flex: 1;">
+            <label class="form-label"><b>Link</b></label>
+            <InputText @bind-Value="_link" class="form-control"/>
+        </div>
     </div>
 
     <div class="mb-2">

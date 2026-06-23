@@ -6,7 +6,8 @@ public record SpellUpdateDto(
     bool? VerbalComponent,
     bool? SomaticComponent,
     string? MaterialComponent,
-    string? Class,
+    string[]? Classes,
+    string[]? Subclasses,
     string? Description,
     int? PrintedCount,
     string? Link);

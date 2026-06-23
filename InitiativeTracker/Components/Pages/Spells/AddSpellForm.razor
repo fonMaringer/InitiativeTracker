@@ -112,8 +112,41 @@
     </div>
 
     <div class="mb-2">
-        <label class="form-label"><b>Class</b></label>
-        <InputText @bind-Value="_class" class="form-control"/>
+        <label class="form-label"><b>Classes</b></label>
+        <div style="display: flex; gap: 5px; margin-bottom: 5px; flex-wrap: wrap;">
+            @foreach (var cls in _classes)
+            {
+                <span class="badge bg-secondary d-inline-flex align-items-center gap-1 px-3 py-2">
+                    @cls
+                    <Icon Name="IconName.X" Size="IconSize.x6" Style="cursor: pointer;" @onclick="() => RemoveClass(cls)"/>
+                </span>
+            }
+        </div>
+        <div style="display: flex; gap: 5px;">
+            <InputText @bind-Value="_classInput" class="form-control" @onkeyup="OnKeyUpAddClass" Placeholder="Enter class name"/>
+            <Button Color="ButtonColor.Secondary" Size="ButtonSize.Small" @onclick="AddClass">
+                <Icon Name="IconName.Plus" Size="IconSize.x6"/>
+            </Button>
+        </div>
+    </div>
+
+    <div class="mb-2">
+        <label class="form-label"><b>Subclasses</b></label>
+        <div style="display: flex; gap: 5px; margin-bottom: 5px; flex-wrap: wrap;">
+            @foreach (var subcls in _subclasses)
+            {
+                <span class="badge bg-secondary d-inline-flex align-items-center gap-1 px-3 py-2">
+                    @subcls
+                    <Icon Name="IconName.X" Size="IconSize.x6" Style="cursor: pointer;" @onclick="() => RemoveSubclass(subcls)"/>
+                </span>
+            }
+        </div>
+        <div style="display: flex; gap: 5px;">
+            <InputText @bind-Value="_subclassInput" class="form-control" @onkeyup="OnKeyUpAddSubclass" Placeholder="Enter subclass name"/>
+            <Button Color="ButtonColor.Secondary" Size="ButtonSize.Small" @onclick="AddSubclass">
+                <Icon Name="IconName.Plus" Size="IconSize.x6"/>
+            </Button>
+        </div>
     </div>
 
     <div class="mb-2">
@@ -158,7 +191,10 @@
     private string _duration = string.Empty;
     private string _time = string.Empty;
     private bool _concentration = false;
-    private string _class = string.Empty;
+    private List<string> _classes = new();
+    private string _classInput = string.Empty;
+    private List<string> _subclasses = new();
+    private string _subclassInput = string.Empty;
     private string _upper = string.Empty;
     private bool _verbalComponent = false;
     private bool _somaticComponent = false;
@@ -193,7 +229,8 @@
             _duration = _editSpell.Duration;
             _time = _editSpell.Time;
             _concentration = _editSpell.Concentration;
-            _class = _editSpell.Classes.FirstOrDefault();
+            _classes = new (_editSpell.Classes);
+            _subclasses = new (_editSpell.Subclasses);
             _upper = _editSpell.Upper ?? string.Empty;
             _verbalComponent = _editSpell.VerbalComponent;
             _somaticComponent = _editSpell.SomaticComponent;
@@ -271,7 +308,8 @@
         _duration = entity.Duration;
         _time = entity.Time;
         _concentration = entity.Concentration;
-        _class = entity.Classes.FirstOrDefault() ?? string.Empty;
+        _classes = new (entity.Classes);
+        _subclasses = new (entity.Subclasses);
         _upper = entity.Upper ?? string.Empty;
         _verbalComponent = entity.VerbalComponent;
         _somaticComponent = entity.SomaticComponent;
@@ -295,7 +333,8 @@
                     VerbalComponent: _verbalComponent,
                     SomaticComponent: _somaticComponent,
                     MaterialComponent: _materialComponent,
-                    Class: _class,
+                    Classes: _classes.ToArray(),
+                    Subclasses: _subclasses.ToArray(),
                     Description: _description,
                     PrintedCount: _printedCount,
                     Link: _link));
@@ -312,7 +351,8 @@
                     VerbalComponent: _verbalComponent,
                     SomaticComponent: _somaticComponent,
                     MaterialComponent: _materialComponent,
-                    Class: _class,
+                    Classes: _classes.ToArray(),
+                    Subclasses: _subclasses.ToArray(),
                     Description: _description,
                     PrintedCount: _printedCount ?? 0,
                     Link: _link,
@@ -353,7 +393,10 @@
         _duration = string.Empty;
         _time = string.Empty;
         _concentration = false;
-        _class = string.Empty;
+        _classes = new();
+        _classInput = string.Empty;
+        _subclasses = new();
+        _subclassInput = string.Empty;
         _upper = string.Empty;
         _verbalComponent = false;
         _somaticComponent = false;
@@ -361,6 +404,62 @@
         _description = string.Empty;
         _printedCount = null;
         _link = null;
+    }
+
+    private void AddClass()
+    {
+        if (string.IsNullOrWhiteSpace(_classInput))
+            return;
+
+        var cls = _classInput.Trim();
+        if (!_classes.Contains(cls, StringComparer.OrdinalIgnoreCase))
+        {
+            _classes.Add(cls);
+        }
+        _classInput = string.Empty;
+        StateHasChanged();
+    }
+
+    private void RemoveClass(string cls)
+    {
+        _classes.Remove(cls);
+        StateHasChanged();
+    }
+
+    private async Task OnKeyUpAddClass(KeyboardEventArgs? e)
+    {
+        if (e?.Code is "Enter" or "NumpadEnter")
+        {
+            AddClass();
+        }
+    }
+
+    private void AddSubclass()
+    {
+        if (string.IsNullOrWhiteSpace(_subclassInput))
+            return;
+
+        var subcls = _subclassInput.Trim();
+        if (!_subclasses.Contains(subcls, StringComparer.OrdinalIgnoreCase))
+        {
+            _subclasses.Add(subcls);
+        }
+        _subclassInput = string.Empty;
+        StateHasChanged();
+    }
+
+    private void RemoveSubclass(string subcls)
+    {
+        _subclasses.Remove(subcls);
+        StateHasChanged();
+    }
+
+    private async Task OnKeyUpAddSubclass(KeyboardEventArgs? e)
+    {
+        if (e?.Code is "Enter" or "NumpadEnter")
+        {
+            AddSubclass();
+        }
     }
 
     public void Dispose()

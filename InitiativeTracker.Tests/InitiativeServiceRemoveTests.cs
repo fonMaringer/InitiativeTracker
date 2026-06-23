@@ -78,7 +78,7 @@ public class InitiativeServiceRemoveTests
         var item1 = CreateItem("A", 5);
         var item2 = CreateItem("B", 10);
         var item3 = CreateItem("C", 15);
-        _service.AppendMultiple(new[] { item1, item2, item3 });
+        _service.AppendMultiple([item1, item2, item3]);
 
         _service.Remove(item2);
 

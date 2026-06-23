@@ -30,7 +30,8 @@ public class SpellService(
                 VerbalComponent = dto.VerbalComponent,
                 SomaticComponent = dto.SomaticComponent,
                 MaterialComponent = dto.MaterialComponent,
-                Classes = [dto.Class],
+                Classes = dto.Classes,
+                Subclasses = dto.Subclasses,
                 Description = dto.Description,
                 PrintedCount = dto.PrintedCount,
                 Link = dto.Link,
@@ -71,8 +72,10 @@ public class SpellService(
                 entity.SomaticComponent = dto.SomaticComponent.Value;
             if (!string.IsNullOrEmpty(dto.MaterialComponent))
                 entity.MaterialComponent = dto.MaterialComponent;
-            if (!string.IsNullOrEmpty(dto.Class))
-                entity.Classes = [dto.Class];
+            if (dto.Classes != null && dto.Classes.Length > 0)
+                entity.Classes = dto.Classes;
+            if (dto.Subclasses != null && dto.Subclasses.Length > 0)
+                entity.Subclasses = dto.Subclasses;
             if (dto.Description != null)
                 entity.Description = dto.Description;
             if (dto.PrintedCount.HasValue)

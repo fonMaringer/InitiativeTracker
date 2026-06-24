@@ -138,14 +138,17 @@
     private string? _successMessage;
     private int? _printedCount = 0;
 
-    // Crop region (normalized 0–1). Defaults: center + fill viewport for 25:32.
-    private float _cropXOffset = 0f;
-    private float _cropYOffset = 0f;
-    private float _cropZoom = 1f;
-    
+    // Crop region in original-image pixels (may be negative or exceed bounds).
+    private double _cropX = 0;
+    private double _cropY = 0;
+    private double _cropWidth = 0;
+    private double _cropHeight = 0;
+
+    // Natural image dimensions, populated when cropper is ready.
+    private double _naturalWidth = 0;
+    private double _naturalHeight = 0;
+
     private CropperComponent? _cropperComponent;
-    private decimal? _naturalImageWidth;
-    private decimal? _naturalImageHeight;
 
     private readonly Options CropperOptions = new()
     {
@@ -318,10 +321,10 @@
         if (_cropperComponent == null) return;
 
         var imageData = await _cropperComponent.GetImageDataAsync();
-        _naturalImageWidth = imageData.NaturalWidth;
-        _naturalImageHeight = imageData.NaturalHeight;
+        _naturalWidth = (double)imageData.NaturalWidth;
+        _naturalHeight = (double)imageData.NaturalHeight;
 
-        if (_editMiniature != null && _editMiniature.CropXOffset.HasValue)
+        if (_editMiniature != null)
         {
             await RestoreCropRegionToCropper();
         }
@@ -339,28 +342,11 @@
         if (_cropperComponent == null) return;
 
         var cropperData = await _cropperComponent.GetDataAsync(true);
-        UpdateCropFromCropperData(cropperData);
+        _cropX = (double)(cropperData.X ?? 0m);
+        _cropY = (double)(cropperData.Y ?? 0m);
+        _cropWidth = (double)(cropperData.Width ?? 0m);
+        _cropHeight = (double)(cropperData.Height ?? 0m);
         await InvokeAsync(StateHasChanged);
-    }
-
-    private void UpdateCropFromCropperData(CropperData data)
-    {
-        if (!_naturalImageWidth.HasValue || !_naturalImageHeight.HasValue)
-            return;
-
-        var imgW = _naturalImageWidth.Value;
-        var imgH = _naturalImageHeight.Value;
-
-        if (imgW == 0m || imgH == 0m)
-            return;
-
-        decimal cropX = data.X ?? 0m;
-        decimal cropY = data.Y ?? 0m;
-        decimal cropW = data.Width ?? imgW;
-
-        _cropXOffset = (float)(cropX / imgW);
-        _cropYOffset = (float)(cropY / imgH);
-        _cropZoom = MathF.Max(0.01f, (float)(imgW / cropW));
     }
 
     protected override void OnParametersSet()
@@ -375,19 +361,10 @@
             _successMessage = null;
             _printedCount = _editMiniature.PrintedCount;
 
-            // Load existing crop region, or compute defaults
-            if (_editMiniature.CropXOffset.HasValue && _editMiniature.CropYOffset.HasValue && _editMiniature.CropZoom.HasValue)
-            {
-                _cropXOffset = _editMiniature.CropXOffset.Value;
-                _cropYOffset = _editMiniature.CropYOffset.Value;
-                _cropZoom = _editMiniature.CropZoom.Value;
-            }
-            else
-            {
-                _cropXOffset = 0f;
-                _cropYOffset = 0f;
-                _cropZoom = 1f;
-            }
+            _cropX = _editMiniature.CropX;
+            _cropY = _editMiniature.CropY;
+            _cropWidth = _editMiniature.CropWidth;
+            _cropHeight = _editMiniature.CropHeight;
         }
         else
         {
@@ -395,32 +372,17 @@
         }
     }
 
-    private async Task RestoreCropRegionToCropper()
+    private Task RestoreCropRegionToCropper()
     {
-        if (!_naturalImageWidth.HasValue || !_naturalImageHeight.HasValue)
-            return;
-
-        var imgW = _naturalImageWidth.Value;
-        var imgH = _naturalImageHeight.Value;
-
-        if (imgW == 0m || imgH == 0m)
-            return;
-
-        if (_cropZoom < 0.1f)
-            return;
-
-        var cropW = imgW / (decimal)_cropZoom;
-        var cropH = imgH / (decimal)_cropZoom;
-        var cropX = imgW * (decimal)_cropXOffset;
-        var cropY = imgH * (decimal)_cropYOffset;
-
         _cropperComponent!.SetData(new SetDataOptions
         {
-            X = cropX,
-            Y = cropY,
-            Width = cropW,
-            Height = cropH,
+            X = (decimal)_cropX,
+            Y = (decimal)_cropY,
+            Width = (decimal)_cropWidth,
+            Height = (decimal)_cropHeight,
         });
+
+        return Task.CompletedTask;
     }
 
     private async Task OnImageSelected(InputFileChangeEventArgs e)
@@ -451,9 +413,12 @@
                     Size: _size,
                     PrintedCount:  _printedCount,
                     Link: _link,
-                    CropXOffset: _cropXOffset,
-                    CropYOffset: _cropYOffset,
-                    CropZoom: _cropZoom);
+                    CropX: _cropX,
+                    CropY: _cropY,
+                    CropWidth: _cropWidth,
+                    CropHeight: _cropHeight,
+                    NaturalWidth: _naturalWidth,
+                    NaturalHeight: _naturalHeight);
                 await MiniatureService.UpdateAsync(_editMiniature.Id, dto);
 
                 _successMessage = $"'{_name}' updated successfully.";
@@ -468,9 +433,12 @@
                     ImageData: _imageData!,
                     PrintedCount: _printedCount ?? 0,
                     Link: _link,
-                    CropXOffset: _cropXOffset,
-                    CropYOffset: _cropYOffset,
-                    CropZoom: _cropZoom));
+                    CropX: _cropX,
+                    CropY: _cropY,
+                    CropWidth: _cropWidth,
+                    CropHeight: _cropHeight,
+                    NaturalWidth: _naturalWidth,
+                    NaturalHeight: _naturalHeight));
 
                 _successMessage = $"'{_name}' added successfully.";
                 ResetForm();
@@ -500,10 +468,11 @@
         _printedCount = null;
         _link = null;
         _imageDataSrc = null;
-        _cropXOffset = 0f;
-        _cropYOffset = 0f;
-        _cropZoom = 1f;
-        _naturalImageWidth = null;
-        _naturalImageHeight = null;
+        _cropX = 0;
+        _cropY = 0;
+        _cropWidth = 0;
+        _cropHeight = 0;
+        _naturalWidth = 0;
+        _naturalHeight = 0;
     }
 }

@@ -94,7 +94,7 @@ public class MiniaturePrintGeneratorTests
     {
         var items = new[]
         {
-            new MiniaturePrintDataDto("Goblin", CreatureSize.Small, 2, FakeImageBase64, null, null, null)
+            new MiniaturePrintDataDto("Goblin", CreatureSize.Small, 2, FakeImageBase64, 0, 0, 0, 0, 0, 0)
         };
 
         var html = _generator.Generate(items);
@@ -317,7 +317,7 @@ public class MiniaturePrintGeneratorTests
     }
 
     static MiniaturePrintDataDto CreateMiniatureDto(string? name, CreatureSize size, int quantity) =>
-        new(name ?? "Unnamed", size, quantity, "iVBORw0KGgoAAAANSU", null, null, null);
+        new(name ?? "Unnamed", size, quantity, "iVBORw0KGgoAAAANSU", 0, 0, 0, 0, 0, 0);
 
     static int RegexCount(string text, string pattern) => Regex.Matches(text, pattern).Count;
 }

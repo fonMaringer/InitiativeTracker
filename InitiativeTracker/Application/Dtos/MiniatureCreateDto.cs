@@ -8,6 +8,9 @@ public record MiniatureCreateDto(
     byte[] ImageData,
     int PrintedCount,
     string? Link,
-    float? CropXOffset,
-    float? CropYOffset,
-    float? CropZoom);
+    double CropX,
+    double CropY,
+    double CropWidth,
+    double CropHeight,
+    double NaturalWidth,
+    double NaturalHeight);

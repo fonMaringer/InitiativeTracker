@@ -9,9 +9,12 @@ public record MiniaturePrintDataDto(
     CreatureSize Size,
     int Quantity,
     string ImageBase64,
-    float? CropXOffset,
-    float? CropYOffset,
-    float? CropZoom);
+    double CropX,
+    double CropY,
+    double CropWidth,
+    double CropHeight,
+    double NaturalWidth,
+    double NaturalHeight);
 
 public class MiniaturePrintGenerator
 {
@@ -84,13 +87,15 @@ public class MiniaturePrintGenerator
         {
             var b64Src = $"data:image/png;base64,{item.ImageBase64}";
             
-            float cx = item.CropXOffset ?? 0f;
-            float cy = item.CropYOffset ?? 0f;
-            float cz = MathF.Max(1f, item.CropZoom ?? 1f);
-            string wPct = (cz * 100).ToString("F4", CultureInfo.InvariantCulture);
-            string tx = (-cx * 100).ToString("F4", CultureInfo.InvariantCulture);
-            string ty = (-cy * 100).ToString("F4", CultureInfo.InvariantCulture);
-            string imgStyle = $"width:{wPct}%; height:auto; display:block; position:absolute; transform-origin:top left; transform:translate({tx}%,{ty}%);";
+            var cw = item.CropWidth;
+            var ch = item.CropHeight;
+
+            string wPct = cw > 0 ? ((item.NaturalWidth / cw) * 100).ToString("F2", CultureInfo.InvariantCulture) : "100";
+            string hPct = ch > 0 ? ((item.NaturalHeight / ch) * 100).ToString("F2", CultureInfo.InvariantCulture) : "100";
+            string lPct = cw > 0 ? (-(item.CropX) / cw * 100).ToString("F2", CultureInfo.InvariantCulture) : "0";
+            string tPct = ch > 0 ? (-(item.CropY) / ch * 100).ToString("F2", CultureInfo.InvariantCulture) : "0";
+
+            string imgStyle = $"width:{wPct}%; height:{hPct}%; display:block; position:absolute; left:{lPct}%; top:{tPct}%";
 
             for (var c = 0; c < item.Quantity; c++)
             {

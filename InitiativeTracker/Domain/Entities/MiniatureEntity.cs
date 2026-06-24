@@ -13,10 +13,13 @@ public class MiniatureEntity
     public int PrintedCount { get; set; }
     public string? Link { get; set; }
 
-    // Crop region (normalized 0–1). NULL means "no crop / use full image".
-    public float? CropXOffset { get; set; }
-    public float? CropYOffset { get; set; }
-    public float? CropZoom { get; set; }
+    public double CropX { get; set; }
+    public double CropY { get; set; }
+    public double CropWidth { get; set; }
+    public double CropHeight { get; set; }
+
+    public double NaturalWidth { get; set; }
+    public double NaturalHeight { get; set; }
 }
 
 public class MiniatureEntityConfiguration : IEntityTypeConfiguration<MiniatureEntity>

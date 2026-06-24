@@ -202,15 +202,14 @@
 
     private static string BuildCropStyle(MiniatureEntity m)
     {
-        float cx = m.CropXOffset ?? 0f;
-        float cy = m.CropYOffset ?? 0f;
-        float cz = MathF.Max(1f, m.CropZoom ?? 1f);
+        var cw = m.CropWidth;
+        var ch = m.CropHeight;
 
-        // Width/height % are relative to container dims. translate() % are relative to element size.
-        // This correctly handles arbitrary image aspect ratios and crop regions outside image bounds (Vm0).
-        string wPct = (cz * 100).ToString("F4", CultureInfo.InvariantCulture);
-        string tx = (-cx * 100).ToString("F4", CultureInfo.InvariantCulture);
-        string ty = (-cy * 100).ToString("F4", CultureInfo.InvariantCulture);
-        return $"width:{wPct}%; height:auto; display:block; position:absolute; transform-origin:top left; transform:translate({tx}%,{ty}%);";
+        string wPct = cw > 0 ? ((m.NaturalWidth / cw) * 100).ToString("F2", CultureInfo.InvariantCulture) : "100";
+        string hPct = ch > 0 ? ((m.NaturalHeight / ch) * 100).ToString("F2", CultureInfo.InvariantCulture) : "100";
+        string lPct = cw > 0 ? (-(m.CropX) / cw * 100).ToString("F2", CultureInfo.InvariantCulture) : "0";
+        string tPct = ch > 0 ? (-(m.CropY) / ch * 100).ToString("F2", CultureInfo.InvariantCulture) : "0";
+
+        return $"width:{wPct}%; height:{hPct}%; display:block; position:absolute; left:{lPct}%; top:{tPct}%";
     }
 }

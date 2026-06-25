@@ -15,7 +15,7 @@ public class InitiativeServiceSortTests
     private InitiativeService _service;
 
     [SetUp]
-    public void Setup()
+    public async Task Setup()
     {
         _logger = Substitute.For<ILogger<InitiativeService>>();
         var options = new DbContextOptionsBuilder<InitiativeTrackerDbContext>()
@@ -23,6 +23,7 @@ public class InitiativeServiceSortTests
             .Options;
         _dbContext = new InitiativeTrackerDbContext(options);
         _service = new InitiativeService(_logger, _dbContext);
+        await _service.WarmUpAsync();
     }
 
     [TearDown]

@@ -15,7 +15,7 @@ public class InitiativeServiceRemoveTests
     private InitiativeService _service;
 
     [SetUp]
-    public void Setup()
+    public async Task Setup()
     {
         _logger = Substitute.For<ILogger<InitiativeService>>();
         var options = new DbContextOptionsBuilder<InitiativeTrackerDbContext>()
@@ -23,6 +23,7 @@ public class InitiativeServiceRemoveTests
             .Options;
         _dbContext = new InitiativeTrackerDbContext(options);
         _service = new InitiativeService(_logger, _dbContext);
+        await _service.WarmUpAsync();
     }
 
     [TearDown]
@@ -158,7 +159,7 @@ public class InitiativeServiceRemoveTests
     }
 
     [Test]
-    public void Clear_ShouldEmptyListAndResetState()
+    public async Task Clear_ShouldEmptyListAndResetState()
     {
         var items = new[]
         {
@@ -169,7 +170,7 @@ public class InitiativeServiceRemoveTests
         _service.Next();
         _service.Next();
 
-        _service.Clear();
+        await _service.ClearAsync();
 
         _service.Items.Should().BeEmpty();
         _service.Current.Should().BeNull();

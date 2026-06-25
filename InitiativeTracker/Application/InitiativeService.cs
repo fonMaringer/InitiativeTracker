@@ -1,8 +1,11 @@
 using InitiativeTracker.Domain.Entities;
 using InitiativeTracker.Domain.Enums;
 using InitiativeTracker.Infrastructure.Database;
+using Microsoft.EntityFrameworkCore;
 
 namespace InitiativeTracker.Application;
+
+public record EncounterDto(int Id, string Name, DateTime CreatedAt);
 
 public interface IInitiativeService
 {
@@ -12,27 +15,47 @@ public interface IInitiativeService
 
     IReadOnlyCollection<InitiativeListItem> Items { get; }
 
+    int? ActiveEncounterId { get; }
+
+    string? ActiveEncounterName { get; }
+
+    IReadOnlyCollection<EncounterDto> AllEncounters { get; }
+
+    Task ClearAsync();
+
+    Task<int> CreateEncounterAsync(string name);
+
+    Task DeleteEncounterAsync(int encounterId);
+
+    void MoveAtDown(int index);
+
+    void MoveAtUp(int index);
+
+    void MoveDown(InitiativeListItem item);
+
+    void MoveUp(InitiativeListItem item);
+
     void Next();
+
+    void Append(InitiativeListItem item);
+
+    void AppendMultiple(IEnumerable<InitiativeListItem> items);
+
+    Task RenameEncounterAsync(int encounterId, string newName);
+
+    void Remove(InitiativeListItem item);
+
+    void RemoveAt(int index);
 
     void Restart();
 
+    void SelectEncounter(int encounterId);
+
     void SortByInitiative();
 
-    void Remove(InitiativeListItem item);
-    void RemoveAt(int index);
+    Task SaveAllAsync();
 
-    void MoveUp(InitiativeListItem item);
-    void MoveAtUp(int index);
-    void MoveDown(InitiativeListItem item);
-    void MoveAtDown(int index);
-
-    void Clear();
-
-    void Append(InitiativeListItem item);
-    void AppendMultiple(IEnumerable<InitiativeListItem> items);
-
-    void WarmUp();
-    void SaveToFile();
+    Task WarmUpAsync();
 }
 
 public class InitiativeService(
@@ -40,113 +63,236 @@ public class InitiativeService(
     InitiativeTrackerDbContext dbContext
 ) : IInitiativeService
 {
-    private List<InitiativeListItem> _items = [];
+    private Dictionary<int, EncounterState> _encounters = new();
+    private int? _activeEncounterId;
 
-    public int CurrentRound { get; private set; } = 1;
+    public int CurrentRound => ActiveState?.CurrentRound ?? 1;
 
-    public InitiativeListItem? Current { get; private set; }
+    public InitiativeListItem? Current => ActiveState?.CurrentItem;
 
-    public IReadOnlyCollection<InitiativeListItem> Items => _items;
+    public IReadOnlyCollection<InitiativeListItem> Items => ActiveState?.Items ?? [];
+
+    public int? ActiveEncounterId => _activeEncounterId;
+
+    public string? ActiveEncounterName =>
+        _activeEncounterId.HasValue && _encounters.TryGetValue(_activeEncounterId.Value, out var state)
+            ? state.EncounterName
+            : null;
+
+    public IReadOnlyCollection<EncounterDto> AllEncounters => _encounters.Values.Select(e => new EncounterDto(e.EncounterId, e.EncounterName, e.CreatedAt)).ToList();
+
+    private EncounterState? ActiveState
+    {
+        get
+        {
+            if (_activeEncounterId.HasValue && _encounters.TryGetValue(_activeEncounterId.Value, out var state))
+                return state;
+            return null;
+        }
+    }
 
     public void Next()
     {
-        if (Current == null)
+        var state = ActiveState;
+        if (state is null)
+            return;
+
+        if (state.CurrentItem == null)
         {
-            Current = Items.FirstOrDefault();
+            state.CurrentItem = state.Items.FirstOrDefault();
             return;
         }
 
-        var currentIndex = _items.IndexOf(Current);
+        var currentIndex = _encounters[_activeEncounterId!.Value].Items.IndexOf(state.CurrentItem);
         var nextIndex = currentIndex + 1;
-        if (nextIndex >= _items.Count)
+        if (nextIndex >= state.Items.Count)
         {
-            CurrentRound++;
+            state.CurrentRound++;
             nextIndex = 0;
         }
 
-        Current = _items[nextIndex];
+        state.CurrentItem = state.Items[nextIndex];
     }
 
     public void Restart()
     {
-        CurrentRound = 1;
-        Current = Items.FirstOrDefault();
-        foreach (var item in Items)
+        var state = ActiveState;
+        if (state is null)
+            return;
+
+        state.CurrentRound = 1;
+        state.CurrentItem = state.Items.FirstOrDefault();
+        foreach (var item in state.Items)
         {
             item.Reset();
         }
     }
 
-    public void SortByInitiative() => _items = _items.OrderByDescending(i => i.Initiative).ToList();
-
-    public void Clear()
+    public void SortByInitiative()
     {
-        CurrentRound = 1;
-        Current = null;
-        _items.Clear();
+        var state = ActiveState;
+        if (state is null)
+            return;
+
+        state.Items = state.Items.OrderByDescending(i => i.Initiative).ToList();
     }
 
-    public void Append(InitiativeListItem item) => _items.Add(item);
+    public async Task ClearAsync()
+    {
+        var state = ActiveState;
+        if (state is null)
+            return;
 
-    public void AppendMultiple(IEnumerable<InitiativeListItem> items) => _items.AddRange(items);
+        state.CurrentRound = 1;
+        state.CurrentItem = null;
+        state.Items.Clear();
+        await SaveEncounterAsync(state.EncounterId);
+    }
 
-    public void Remove(InitiativeListItem item) => _items.Remove(item);
+    public void Append(InitiativeListItem item)
+    {
+        var state = ActiveState;
+        if (state is null)
+            return;
 
-    public void RemoveAt(int index) => _items.RemoveAt(index);
+        state.Items.Add(item);
+        _ = Task.Run(async () => await SaveEncounterAsync(state.EncounterId));
+    }
+
+    public void AppendMultiple(IEnumerable<InitiativeListItem> items)
+    {
+        var state = ActiveState;
+        if (state is null)
+            return;
+
+        state.Items.AddRange(items);
+        _ = Task.Run(async () => await SaveEncounterAsync(state.EncounterId));
+    }
+
+    public void Remove(InitiativeListItem item)
+    {
+        var state = ActiveState;
+        if (state is null)
+            return;
+
+        state.Items.Remove(item);
+        _ = Task.Run(async () => await SaveEncounterAsync(state.EncounterId));
+    }
+
+    public void RemoveAt(int index)
+    {
+        var state = ActiveState;
+        if (state is null)
+            return;
+
+        state.Items.RemoveAt(index);
+        _ = Task.Run(async () => await SaveEncounterAsync(state.EncounterId));
+    }
 
     public void MoveUp(InitiativeListItem item) => MoveItem(item, true);
-    public void MoveAtUp(int index) => MoveItem(_items[index], true);
+    public void MoveAtUp(int index)
+    {
+        var state = ActiveState;
+        if (state is null)
+            return;
+        MoveItem(state.Items[index], true);
+    }
     public void MoveDown(InitiativeListItem item) => MoveItem(item, false);
-    public void MoveAtDown(int index) => MoveItem(_items[index], false);
+    public void MoveAtDown(int index)
+    {
+        var state = ActiveState;
+        if (state is null)
+            return;
+        MoveItem(state.Items[index], false);
+    }
 
     private void MoveItem(InitiativeListItem item, bool isUp)
     {
-        var oldIndex = _items.IndexOf(item);
+        var state = ActiveState;
+        if (state is null)
+            return;
 
+        var oldIndex = state.Items.IndexOf(item);
         if (oldIndex <= -1)
             return;
 
         var newIndex = isUp ? oldIndex - 1 : oldIndex + 1;
         if (newIndex < 0)
-        {
             newIndex = 0;
-        }
 
-        if (newIndex >= _items.Count)
-        {
+        if (newIndex >= state.Items.Count)
             return;
-        }
 
-        _items.RemoveAt(oldIndex);
-
-        _items.Insert(newIndex, item);
+        state.Items.RemoveAt(oldIndex);
+        state.Items.Insert(newIndex, item);
     }
 
-    public void WarmUp()
+    public async Task WarmUpAsync()
     {
         try
         {
-            var entities = dbContext.Initiatives.OrderBy(e => e.OrderIndex).ToList();
-            _items = entities.Select(MapToItem).ToList();
+            var encountersMap = await dbContext.Encounters
+                .ToDictionaryAsync(e => e.Id);
+
+            var initiativeEntities = await dbContext.Initiatives
+                .OrderBy(e => e.OrderIndex)
+                .ToListAsync();
+
+            foreach (var group in initiativeEntities.GroupBy(e => e.EncounterId))
+            {
+                if (encountersMap.TryGetValue(group.Key, out var encData))
+                {
+                    _encounters[group.Key] = new EncounterState(
+                        EncounterId: group.Key,
+                        EncounterName: encData.Name,
+                        CreatedAt: encData.CreatedAt,
+                        Items: group.Select(MapToItem).ToList(),
+                        CurrentRound: 1,
+                        CurrentItem: null
+                    );
+                }
+            }
+
+            if (!_encounters.Any())
+            {
+                _activeEncounterId = await CreateEncounterAsync("Default");
+            }
+            else if (_activeEncounterId == null || !_encounters.ContainsKey(_activeEncounterId.Value))
+            {
+                _activeEncounterId = _encounters.Keys.First();
+            }
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            logger.LogError(e, "Unable to load initiative list from database.");
+            logger.LogError(ex, "Unable to load initiatives from database.");
         }
     }
 
-    public void SaveToFile()
+    public async Task SaveAllAsync()
     {
+        foreach (var kvp in _encounters)
+        {
+            await SaveEncounterAsync(kvp.Key);
+        }
+    }
+
+    private async Task SaveEncounterAsync(int encounterId)
+    {
+        if (!_encounters.TryGetValue(encounterId, out var state))
+            return;
+
         try
         {
-            dbContext.Initiatives.RemoveRange(dbContext.Initiatives.ToList());
-            var entities = _items.Select(MapToEntity).ToList();
+            var existing = dbContext.Initiatives.Where(e => e.EncounterId == encounterId).ToList();
+            dbContext.Initiatives.RemoveRange(existing);
+
+            var entities = state.Items.Select((item, index) => MapToEntity(item, encounterId, index)).ToList();
             dbContext.Initiatives.AddRange(entities);
-            dbContext.SaveChanges();
+            await dbContext.SaveChangesAsync();
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            logger.LogError(e, "Unable to save initiative list to database.");
+            logger.LogError(ex, "Unable to save initiative list for encounter {EncounterId}.", encounterId);
         }
     }
 
@@ -171,10 +317,11 @@ public class InitiativeService(
         };
     }
 
-    private static InitiativeEntity MapToEntity(InitiativeListItem item, int index)
+    private static InitiativeEntity MapToEntity(InitiativeListItem item, int encounterId, int index)
     {
         return new InitiativeEntity
         {
+            EncounterId = encounterId,
             Name = item.Name,
             Initiative = item.Initiative,
             Dexterity = item.Dexterity,
@@ -187,4 +334,77 @@ public class InitiativeService(
             OrderIndex = index,
         };
     }
+
+    public async Task<int> CreateEncounterAsync(string name)
+    {
+        var entity = new EncounterEntity
+        {
+            Name = name,
+            CreatedAt = DateTime.UtcNow,
+        };
+        dbContext.Encounters.Add(entity);
+        await dbContext.SaveChangesAsync();
+
+        _encounters[entity.Id] = new EncounterState(
+            EncounterId: entity.Id,
+            EncounterName: entity.Name,
+            CreatedAt: entity.CreatedAt,
+            Items: [],
+            CurrentRound: 1,
+            CurrentItem: null
+        );
+
+        return entity.Id;
+    }
+
+    public async Task DeleteEncounterAsync(int encounterId)
+    {
+        if (!_encounters.Remove(encounterId))
+            return;
+
+        await dbContext.Encounters.Where(e => e.Id == encounterId).ExecuteDeleteAsync();
+
+        if (_activeEncounterId == encounterId)
+        {
+            _activeEncounterId = _encounters.Any() ? _encounters.Keys.First() : null;
+        }
+    }
+
+    public async Task RenameEncounterAsync(int encounterId, string newName)
+    {
+        var state = _encounters.GetValueOrDefault(encounterId);
+        if (state is null)
+            return;
+
+        state.EncounterName = newName;
+
+        await dbContext.Encounters
+            .Where(e => e.Id == encounterId)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(e => e.Name, newName));
+    }
+
+    public void SelectEncounter(int encounterId)
+    {
+        if (_encounters.ContainsKey(encounterId))
+        {
+            _activeEncounterId = encounterId;
+        }
+    }
+}
+
+internal sealed class EncounterState(
+    int EncounterId,
+    string EncounterName,
+    DateTime CreatedAt,
+    List<InitiativeListItem> Items,
+    int CurrentRound,
+    InitiativeListItem? CurrentItem
+)
+{
+    public int EncounterId { get; } = EncounterId;
+    public string EncounterName { get; set; } = EncounterName;
+    public DateTime CreatedAt { get; } = CreatedAt;
+    public List<InitiativeListItem> Items { get; set; } = Items;
+    public int CurrentRound { get; set; } = CurrentRound;
+    public InitiativeListItem? CurrentItem { get; set; } = CurrentItem;
 }

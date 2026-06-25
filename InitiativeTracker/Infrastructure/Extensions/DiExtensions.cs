@@ -34,6 +34,7 @@ public static class DiExtensions
         public IServiceCollection AddApplication()
         {
             services.AddSingleton<IInitiativeService, InitiativeService>();
+            services.AddSingleton<IParticipantLibraryService, ParticipantLibraryService>();
             services.AddSingleton<IMiniatureService, MiniatureService>();
             services.AddSingleton<IItemService, ItemService>();
             services.AddSingleton<ISpellService, SpellService>();

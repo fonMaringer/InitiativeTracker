@@ -1,0 +1,94 @@
+.dashboard-layout {
+    display: flex;
+    gap: 20px;
+    padding: 20px;
+    max-width: 1700px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.encounters-column {
+    width: 250px;
+    min-width: 250px;
+    overflow-y: auto;
+    max-height: 100vh;
+    padding-right: 10px;
+}
+
+.encounter-item {
+    cursor: pointer;
+    border-radius: 4px;
+    margin-bottom: 3px;
+    padding: 8px 12px;
+    background-color: #2a2d32;
+    align-items: center;
+}
+
+.encounter-item:hover {
+    background-color: #373b41;
+}
+
+.encounter-item.active {
+    background-color: #0d6efd;
+}
+
+.encounter-item.active .encounter-name {
+    color: white;
+    font-weight: 600;
+}
+
+.encounter-name {
+    flex-grow: 1;
+    margin-right: 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.encounter-actions {
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+}
+
+.encounter-item:hover .encounter-actions {
+    opacity: 1;
+}
+
+.add-encounter-inline,
+.add-library-inline {
+    margin-top: 10px;
+}
+
+.main-content-column {
+    flex-grow: 1;
+    overflow-y: auto;
+    max-height: 100vh;
+}
+
+.tracker-section {
+    margin-bottom: 20px;
+}
+
+.integration-panel h6,
+.search-bestiary-section h6,
+.library-section h6 {
+    margin-bottom: 10px;
+}
+
+.library-item {
+    padding: 6px 12px;
+    border-radius: 4px;
+    background-color: #2a2d32;
+    margin-bottom: 3px;
+    align-items: center;
+}
+
+.library-item:hover {
+    background-color: #373b41;
+}
+
+.tracker-stats {
+    margin-bottom: 5px;
+}

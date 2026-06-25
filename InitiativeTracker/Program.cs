@@ -65,7 +65,7 @@ app.MapRazorComponents<App>()
 
 StaticWebAssetsLoader.UseStaticWebAssets(app.Environment, app.Configuration);
 
-app.WarmUp();
+await app.WarmUp();
 app.Lifetime.ApplicationStopping.Register(_ => app.TearDown(), null);
 
 var appOptions = app.Services.GetRequiredService<IOptionsMonitor<AppOptions>>();

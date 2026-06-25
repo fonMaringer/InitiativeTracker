@@ -20,7 +20,8 @@
         <div style="margin-bottom: 15px;">
             <h6>Add from ttg.club bestiary</h6>
             <div style="display: flex">
-                <TextInput @bind-Value="@_searchPattern" @onkeyup="OnKeyUpSearch" style="width: 300px; margin-right: 10px"/>
+                <TextInput @bind-Value="@_searchPattern" @onkeyup="OnKeyUpSearch"
+                           style="width: 300px; margin-right: 10px"/>
                 <Button Color="ButtonColor.Dark" @onclick="SearchBestiary">
                     <Icon Name="IconName.Search" Size="IconSize.x6"/>
                 </Button>
@@ -42,7 +43,9 @@
                             <div class="grid-cell">@result.Type</div>
                             <div class="grid-cell">@result.ChallengeRating</div>
                             <div class="grid-cell">
-                                <Button Color="ButtonColor.Dark" @onclick="() => SelectMiniature(result)" TooltipPlacement="TooltipPlacement.Bottom" TooltipTitle="Select to fill form fields">
+                                <Button Color="ButtonColor.Dark" @onclick="() => SelectMiniature(result)"
+                                        TooltipPlacement="TooltipPlacement.Bottom"
+                                        TooltipTitle="Select to fill form fields">
                                     <Icon Name="IconName.Plus" Size="IconSize.x6"/>
                                 </Button>
                             </div>
@@ -82,7 +85,9 @@
     <div class="mb-2">
         <label class="form-label"><b>Image</b></label>
         <InputFile OnChange="OnImageSelected" class="form-control"/>
-        <p class="text-muted" style="font-size: 0.8em;">Or focus this form and press Ctrl+V to paste image from clipboard.</p>
+        <p class="text-muted" style="font-size: 0.8em;">
+            Or focus this form and press Ctrl+V to paste image from clipboard.
+        </p>
     </div>
 
     <div class="mb-2">
@@ -144,10 +149,6 @@
     private double _cropWidth = 0;
     private double _cropHeight = 0;
 
-    // Natural image dimensions, populated when cropper is ready.
-    private double _naturalWidth = 0;
-    private double _naturalHeight = 0;
-
     private CropperComponent? _cropperComponent;
 
     private readonly Options CropperOptions = new()
@@ -162,9 +163,14 @@
     private readonly CreatureSize[] _sizeOptions = Enum.GetValues<CreatureSize>();
     private bool _isDisabled => _isProcessing || string.IsNullOrWhiteSpace(_name) || (_editMiniature == null && _imageData == null);
 
-    [Parameter] public EventCallback OnDataChanged { get; set; }
-    [Parameter] public MiniatureEntity? EditMiniature { get; set; }
-    [Parameter] public EventCallback<MiniatureEntity?> OnEditMiniatureChanged { get; set; }
+    [Parameter]
+    public EventCallback OnDataChanged { get; set; }
+
+    [Parameter]
+    public MiniatureEntity? EditMiniature { get; set; }
+
+    [Parameter]
+    public EventCallback<MiniatureEntity?> OnEditMiniatureChanged { get; set; }
 
     private MiniatureEntity? _editMiniature;
 
@@ -174,9 +180,14 @@
         _searchCts.Dispose();
     }
 
-    [Inject] IMiniatureService MiniatureService { get; set; } = default!;
-    [Inject] IJSRuntime JSRuntime { get; set; } = default!;
-    [Inject] IBestiaryClient BestiaryClient { get; set; } = default!;
+    [Inject]
+    IMiniatureService MiniatureService { get; set; } = default!;
+
+    [Inject]
+    IJSRuntime JSRuntime { get; set; } = default!;
+
+    [Inject]
+    IBestiaryClient BestiaryClient { get; set; } = default!;
 
     private string _searchPattern = string.Empty;
     private BestiarySearchResponseItem[]? _searchResults;
@@ -320,10 +331,6 @@
     {
         if (_cropperComponent == null) return;
 
-        var imageData = await _cropperComponent.GetImageDataAsync();
-        _naturalWidth = (double)imageData.NaturalWidth;
-        _naturalHeight = (double)imageData.NaturalHeight;
-
         if (_editMiniature != null)
         {
             await RestoreCropRegionToCropper();
@@ -406,19 +413,30 @@
 
         try
         {
+            var options = new GetCroppedCanvasOptions
+            {
+                FillColor = "#ffffff",
+                ImageSmoothingEnabled = true,
+            };
+
+            var nativeCroppedBase64 = await _cropperComponent.GetCroppedCanvasDataURLAsync(options, "image/jpeg", 0.85f);
+
+            var cleanBase64 = nativeCroppedBase64.Contains(",") ? nativeCroppedBase64.Split(',')[1] : nativeCroppedBase64;
+            var croppedImageData = Convert.FromBase64String(cleanBase64);
+
             if (_editMiniature != null)
             {
                 var dto = new MiniatureUpdateDto(
                     Name: _name,
                     Size: _size,
-                    PrintedCount:  _printedCount,
+                    ImageData: _imageData!,
+                    CroppedImageData: croppedImageData,
+                    PrintedCount: _printedCount,
                     Link: _link,
                     CropX: _cropX,
                     CropY: _cropY,
                     CropWidth: _cropWidth,
-                    CropHeight: _cropHeight,
-                    NaturalWidth: _naturalWidth,
-                    NaturalHeight: _naturalHeight);
+                    CropHeight: _cropHeight);
                 await MiniatureService.UpdateAsync(_editMiniature.Id, dto);
 
                 _successMessage = $"'{_name}' updated successfully.";
@@ -431,14 +449,13 @@
                     Name: _name,
                     Size: _size,
                     ImageData: _imageData!,
+                    CroppedImageData: croppedImageData ?? [],
                     PrintedCount: _printedCount ?? 0,
                     Link: _link,
                     CropX: _cropX,
                     CropY: _cropY,
                     CropWidth: _cropWidth,
-                    CropHeight: _cropHeight,
-                    NaturalWidth: _naturalWidth,
-                    NaturalHeight: _naturalHeight));
+                    CropHeight: _cropHeight));
 
                 _successMessage = $"'{_name}' added successfully.";
                 ResetForm();
@@ -472,7 +489,5 @@
         _cropY = 0;
         _cropWidth = 0;
         _cropHeight = 0;
-        _naturalWidth = 0;
-        _naturalHeight = 0;
     }
 }

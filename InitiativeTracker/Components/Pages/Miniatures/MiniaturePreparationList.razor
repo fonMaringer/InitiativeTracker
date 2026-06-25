@@ -27,7 +27,7 @@
                             <div style="width:50px; height:64px; overflow:hidden; position:relative;">
                                 <img src="@imgSrc"
                                      alt="@printItem.Miniature.Name"
-                                     style="@BuildCropStyle(printItem.Miniature)"
+                                     style="width: 100%; height: 100%; object-fit: cover;"
                                      @onclick:stopPropagation="true"/>
                             </div>
                         }
@@ -56,8 +56,7 @@
 
 @code
 {
-
-    List<PrintListMiniatureEntry> _printItems = new();
+    List<PrintListMiniatureEntry> _printItems = [];
     readonly Dictionary<int, string> _images = new();
 
     readonly MiniaturePrintGenerator _printGenerator = new();
@@ -74,9 +73,9 @@
         else
         {
             _printItems.Add(new PrintListMiniatureEntry(miniature, quantity));
-            if (miniature.ImageData != null && miniature.ImageData.Length > 0)
+            if (miniature.CroppedImageData is { Length: > 0 })
             {
-                _images[miniature.Id] = $"data:image/png;base64,{Convert.ToBase64String(miniature.ImageData)}";
+                _images[miniature.Id] = $"data:image/png;base64,{Convert.ToBase64String(miniature.CroppedImageData)}";
             }
         }
 
@@ -96,19 +95,12 @@
         foreach (var printItem in _printItems)
         {
             var entity = printItem.Miniature;
-            var imageBase64 = entity.ImageData != null ? Convert.ToBase64String(entity.ImageData) : string.Empty;
+            var imageBase64 = entity.CroppedImageData != null ? Convert.ToBase64String(entity.CroppedImageData) : string.Empty;
 
             printDataList.Add(new MiniaturePrintDataDto(
-                Name: entity.Name,
                 Size: entity.Size,
                 Quantity: printItem.Quantity,
-                ImageBase64: imageBase64,
-                CropX: entity.CropX,
-                CropY: entity.CropY,
-                CropWidth: entity.CropWidth,
-                CropHeight: entity.CropHeight,
-                NaturalWidth: entity.NaturalWidth,
-                NaturalHeight: entity.NaturalHeight));
+                ImageBase64: imageBase64));
         }
 
         string html = _printGenerator.Generate(printDataList);
@@ -119,18 +111,5 @@
     {
         public MiniatureEntity Miniature { get; } = miniature;
         public int Quantity { get; set; } = quantity;
-    }
-
-    private static string BuildCropStyle(MiniatureEntity m)
-    {
-        var cw = m.CropWidth;
-        var ch = m.CropHeight;
-
-        string wPct = cw > 0 ? ((m.NaturalWidth / cw) * 100).ToString("F2", CultureInfo.InvariantCulture) : "100";
-        string hPct = ch > 0 ? ((m.NaturalHeight / ch) * 100).ToString("F2", CultureInfo.InvariantCulture) : "100";
-        string lPct = cw > 0 ? (-(m.CropX) / cw * 100).ToString("F2", CultureInfo.InvariantCulture) : "0";
-        string tPct = ch > 0 ? (-(m.CropY) / ch * 100).ToString("F2", CultureInfo.InvariantCulture) : "0";
-
-        return $"width:{wPct}%; height:{hPct}%; display:block; position:absolute; left:{lPct}%; top:{tPct}%";
     }
 }

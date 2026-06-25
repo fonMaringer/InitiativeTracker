@@ -74,7 +74,7 @@
 
 @code
 {
-    private List<SpellEntity> _spells = new();
+    private List<SpellEntity> _spells = [];
     private bool _isLoading;
     private string _searchQuery = string.Empty;
 
@@ -136,7 +136,7 @@
             StateHasChanged();
             var results = await SpellService.SearchAsync(_searchQuery);
             if (version == _pendingSearchVersion)
-                _spells = new List<SpellEntity>(results);
+                _spells = [..results];
             StateHasChanged();
         }
         catch (Exception ex)

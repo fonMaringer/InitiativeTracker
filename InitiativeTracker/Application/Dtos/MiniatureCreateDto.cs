@@ -6,11 +6,10 @@ public record MiniatureCreateDto(
     string Name,
     CreatureSize Size,
     byte[] ImageData,
+    byte[] CroppedImageData,
     int PrintedCount,
     string? Link,
     double CropX,
     double CropY,
     double CropWidth,
-    double CropHeight,
-    double NaturalWidth,
-    double NaturalHeight);
+    double CropHeight);

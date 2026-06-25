@@ -9,6 +9,7 @@ public class MiniatureEntity
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public byte[]? ImageData { get; set; } = [];
+    public byte[]? CroppedImageData { get; set; } = [];
     public CreatureSize Size { get; set; }
     public int PrintedCount { get; set; }
     public string? Link { get; set; }

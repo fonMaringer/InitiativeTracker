@@ -1,5 +1,4 @@
 @rendermode InteractiveServer
-@using System.Globalization
 @using InitiativeTracker.Application
 @using InitiativeTracker.Domain.Entities
 
@@ -30,7 +29,8 @@
             </div>
             @foreach (var miniature in _miniatures)
             {
-                <div class="d-flex align-items-center catalog-row mb-2" style="cursor: pointer;" @onclick="() => SelectForEdit(miniature)">
+                <div class="d-flex align-items-center catalog-row mb-2" style="cursor: pointer;"
+                     @onclick="() => SelectForEdit(miniature)">
                     <div style="flex: 0.5;">
                         @if (miniature.Link is not null)
                         {
@@ -43,12 +43,12 @@
                         <span class="badge bg-secondary ms-2">@miniature.Size</span>
                     </div>
                     <div style="flex: 0.25;" @onclick:stopPropagation="true">
-                        @if (_imageSources.TryGetValue(miniature.Id, out var imgSrc))
+                        @if (miniature.CroppedImageData is { Length: > 0 } imgSrc)
                         {
                             <div style="width:50px; height:64px; overflow:hidden; position:relative;">
-                                <img src="@imgSrc"
+                                <img src="data:image/png;base64,@Convert.ToBase64String(imgSrc)"
                                      alt="@miniature.Name"
-                                     style="@BuildCropStyle(miniature)"
+                                     style="width: 100%; height: 100%; object-fit: cover;"
                                      @onclick:stopPropagation="true"/>
                             </div>
                         }
@@ -56,8 +56,10 @@
                     <div style="flex: 0.15;">
                         @(miniature.PrintedCount)
                     </div>
-                    <div class="d-flex gap-1 align-items-center justify-content-end" style="flex: 0.1;" @onclick:stopPropagation="true">
-                        <Button Color="ButtonColor.Success" Outline="true" Size="ButtonSize.Small" @onclick="() => OnAddToPrint(miniature)"
+                    <div class="d-flex gap-1 align-items-center justify-content-end" style="flex: 0.1;"
+                         @onclick:stopPropagation="true">
+                        <Button Color="ButtonColor.Success" Outline="true" Size="ButtonSize.Small"
+                                @onclick="() => OnAddToPrint(miniature)"
                                 TooltipPlacement="TooltipPlacement.Bottom" TooltipTitle="Add to print list">
                             <Icon Name="IconName.Printer" Size="IconSize.x6"/>
                         </Button>
@@ -74,15 +76,21 @@
 
 @code
 {
-    private List<MiniatureEntity> _miniatures = new();
+    private List<MiniatureEntity> _miniatures = [];
     private bool _isLoading;
-    private readonly Dictionary<int, string> _imageSources = new();
     private string _searchQuery = string.Empty;
 
-    [Inject] IMiniatureService MiniatureService { get; set; } = default!;
-    [Parameter] public EventCallback<MiniatureEntity?> OnEditSelected { get; set; }
-    [Parameter] public EventCallback OnDataChanged { get; set; }
-    [Parameter] public EventCallback<MiniatureEntity> OnAddForPrint { get; set; }
+    [Inject]
+    IMiniatureService MiniatureService { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback<MiniatureEntity?> OnEditSelected { get; set; }
+
+    [Parameter]
+    public EventCallback OnDataChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<MiniatureEntity> OnAddForPrint { get; set; }
 
     private volatile bool _isSearching;
     private int _pendingSearchVersion;
@@ -106,17 +114,6 @@
         {
             var allItems = await MiniatureService.SearchAsync(string.Empty);
             _miniatures = new List<MiniatureEntity>(allItems);
-            foreach (var miniature in _miniatures)
-            {
-                if (!_imageSources.ContainsKey(miniature.Id))
-                {
-                    var imageBytes = await MiniatureService.GetImageAsync(miniature.Id);
-                    if (imageBytes != null && imageBytes.Length > 0)
-                    {
-                        _imageSources[miniature.Id] = $"data:image/png;base64,{Convert.ToBase64String(imageBytes)}";
-                    }
-                }
-            }
         }
         catch (Exception ex)
         {
@@ -148,18 +145,7 @@
             StateHasChanged();
             var results = await MiniatureService.SearchAsync(_searchQuery);
             if (version == _pendingSearchVersion)
-                _miniatures = new List<MiniatureEntity>(results);
-            foreach (var miniature in _miniatures)
-            {
-                if (!_imageSources.ContainsKey(miniature.Id))
-                {
-                    var imageBytes = await MiniatureService.GetImageAsync(miniature.Id);
-                    if (imageBytes != null && imageBytes.Length > 0)
-                    {
-                        _imageSources[miniature.Id] = $"data:image/png;base64,{Convert.ToBase64String(imageBytes)}";
-                    }
-                }
-            }
+                _miniatures = [..results];
             StateHasChanged();
         }
         catch (Exception ex)
@@ -190,7 +176,6 @@
         {
             await MiniatureService.DeleteAsync(miniature.Id);
             _miniatures.Remove(miniature);
-            _imageSources.Remove(miniature.Id);
             StateHasChanged();
             await OnDataChanged.InvokeAsync();
         }
@@ -198,18 +183,5 @@
         {
             Console.WriteLine($"Failed to delete miniature: {ex.Message}");
         }
-    }
-
-    private static string BuildCropStyle(MiniatureEntity m)
-    {
-        var cw = m.CropWidth;
-        var ch = m.CropHeight;
-
-        string wPct = cw > 0 ? ((m.NaturalWidth / cw) * 100).ToString("F2", CultureInfo.InvariantCulture) : "100";
-        string hPct = ch > 0 ? ((m.NaturalHeight / ch) * 100).ToString("F2", CultureInfo.InvariantCulture) : "100";
-        string lPct = cw > 0 ? (-(m.CropX) / cw * 100).ToString("F2", CultureInfo.InvariantCulture) : "0";
-        string tPct = ch > 0 ? (-(m.CropY) / ch * 100).ToString("F2", CultureInfo.InvariantCulture) : "0";
-
-        return $"width:{wPct}%; height:{hPct}%; display:block; position:absolute; left:{lPct}%; top:{tPct}%";
     }
 }

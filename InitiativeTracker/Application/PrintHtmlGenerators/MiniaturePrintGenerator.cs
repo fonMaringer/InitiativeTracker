@@ -1,20 +1,12 @@
-using System.Globalization;
 using System.Text;
 using InitiativeTracker.Domain.Enums;
 
 namespace InitiativeTracker.Application.PrintHtmlGenerators;
 
 public record MiniaturePrintDataDto(
-    string Name,
     CreatureSize Size,
     int Quantity,
-    string ImageBase64,
-    double CropX,
-    double CropY,
-    double CropWidth,
-    double CropHeight,
-    double NaturalWidth,
-    double NaturalHeight);
+    string ImageBase64);
 
 public class MiniaturePrintGenerator
 {
@@ -87,15 +79,7 @@ public class MiniaturePrintGenerator
         {
             var b64Src = $"data:image/png;base64,{item.ImageBase64}";
             
-            var cw = item.CropWidth;
-            var ch = item.CropHeight;
-
-            string wPct = cw > 0 ? ((item.NaturalWidth / cw) * 100).ToString("F2", CultureInfo.InvariantCulture) : "100";
-            string hPct = ch > 0 ? ((item.NaturalHeight / ch) * 100).ToString("F2", CultureInfo.InvariantCulture) : "100";
-            string lPct = cw > 0 ? (-(item.CropX) / cw * 100).ToString("F2", CultureInfo.InvariantCulture) : "0";
-            string tPct = ch > 0 ? (-(item.CropY) / ch * 100).ToString("F2", CultureInfo.InvariantCulture) : "0";
-
-            string imgStyle = $"width:{wPct}%; height:{hPct}%; display:block; position:absolute; left:{lPct}%; top:{tPct}%";
+            var imgStyle = $"width: 100%; height: 100%; object-fit: cover;";
 
             for (var c = 0; c < item.Quantity; c++)
             {

@@ -1,8 +1,6 @@
-using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using FluentAssertions;
 using InitiativeTracker.Application.PrintHtmlGenerators;
-using InitiativeTracker.Domain;
 using InitiativeTracker.Domain.Enums;
 
 namespace InitiativeTracker.Tests;
@@ -94,7 +92,7 @@ public class MiniaturePrintGeneratorTests
     {
         var items = new[]
         {
-            new MiniaturePrintDataDto("Goblin", CreatureSize.Small, 2, FakeImageBase64, 0, 0, 0, 0, 0, 0)
+            new MiniaturePrintDataDto(CreatureSize.Small, 2, FakeImageBase64)
         };
 
         var html = _generator.Generate(items);
@@ -317,7 +315,7 @@ public class MiniaturePrintGeneratorTests
     }
 
     static MiniaturePrintDataDto CreateMiniatureDto(string? name, CreatureSize size, int quantity) =>
-        new(name ?? "Unnamed", size, quantity, "iVBORw0KGgoAAAANSU", 0, 0, 0, 0, 0, 0);
+        new(size, quantity, "iVBORw0KGgoAAAANSU");
 
     static int RegexCount(string text, string pattern) => Regex.Matches(text, pattern).Count;
 }

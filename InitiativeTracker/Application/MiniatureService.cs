@@ -29,14 +29,13 @@ public class MiniatureService(
                 Name = dto.Name,
                 Size = dto.Size,
                 ImageData = dto.ImageData,
+                CroppedImageData = dto.CroppedImageData,
                 PrintedCount = dto.PrintedCount,
                 Link = dto.Link,
                 CropX = dto.CropX,
                 CropY = dto.CropY,
                 CropWidth = dto.CropWidth,
                 CropHeight = dto.CropHeight,
-                NaturalWidth = dto.NaturalWidth,
-                NaturalHeight = dto.NaturalHeight,
             };
 
             dbContext.Miniatures.Add(entity);
@@ -63,13 +62,13 @@ public class MiniatureService(
                 entity.Size = dto.Size.Value;
             if (dto.PrintedCount.HasValue)
                 entity.PrintedCount = dto.PrintedCount.Value;
+            entity.ImageData = dto.ImageData;
+            entity.CroppedImageData = dto.CroppedImageData;
             entity.Link = dto.Link;
             entity.CropX = dto.CropX;
             entity.CropY = dto.CropY;
             entity.CropWidth = dto.CropWidth;
             entity.CropHeight = dto.CropHeight;
-            entity.NaturalWidth = dto.NaturalWidth;
-            entity.NaturalHeight = dto.NaturalHeight;
 
             await dbContext.SaveChangesAsync();
         }
@@ -120,6 +119,6 @@ public class MiniatureService(
             .Select(e => e.ImageData)
             .FirstOrDefaultAsync();
 
-        return imageData ?? Array.Empty<byte>();
+        return imageData ?? [];
     }
 }

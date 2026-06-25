@@ -1,6 +1,5 @@
 @page "/miniatures"
 @rendermode InteractiveServer
-@using InitiativeTracker.Domain.Entities
 
 <PageTitle>Miniatures</PageTitle>
 
@@ -30,28 +29,3 @@
     </div>
 </div>
 
-@code
-{
-    private int _catalogKey;
-    private MiniatureEntity? _editMiniature;
-    private MiniaturePreparationList? PreparationListRef;
-
-    private Task OnEditSelected(MiniatureEntity? miniature) => OnEditMiniatureChanged(miniature);
-
-    private async Task OnEditMiniatureChanged(MiniatureEntity? miniature)
-    {
-        _editMiniature = miniature;
-        StateHasChanged();
-    }
-
-    private void InvalidateCatalog()
-    {
-        _catalogKey++;
-    }
-
-    private async Task OnAddForPrint(MiniatureEntity miniature)
-    {
-        PreparationListRef?.AddItem(miniature, 1);
-        StateHasChanged();
-    }
-}

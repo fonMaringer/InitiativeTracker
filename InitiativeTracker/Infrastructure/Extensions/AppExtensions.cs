@@ -1,24 +1,28 @@
 using InitiativeTracker.Application;
 using InitiativeTracker.Infrastructure.Database;
+using Microsoft.EntityFrameworkCore;
 
 namespace InitiativeTracker.Infrastructure.Extensions;
 
 public static class AppExtensions
 {
-    public static void WarmUp(this WebApplication app)
+    extension(WebApplication app)
     {
-        using var scope = app.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<InitiativeTrackerDbContext>();
-        dbContext.Database.EnsureCreated();
+        public void WarmUp()
+        {
+            using var scope = app.Services.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<InitiativeTrackerDbContext>();
+            dbContext.Database.EnsureCreated();
 
-        var initiativeService = scope.ServiceProvider.GetRequiredService<IInitiativeService>();
-        initiativeService.WarmUp();
-    }
+            var initiativeService = scope.ServiceProvider.GetRequiredService<IInitiativeService>();
+            initiativeService.WarmUp();
+        }
 
-    public static void TearDown(this WebApplication app)
-    {
-        using var scope = app.Services.CreateScope();
-        var initiativeService = scope.ServiceProvider.GetRequiredService<IInitiativeService>();
-        initiativeService.SaveToFile();
+        public void TearDown()
+        {
+            using var scope = app.Services.CreateScope();
+            var initiativeService = scope.ServiceProvider.GetRequiredService<IInitiativeService>();
+            initiativeService.SaveToFile();
+        }
     }
 }

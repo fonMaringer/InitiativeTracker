@@ -73,6 +73,7 @@ if (appOptions.CurrentValue.OpenBrowserOnStart)
     OpenBrowser(appOptions.CurrentValue.BrowserUrl);
 
 app.Run();
+
 static void OpenBrowser(string url)
 {
     if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -87,8 +88,5 @@ static void OpenBrowser(string url)
     {
         Process.Start("open", url);
     }
-    else
-    {
-        // throw 
-    }
+    // throw 
 }

@@ -79,7 +79,7 @@ public class MiniaturePrintGenerator
         {
             var b64Src = $"data:image/png;base64,{item.ImageBase64}";
             
-            var imgStyle = $"width: 100%; height: 100%; object-fit: cover;";
+            var imgStyle = "width: 100%; height: 100%; object-fit: cover;";
 
             for (var c = 0; c < item.Quantity; c++)
             {
@@ -92,7 +92,7 @@ public class MiniaturePrintGenerator
             }
         }
 
-        sb.Append($"<section class=\"sheet\">");
+        sb.Append("<section class=\"sheet\">");
 
         foreach (var cellHtml in imgCells)
             sb.Append(cellHtml);

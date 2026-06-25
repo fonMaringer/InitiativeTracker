@@ -81,9 +81,9 @@ public class PokerCardPrintGenerator
 
     private static void WritePokerCard(StringBuilder sb, PokerCardPrintDataDto item)
     {
-        sb.Append($"<div class=\"poker-card\">");
+        sb.Append("<div class=\"poker-card\">");
         sb.Append($"  <div class=\"card-title\">{HttpUtility.HtmlEncode(item.Title)}</div>");
-        sb.Append($"  <div class=\"card-subtitle\">");
+        sb.Append("  <div class=\"card-subtitle\">");
         if (item.Subtitle is not null)
         {
             sb.Append($"<span class=\"card-subtitle-text\">{HttpUtility.HtmlEncode(item.Subtitle)}</span>");
@@ -95,7 +95,7 @@ public class PokerCardPrintGenerator
         sb.AppendLine("</div>");
         if (item.AdditionalInfo.Any())
         {
-            sb.Append($"  <div class=\"card-additional-info\">");
+            sb.Append("  <div class=\"card-additional-info\">");
             foreach (var info in item.AdditionalInfo)
             {
                 sb.Append($"<span>{info}</span>");

@@ -21,7 +21,11 @@ public static class DiExtensions
 
         public IServiceCollection AddDatabase(IConfiguration configuration)
         {
-            var connectionString = configuration.GetConnectionString("Default");
+            var rawConnectionString = configuration.GetConnectionString("Default");
+            var dbFileName = rawConnectionString!.Replace("Data Source=", "", StringComparison.OrdinalIgnoreCase);
+            var dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, dbFileName);
+            var connectionString = $"Data Source={dbPath}";
+            
             services.AddDbContext<InitiativeTrackerDbContext>(options =>
                 options.UseSqlite(connectionString), ServiceLifetime.Singleton);
             return services;

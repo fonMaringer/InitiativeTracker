@@ -1,6 +1,5 @@
 @page "/items"
 @rendermode InteractiveServer
-@using InitiativeTracker.Domain.Entities
 
 <PageTitle>Items</PageTitle>
 
@@ -30,28 +29,3 @@
     </div>
 </div>
 
-@code
-{
-    private int _catalogKey;
-    private ItemEntity? _editItem;
-    private ItemPreparationList? PreparationListRef;
-
-    private Task OnEditSelected(ItemEntity? item) => OnEditItemChanged(item);
-
-    private async Task OnEditItemChanged(ItemEntity? item)
-    {
-        _editItem = item;
-        StateHasChanged();
-    }
-
-    private void InvalidateCatalog()
-    {
-        _catalogKey++;
-    }
-
-    private async Task OnAddForPrint(ItemEntity item)
-    {
-        PreparationListRef?.AddItem(item, 1);
-        StateHasChanged();
-    }
-}

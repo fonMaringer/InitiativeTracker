@@ -1,6 +1,5 @@
 @page "/spells"
 @rendermode InteractiveServer
-@using InitiativeTracker.Domain.Entities
 
 <PageTitle>Spells</PageTitle>
 
@@ -30,28 +29,3 @@
     </div>
 </div>
 
-@code
-{
-    private int _catalogKey;
-    private SpellEntity? _editSpell;
-    private SpellPreparationList? PreparationListRef;
-
-    private Task OnEditSelected(SpellEntity? spell) => OnEditSpellChanged(spell);
-
-    private async Task OnEditSpellChanged(SpellEntity? spell)
-    {
-        _editSpell = spell;
-        StateHasChanged();
-    }
-
-    private void InvalidateCatalog()
-    {
-        _catalogKey++;
-    }
-
-    private async Task OnAddForPrint(SpellEntity spell)
-    {
-        PreparationListRef?.AddItem(spell, 1);
-        StateHasChanged();
-    }
-}

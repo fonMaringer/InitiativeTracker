@@ -1,4 +1,3 @@
-using InitiativeTracker.Domain;
 using InitiativeTracker.Domain.Entities;
 using InitiativeTracker.Integration.RestClients.TtgClub.Contracts.V1;
 using Source = InitiativeTracker.Domain.Enums.Source;

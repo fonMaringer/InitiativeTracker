@@ -7,6 +7,6 @@ public class BestiarySearchRequest
 {
     public int Page { get; set; }
     public int Size { get; set; }
-    public Search Search { get; set; }
-    public Order[] Order { get; set; }
+    public Search Search { get; set; } = null!;
+    public Order[] Order { get; set; } = [];
 }

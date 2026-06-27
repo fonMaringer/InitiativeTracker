@@ -1,0 +1,159 @@
+@using global::InitiativeTracker.Domain.Entities
+@using global::InitiativeTracker.Domain.Enums
+@rendermode InteractiveServer
+
+@if (CurrentEncounter is null)
+{
+    <h5>Select encounter first</h5>
+}
+else
+{
+    <div class="tracker-stats">
+        <h4>Round: @CurrentEncounter.CurrentRound</h4>
+    </div>
+
+    <div class="grid-table" style="grid-template-columns: 20fr 39fr 100fr 30fr 90fr 30fr 15fr">
+        <div class="grid-header">
+            <div></div>
+            <div>Initiative</div>
+            <div>Name</div>
+            <div>HP</div>
+            <div>Change HP</div>
+            <div>AC</div>
+            <div></div>
+        </div>
+        @foreach (var item in Participants)
+        {
+            <div class="grid-row @(GetItemStyle(item)) @(item.Id == CurrentEncounter.CurrentActiveParticipantId ? "current-item" : "")">
+                <div class="grid-cell">
+                    <Button Color="ButtonColor.Dark" @onclick="() => Move(item.Id, true)"
+                            style="margin-right: 5px">
+                        <Icon Name="IconName.ArrowUp" Size="IconSize.x6"/>
+                    </Button>
+                    <Button Color="ButtonColor.Dark" @onclick="() => Move(item.Id, false)">
+                        <Icon Name="IconName.ArrowDown" Size="IconSize.x6"/>
+                    </Button>
+                </div>
+                <div class="grid-cell">
+                    <NumberInput TValue="int" @bind-Value="@item.Initiative" Style="width: 75px; border-width: 0"
+                                   onClick="this.select();" @bind-Value:after="@SaveParticipantAsync"/>
+                    <div style="min-width: 35px; margin: 0 5px 0 5px; color: #ccc">
+                        <Tooltip Placement="TooltipPlacement.Bottom" Title="Dexterity modifier">
+                            (@(item.DexModifier > 0 ? "+" : "")@item.DexModifier)
+                        </Tooltip>
+                    </div>
+                    <Button Color="ButtonColor.Info" Outline="true" @onclick="async () => { item.RollInitiative(); await SaveParticipantAsync(); }"
+                            Style="margin-left: 5px" TooltipPlacement="TooltipPlacement.Bottom"
+                            TooltipTitle="Roll for initiative">
+                        <Icon Name="IconName.ArrowClockwise" Size="IconSize.x6"/>
+                    </Button>
+                </div>
+                <div class="grid-cell">
+                    <TextInput @bind-Value="@item.Name" Style="border-width: 0; margin-right: 5px" @bind-Value:after="@SaveParticipantAsync"/>
+                    @if (item.Source is Source.Bestiary)
+                    {
+                        <Button Color="ButtonColor.Dark" Type="ButtonType.Link" To="@item.Link" Target="Target.Blank"
+                                TooltipPlacement="TooltipPlacement.Bottom" TooltipTitle="Open in Bestiary">
+                            <Icon Name="IconName.Link45Deg" Size="IconSize.x6"/>
+                        </Button>
+                    }
+                </div>
+                <div class="grid-cell">
+                    <Tooltip Placement="TooltipPlacement.Bottom"
+                             Title="@(item.Source is Source.Bestiary ? $"Max HP: {item.HitsAverage}" : "")">
+                        <NumberInput TValue="int" @bind-Value="@item.HitsCurrent" Style="border-width: 0"
+                                       onClick="this.select();" @bind-Value:after="@SaveParticipantAsync"/>
+                    </Tooltip>
+                </div>
+                <div class="grid-cell">
+                    <NumberInput TValue="int" @bind-Value="item.ChangeHpValue"
+                                 Style="border-width: 0; margin-right: 15px"
+                                 onClick="this.select();"/>
+                    <Button Color="ButtonColor.Danger" @onclick="async () => { item.RemoveHp(OperationMode.Full); await SaveParticipantAsync(); }"
+                            Style="margin-right: 5px" TooltipPlacement="TooltipPlacement.Bottom"
+                            TooltipTitle="Remove value">
+                        <Icon Name="IconName.Dash" Size="IconSize.x6"/>
+                    </Button>
+                    <Button Color="ButtonColor.Danger" @onclick="async () => { item.RemoveHp(OperationMode.Half); await SaveParticipantAsync(); }"
+                            Style="margin-right: 5px" TooltipPlacement="TooltipPlacement.Bottom"
+                            TooltipTitle="Remove half">
+                        <div style="display: flex; flex-direction: row;">
+                            <Icon Name="IconName.Dash" Size="IconSize.x6"/>
+                            <p style="margin: 0">/2</p>
+                        </div>
+                    </Button>
+                    <Button Color="ButtonColor.Success" @onclick="async () => { item.AddHp(OperationMode.Full); await SaveParticipantAsync(); }"
+                            Style="margin-right: 5px" TooltipPlacement="TooltipPlacement.Bottom"
+                            TooltipTitle="Add value">
+                        <Icon Name="IconName.Plus" Size="IconSize.x6"/>
+                    </Button>
+                    <Button Color="ButtonColor.Success" @onclick="async () => { item.AddHp(OperationMode.Half); await SaveParticipantAsync(); }"
+                            Style="margin-right: 5px" TooltipPlacement="TooltipPlacement.Bottom"
+                            TooltipTitle="Add half">
+                        <div style="display: flex; flex-direction: row;">
+                            <Icon Name="IconName.Plus" Size="IconSize.x6"/>
+                            <p style="margin: 0">/2</p>
+                        </div>
+                    </Button>
+                </div>
+                <div class="grid-cell">
+                    <Tooltip Placement="TooltipPlacement.Bottom"
+                             Title="@(item.Source is Source.Bestiary ? $"Max AC: {item.ArmorClass}" : "")">
+                        <NumberInput TValue="int" @bind-Value="@item.ArmorClassCurrent" Style="border-width: 0"
+                                       onClick="this.select();" @bind-Value:after="@SaveParticipantAsync"/>
+                    </Tooltip>
+                </div>
+                <div class="grid-cell">
+                    <Button Color="ButtonColor.Danger" Outline="true" @onclick="() => Remove(item.Id)"
+                            TooltipPlacement="TooltipPlacement.Bottom" TooltipTitle="Delete row">
+                        <Icon Name="IconName.Trash" Size="IconSize.x6"/>
+                    </Button>
+                </div>
+            </div>
+        }
+
+        <!-- Inline Add Row -->
+        <div class="grid-row">
+            <div></div>
+            <div></div>
+            <div class="grid-cell">
+                <TextInput @bind-Value="_createName"/>
+            </div>
+            <div class="grid-cell">
+                <NumberInput TValue="int" @bind-Value="_createHp" onClick="this.select();"/>
+            </div>
+            <div></div>
+            <div class="grid-cell">
+                <NumberInput TValue="int" @bind-Value="_createAc" onClick="this.select();"/>
+            </div>
+            <div class="grid-cell">
+                <Button Color="ButtonColor.Primary" @onclick="AddManual" TooltipPlacement="TooltipPlacement.Bottom"
+                        TooltipTitle="Add row manually">
+                    <Icon Name="IconName.Plus" Size="IconSize.x6"/>
+                </Button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Controls -->
+    <hr style="margin: 15px 0; border-color: #333;"/>
+    <div class="tracker-controls" style="margin-left: 5px">
+        <Button Color="ButtonColor.Primary" Outline="true" Class="control-btn" @onclick="Next">Next</Button>
+        <Button Color="ButtonColor.Info" Outline="true" Class="control-btn" @onclick="SortByInitiative">Sort</Button>
+        <Button Color="ButtonColor.Warning" Outline="true" Class="control-btn" @onclick="Restart">Restart</Button>
+        <Button Color="ButtonColor.Danger" Outline="true" Class="control-btn" @onclick="Clear">Clear</Button>
+    </div>
+}
+
+@code
+{
+    private static string GetItemStyle(EncounterParticipant item) => item.State switch
+    {
+        HealthState.Healthy => "healthy-item",
+        HealthState.SlightlyWounded => "slightly-wounded-item",
+        HealthState.Wounded => "wounded-item",
+        HealthState.SeriouslyWounded => "seriously-wounded-item",
+        HealthState.Dead => "dead-item",
+        _ => throw new ArgumentOutOfRangeException(nameof(item.State), item.State, null)
+    };
+}

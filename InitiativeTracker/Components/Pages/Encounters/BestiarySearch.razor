@@ -1,0 +1,46 @@
+@using global::InitiativeTracker.Domain.Enums
+@rendermode InteractiveServer
+
+<div style="display: flex; margin-bottom: 10px">
+    <TextInput @bind-Value="@_searchPattern" @onkeyup="OnKeyUpSearch"
+               Style="width: 200px; height: 35px; margin-left: 5px;"/>
+    <Button Color="ButtonColor.Dark" @onclick="Search" Style="margin-left: 5px;">
+        <Icon Name="IconName.Search"/>
+    </Button>
+</div>
+
+@if (_searchResults != null && _searchResults.Any())
+{
+    <div class="grid-table" style="grid-template-columns: 1fr 100px 200px">
+        <div class="grid-header">
+            <div>Name</div>
+            <div>Source</div>
+            <div>Add</div>
+        </div>
+        @foreach (var result in _searchResults)
+        {
+            <div class="grid-row">
+                <div class="grid-cell">@result.Name.Rus</div>
+                <div class="grid-cell">
+                    <Button Color="ButtonColor.None" TooltipPlacement="TooltipPlacement.Bottom"
+                            TooltipTitle="@result.Source.Name">
+                        @result.Source.ShortName
+                    </Button>
+                </div>
+                <div class="grid-cell">
+                    <NumberInput TValue="int" @bind-Value="result.AddCount" Style="border-width: 0; height: 25px;"
+                                 onClick="this.select();"/>
+                    <Button Color="ButtonColor.Dark" @onclick="() => Add(result, HitsMode.Average)"
+                            TooltipPlacement="TooltipPlacement.Bottom" TooltipTitle="Add with average HP"
+                            Style="margin-left: 5px;">
+                        <Icon Name="IconName.Plus"/>
+                    </Button>
+                    <Button Color="ButtonColor.Dark" @onclick="() => Add(result, HitsMode.Random)"
+                            TooltipPlacement="TooltipPlacement.Bottom" TooltipTitle="Add with randomized HP">
+                        <Icon Name="IconName.Dice5"/>
+                    </Button>
+                </div>
+            </div>
+        }
+    </div>
+}

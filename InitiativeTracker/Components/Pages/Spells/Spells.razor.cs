@@ -5,12 +5,12 @@ namespace InitiativeTracker.Components.Pages.Spells;
 public partial class Spells
 {
     private int _catalogKey;
-    private SpellEntity? _editSpell;
+    private Spell? _editSpell;
     private SpellPreparationList? PreparationListRef;
 
-    private Task OnEditSelected(SpellEntity? spell) => OnEditSpellChanged(spell);
+    private Task OnEditSelected(Spell? spell) => OnEditSpellChanged(spell);
 
-    private async Task OnEditSpellChanged(SpellEntity? spell)
+    private async Task OnEditSpellChanged(Spell? spell)
     {
         _editSpell = spell;
         StateHasChanged();
@@ -21,7 +21,7 @@ public partial class Spells
         _catalogKey++;
     }
 
-    private async Task OnAddForPrint(SpellEntity spell)
+    private async Task OnAddForPrint(Spell spell)
     {
         PreparationListRef?.AddItem(spell, 1);
         StateHasChanged();

@@ -22,7 +22,7 @@
                     <div class="grid-header">
                         <div>Name</div>
                         <div>Type</div>
-                        <div>CR</div>
+                        <div>Source</div>
                         <div>Select</div>
                     </div>
                     @foreach (var result in _searchResults)
@@ -30,7 +30,7 @@
                         <div class="grid-row">
                             <div class="grid-cell">@result.Name.Rus</div>
                             <div class="grid-cell">@result.Type</div>
-                            <div class="grid-cell">@result.ChallengeRating</div>
+                            <div class="grid-cell">@result.Source.ShortName</div>
                             <div class="grid-cell">
                                 <Button Color="ButtonColor.Dark" @onclick="() => SelectMiniature(result)"
                                         TooltipPlacement="TooltipPlacement.Bottom"

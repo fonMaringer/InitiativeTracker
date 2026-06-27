@@ -1,0 +1,44 @@
+.encounter-item {
+    cursor: pointer;
+    border-radius: 4px;
+    margin-bottom: 3px;
+    padding: 8px 12px;
+    background-color: #2a2d32;
+    align-items: center;
+}
+
+.encounter-item:hover {
+    background-color: #373b41;
+}
+
+.encounter-item.active {
+    background-color: #0d6efd;
+}
+
+.encounter-item.active .encounter-name {
+    color: white;
+    font-weight: 600;
+}
+
+.encounter-name {
+    flex-grow: 1;
+    margin-right: 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.encounter-actions {
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+}
+
+.encounter-item:hover .encounter-actions {
+    opacity: 1;
+}
+
+.add-encounter-inline {
+    margin-top: 10px;
+}

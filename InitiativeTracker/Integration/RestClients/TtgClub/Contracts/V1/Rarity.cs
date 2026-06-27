@@ -4,9 +4,9 @@ namespace InitiativeTracker.Integration.RestClients.TtgClub.Contracts.V1;
 
 public class Rarity
 {
-    public string Type { get; set; }
-    public string Name { get; set; }
-    public string Short { get; set; }
+    public string Type { get; set; } = null!;
+    public string Name { get; set; } = null!;
+    public string Short { get; set; } = null!;
 
     public ItemRarity ItemRarity => Type.ToUpper() switch
     {

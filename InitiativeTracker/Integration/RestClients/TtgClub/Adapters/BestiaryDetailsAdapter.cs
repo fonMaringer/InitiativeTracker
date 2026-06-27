@@ -1,4 +1,5 @@
 using InitiativeTracker.Domain.Entities;
+using InitiativeTracker.Domain.Enums;
 using InitiativeTracker.Integration.RestClients.TtgClub.Contracts.V1;
 using Source = InitiativeTracker.Domain.Enums.Source;
 
@@ -6,12 +7,12 @@ namespace InitiativeTracker.Integration.RestClients.TtgClub.Adapters;
 
 public static class BestiaryDetailsAdapter
 {
-    public static InitiativeListItem ToInitiativeListItem(
+    public static EncounterParticipant ToEncounterParticipant(
         this BestiaryDetailsResponse s,
         string link,
         HitsMode mode)
     {
-        var res = new InitiativeListItem
+        var res = new EncounterParticipant
         {
             Name = s.Name.Rus,
             ArmorClass = s.ArmorClass,
@@ -27,7 +28,7 @@ public static class BestiaryDetailsAdapter
         return res;
     }
 
-    public static MiniatureEntity ToMiniatureEntity(
+    public static Miniature ToMiniatureEntity(
         this BestiaryDetailsResponse s,
         string link,
         byte[]? imageData)

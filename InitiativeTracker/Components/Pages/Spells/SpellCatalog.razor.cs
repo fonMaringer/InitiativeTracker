@@ -1,32 +1,27 @@
-using System.Text.RegularExpressions;
-using InitiativeTracker.Application;
+using InitiativeTracker.DataAccess.Repositories;
 using InitiativeTracker.Domain.Entities;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 
 namespace InitiativeTracker.Components.Pages.Spells;
 
-public partial class SpellCatalog
+public partial class SpellCatalog(ISpellRepository spellRepository)
 {
-    private List<SpellEntity> _spells = [];
+    private List<Spell> _spells = [];
     private bool _isLoading;
     private string _searchQuery = string.Empty;
 
-    [Inject] ISpellService SpellService { get; set; } = default!;
-    [Parameter] public EventCallback<SpellEntity?> OnEditSelected { get; set; }
-    [Parameter] public EventCallback OnDataChanged { get; set; }
-    [Parameter] public EventCallback<SpellEntity> OnAddForPrint { get; set; }
+    [Parameter]
+    public EventCallback<Spell?> OnEditSelected { get; set; }
+    [Parameter]
+    public EventCallback OnDataChanged { get; set; }
+    [Parameter]
+    public EventCallback<Spell> OnAddForPrint { get; set; }
 
     private volatile bool _isSearching;
     private int _pendingSearchVersion;
 
     protected override async Task OnInitializedAsync() => await LoadAllSpells();
-
-    public async Task RefreshAsync()
-    {
-        _searchQuery = string.Empty;
-        await LoadAllSpells();
-    }
 
     private async Task LoadAllSpells()
     {
@@ -34,8 +29,8 @@ public partial class SpellCatalog
         StateHasChanged();
         try
         {
-            var allSpells = await SpellService.SearchAsync(string.Empty);
-            _spells = new List<SpellEntity>(allSpells);
+            var allSpells = await spellRepository.SearchAsync(string.Empty);
+            _spells = new List<Spell>(allSpells);
         }
         catch (Exception ex)
         {
@@ -65,7 +60,7 @@ public partial class SpellCatalog
         {
             _isLoading = true;
             StateHasChanged();
-            var results = await SpellService.SearchAsync(_searchQuery);
+            var results = await spellRepository.SearchAsync(_searchQuery);
             if (version == _pendingSearchVersion)
                 _spells = [..results];
             StateHasChanged();
@@ -82,15 +77,15 @@ public partial class SpellCatalog
         }
     }
 
-    private async Task SelectForEdit(SpellEntity? spell) => await OnEditSelected.InvokeAsync(spell);
+    private async Task SelectForEdit(Spell? spell) => await OnEditSelected.InvokeAsync(spell);
 
-    private async Task OnAddToPrint(SpellEntity? spell) => await OnAddForPrint.InvokeAsync(spell!);
+    private async Task OnAddToPrint(Spell? spell) => await OnAddForPrint.InvokeAsync(spell!);
 
-    private async Task OnDelete(SpellEntity spell)
+    private async Task OnDelete(Spell spell)
     {
         try
         {
-            await SpellService.DeleteAsync(spell.Id);
+            await spellRepository.DeleteAsync(spell.Id);
             _spells.Remove(spell);
             StateHasChanged();
             await OnDataChanged.InvokeAsync();
@@ -99,14 +94,5 @@ public partial class SpellCatalog
         {
             Console.WriteLine($"Failed to delete spell: {ex.Message}");
         }
-    }
-
-    private string Truncate(string text, int maxLength)
-    {
-        if (string.IsNullOrEmpty(text) || text.Length <= maxLength)
-            return text;
-
-        var stripped = Regex.Replace(text, "<.*?>", string.Empty);
-        return stripped.Substring(0, maxLength) + "...";
     }
 }

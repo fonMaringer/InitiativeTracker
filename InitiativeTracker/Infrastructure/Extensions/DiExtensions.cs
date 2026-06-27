@@ -1,7 +1,8 @@
-using InitiativeTracker.Application;
+using InitiativeTracker.DataAccess.Repositories;
 using InitiativeTracker.Infrastructure.Database;
 using InitiativeTracker.Integration.RestClients.TtgClub;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace InitiativeTracker.Infrastructure.Extensions;
 
@@ -12,9 +13,9 @@ public static class DiExtensions
         public IServiceCollection AddHttpClients(IConfiguration configuration)
         {
             services.Configure<TtgClubClientOptions>(configuration.GetSection(nameof(TtgClubClientOptions)));
-            services.AddSingleton<IBestiaryClient, BestiaryClient>();
-            services.AddSingleton<IMagicItemsClient, MagicItemsClient>();
-            services.AddSingleton<ISpellsClient, SpellsClient>();
+            services.TryAddScoped<IBestiaryClient, BestiaryClient>();
+            services.TryAddScoped<IMagicItemsClient, MagicItemsClient>();
+            services.TryAddScoped<ISpellsClient, SpellsClient>();
 
             return services;
         }
@@ -27,17 +28,18 @@ public static class DiExtensions
             var connectionString = $"Data Source={dbPath}";
             
             services.AddDbContext<InitiativeTrackerDbContext>(options =>
-                options.UseSqlite(connectionString), ServiceLifetime.Singleton);
+                options.UseSqlite(connectionString));
             return services;
         }
 
         public IServiceCollection AddApplication()
         {
-            services.AddSingleton<IInitiativeService, InitiativeService>();
-            services.AddSingleton<IParticipantLibraryService, ParticipantLibraryService>();
-            services.AddSingleton<IMiniatureService, MiniatureService>();
-            services.AddSingleton<IItemService, ItemService>();
-            services.AddSingleton<ISpellService, SpellService>();
+            services.TryAddScoped<IEncounterRepository, EncounterRepository>();
+            services.TryAddScoped<IParticipantRepository, ParticipantRepository>();
+            services.TryAddScoped<IMiniatureRepository, MiniatureRepository>();
+            services.TryAddScoped<IMagicItemRepository, MagicMagicItemRepository>();
+            services.TryAddScoped<ISpellRepository, SpellRepository>();
+            services.TryAddScoped<IEncounterParticipantsRepository, EncounterParticipantsRepository>();
 
             return services;
         }

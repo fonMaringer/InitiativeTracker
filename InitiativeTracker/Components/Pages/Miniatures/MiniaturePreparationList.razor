@@ -19,7 +19,7 @@
             {
                 <div class="grid-row">
                     <div class="grid-cell">
-                        @if (_images.TryGetValue(printItem.Miniature.Id, out string? imgSrc))
+                        @if (_images.TryGetValue(printItem.Miniature.Id, out var imgSrc))
                         {
                             <div style="width:50px; height:64px; overflow:hidden; position:relative;">
                                 <img src="@imgSrc"
@@ -34,7 +34,7 @@
                     <div class="grid-cell">
                         <NumberInput TValue="int" 
                                      @bind-Value="@printItem.Quantity"
-                                    Style="width: 60px; border-width: 0" onClick="this.select();"/>
+                                     Style="width: 60px; border-width: 0" onClick="this.select();"/>
                     </div>
                     <div class="grid-cell">
                         <Button Color="ButtonColor.Danger" Outline="true" @onclick="() => RemoveFromPrintList(printItem.Miniature.Id)">

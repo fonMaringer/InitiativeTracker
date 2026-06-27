@@ -1,5 +1,5 @@
-using InitiativeTracker.Application;
-using InitiativeTracker.Application.Dtos;
+using InitiativeTracker.DataAccess.Dtos;
+using InitiativeTracker.DataAccess.Repositories;
 using InitiativeTracker.Domain.Entities;
 using InitiativeTracker.Integration.RestClients.TtgClub;
 using InitiativeTracker.Integration.RestClients.TtgClub.Adapters;
@@ -10,7 +10,10 @@ using Source = InitiativeTracker.Domain.Enums.Source;
 
 namespace InitiativeTracker.Components.Pages.Spells;
 
-public partial class AddSpellForm : IDisposable
+public partial class AddSpellForm(
+    ISpellsClient spellsClient,
+    ISpellRepository spellRepository
+    ) : IDisposable
 {
     private string _name = string.Empty;
     private string? _link;
@@ -41,11 +44,14 @@ public partial class AddSpellForm : IDisposable
 
     private bool _isDisabled => _isProcessing || string.IsNullOrWhiteSpace(_name);
 
-    [Parameter] public EventCallback OnDataChanged { get; set; }
-    [Parameter] public SpellEntity? EditSpell { get; set; }
-    [Parameter] public EventCallback<SpellEntity?> OnEditSpellChanged { get; set; }
+    [Parameter]
+    public EventCallback OnDataChanged { get; set; }
+    [Parameter]
+    public Spell? EditSpell { get; set; }
+    [Parameter]
+    public EventCallback<Spell?> OnEditSpellChanged { get; set; }
 
-    private SpellEntity? _editSpell;
+    private Spell? _editSpell;
 
     protected override void OnParametersSet()
     {
@@ -78,9 +84,6 @@ public partial class AddSpellForm : IDisposable
         }
     }
 
-    [Inject] ISpellsClient SpellsClient { get; set; } = default!;
-    [Inject] ISpellService SpellService { get; set; } = default!;
-
     private async Task OnKeyUpSearch(KeyboardEventArgs? e)
     {
         if (e?.Code is "Enter" or "NumpadEnter")
@@ -104,7 +107,7 @@ public partial class AddSpellForm : IDisposable
 
         try
         {
-            _searchResults = await SpellsClient.SearchV1Async(_searchPattern, _searchCts.Token);
+            _searchResults = await spellsClient.SearchV1Async(_searchPattern, _searchCts.Token);
         }
         catch (OperationCanceledException)
         {
@@ -124,11 +127,11 @@ public partial class AddSpellForm : IDisposable
         if (string.IsNullOrEmpty(url))
             return;
 
-        var details = await SpellsClient.GetDetailsV1Async(url, _searchCts.Token);
+        var details = await spellsClient.GetDetailsV1Async(url, _searchCts.Token);
         if (details is null)
             return;
 
-        var link = SpellsClient.BuildDirectLink(details.Url);
+        var link = spellsClient.BuildDirectLink(details.Url);
         var entity = details.ToSpellEntity(link);
 
         _name = entity.Name;
@@ -159,7 +162,7 @@ public partial class AddSpellForm : IDisposable
         {
             if (_editSpell != null)
             {
-                await SpellService.UpdateAsync(_editSpell.Id, new SpellUpdateDto(
+                await spellRepository.UpdateAsync(_editSpell.Id, new SpellUpdateDto(
                     Name: _name,
                     Type: _type,
                     VerbalComponent: _verbalComponent,
@@ -177,7 +180,7 @@ public partial class AddSpellForm : IDisposable
             }
             else
             {
-                await SpellService.AddAsync(new SpellCreateDto(
+                await spellRepository.AddAsync(new SpellCreateDto(
                     Name: _name,
                     Type: _type,
                     VerbalComponent: _verbalComponent,

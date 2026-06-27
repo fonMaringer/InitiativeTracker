@@ -5,12 +5,12 @@ namespace InitiativeTracker.Components.Pages.Miniatures;
 public partial class Miniatures
 {
     private int _catalogKey;
-    private MiniatureEntity? _editMiniature;
+    private Miniature? _editMiniature;
     private MiniaturePreparationList? PreparationListRef;
 
-    private Task OnEditSelected(MiniatureEntity? miniature) => OnEditMiniatureChanged(miniature);
+    private Task OnEditSelected(Miniature? miniature) => OnEditMiniatureChanged(miniature);
 
-    private async Task OnEditMiniatureChanged(MiniatureEntity? miniature)
+    private async Task OnEditMiniatureChanged(Miniature? miniature)
     {
         _editMiniature = miniature;
         StateHasChanged();
@@ -21,7 +21,7 @@ public partial class Miniatures
         _catalogKey++;
     }
 
-    private async Task OnAddForPrint(MiniatureEntity miniature)
+    private async Task OnAddForPrint(Miniature miniature)
     {
         PreparationListRef?.AddItem(miniature, 1);
         StateHasChanged();

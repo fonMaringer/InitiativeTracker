@@ -1,19 +1,16 @@
 using InitiativeTracker.Application.PrintHtmlGenerators;
 using InitiativeTracker.Domain.Entities;
-using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 
 namespace InitiativeTracker.Components.Pages.Miniatures;
 
-public partial class MiniaturePreparationList
+public partial class MiniaturePreparationList(IJSRuntime jsRuntime)
 {
-    List<PrintListMiniatureEntry> _printItems = [];
-    readonly Dictionary<int, string> _images = new();
-    readonly MiniaturePrintGenerator _printGenerator = new();
+    private List<PrintListMiniatureEntry> _printItems = [];
+    private readonly Dictionary<int, string> _images = new();
+    private readonly MiniaturePrintGenerator _printGenerator = new();
 
-    [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
-
-    public void AddItem(MiniatureEntity miniature, int quantity)
+    public void AddItem(Miniature miniature, int quantity)
     {
         if (quantity <= 0) return;
 
@@ -30,13 +27,13 @@ public partial class MiniaturePreparationList
         StateHasChanged();
     }
 
-    void RemoveFromPrintList(int miniatureId)
+    private void RemoveFromPrintList(int miniatureId)
     {
         _printItems.RemoveAll(p => p.Miniature.Id == miniatureId);
         StateHasChanged();
     }
 
-    async Task GenerateAndOpenPrintHtml()
+    private async Task GenerateAndOpenPrintHtml()
     {
         var printDataList = new List<MiniaturePrintDataDto>();
 
@@ -52,12 +49,12 @@ public partial class MiniaturePreparationList
         }
 
         string html = _printGenerator.Generate(printDataList);
-        await JSRuntime.InvokeVoidAsync("openHtmlInNewTab", html);
+        await jsRuntime.InvokeVoidAsync("openHtmlInNewTab", html);
     }
 
-    public class PrintListMiniatureEntry(MiniatureEntity miniature, int quantity)
+    public class PrintListMiniatureEntry(Miniature miniature, int quantity)
     {
-        public MiniatureEntity Miniature { get; } = miniature;
+        public Miniature Miniature { get; } = miniature;
         public int Quantity { get; set; } = quantity;
     }
 }

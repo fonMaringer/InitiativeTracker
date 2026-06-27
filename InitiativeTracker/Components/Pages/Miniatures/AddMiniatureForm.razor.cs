@@ -3,8 +3,8 @@ using Cropper.Blazor.Events;
 using Cropper.Blazor.Events.CropEndEvent;
 using Cropper.Blazor.Events.CropReadyEvent;
 using Cropper.Blazor.Models;
-using InitiativeTracker.Application;
-using InitiativeTracker.Application.Dtos;
+using InitiativeTracker.DataAccess.Dtos;
+using InitiativeTracker.DataAccess.Repositories;
 using InitiativeTracker.Domain.Entities;
 using InitiativeTracker.Domain.Enums;
 using InitiativeTracker.Integration.RestClients.TtgClub;
@@ -16,7 +16,11 @@ using Microsoft.JSInterop;
 
 namespace InitiativeTracker.Components.Pages.Miniatures;
 
-public partial class AddMiniatureForm : IDisposable
+public partial class AddMiniatureForm(
+    IMiniatureRepository miniatureRepository,
+    IJSRuntime jsRuntime,
+    IBestiaryClient bestiaryClient
+    ) : IDisposable
 {
     private string _name = string.Empty;
     private string? _link;
@@ -49,29 +53,18 @@ public partial class AddMiniatureForm : IDisposable
 
     [Parameter]
     public EventCallback OnDataChanged { get; set; }
-
     [Parameter]
-    public MiniatureEntity? EditMiniature { get; set; }
-
+    public Miniature? EditMiniature { get; set; }
     [Parameter]
-    public EventCallback<MiniatureEntity?> OnEditMiniatureChanged { get; set; }
+    public EventCallback<Miniature?> OnEditMiniatureChanged { get; set; }
 
-    private MiniatureEntity? _editMiniature;
+    private Miniature? _editMiniature;
 
     public void Dispose()
     {
         _searchCts.Cancel();
         _searchCts.Dispose();
     }
-
-    [Inject]
-    IMiniatureService MiniatureService { get; set; } = default!;
-
-    [Inject]
-    IJSRuntime JSRuntime { get; set; } = default!;
-
-    [Inject]
-    IBestiaryClient BestiaryClient { get; set; } = default!;
 
     private string _searchPattern = string.Empty;
     private BestiarySearchResponseItem[]? _searchResults;
@@ -102,7 +95,7 @@ public partial class AddMiniatureForm : IDisposable
 
         try
         {
-            _searchResults = await BestiaryClient.SearchV1Async(_searchPattern, _searchCts.Token);
+            _searchResults = await bestiaryClient.SearchV1Async(_searchPattern, _searchCts.Token);
         }
         catch (OperationCanceledException)
         {
@@ -120,12 +113,12 @@ public partial class AddMiniatureForm : IDisposable
 
         try
         {
-            var details = await BestiaryClient.GetDetailsV1Async(url, _searchCts.Token);
+            var details = await bestiaryClient.GetDetailsV1Async(url, _searchCts.Token);
 
             if (details is null)
                 return;
 
-            var link = BestiaryClient.BuildDirectLink(item.Url);
+            var link = bestiaryClient.BuildDirectLink(item.Url);
 
             _name = details.Name.Rus;
             _link = link;
@@ -170,7 +163,7 @@ public partial class AddMiniatureForm : IDisposable
 
         if (_editMiniature != null && string.IsNullOrEmpty(_imageDataSrc))
         {
-            var imageBytes = await MiniatureService.GetImageAsync(_editMiniature.Id);
+            var imageBytes = await miniatureRepository.GetImageAsync(_editMiniature.Id);
             if (imageBytes != null && imageBytes.Length > 0)
             {
                 _imageData = imageBytes;
@@ -184,7 +177,7 @@ public partial class AddMiniatureForm : IDisposable
         if (firstRender)
         {
             var dotNetHelper = DotNetObjectReference.Create(this);
-            await JSRuntime.InvokeVoidAsync("registerPasteListener", "addMiniatureForm", dotNetHelper);
+            await jsRuntime.InvokeVoidAsync("registerPasteListener", "addMiniatureForm", dotNetHelper);
         }
     }
 
@@ -290,6 +283,9 @@ public partial class AddMiniatureForm : IDisposable
 
     private async Task OnSave()
     {
+        if (_cropperComponent == null)
+            return;
+        
         _isProcessing = true;
         _errorMessage = null;
         _successMessage = null;
@@ -302,7 +298,9 @@ public partial class AddMiniatureForm : IDisposable
                 ImageSmoothingEnabled = true,
             };
 
+#pragma warning disable CS0618 // Type or member is obsolete
             var nativeCroppedBase64 = await _cropperComponent.GetCroppedCanvasDataURLAsync(options, "image/jpeg", 0.85f);
+#pragma warning restore CS0618 // Type or member is obsolete
 
             var cleanBase64 = nativeCroppedBase64.Contains(",") ? nativeCroppedBase64.Split(',')[1] : nativeCroppedBase64;
             var croppedImageData = Convert.FromBase64String(cleanBase64);
@@ -320,7 +318,7 @@ public partial class AddMiniatureForm : IDisposable
                     CropY: _cropY,
                     CropWidth: _cropWidth,
                     CropHeight: _cropHeight);
-                await MiniatureService.UpdateAsync(_editMiniature.Id, dto);
+                await miniatureRepository.UpdateAsync(_editMiniature.Id, dto);
 
                 _successMessage = $"'{_name}' updated successfully.";
                 await OnEditMiniatureChanged.InvokeAsync(null);
@@ -328,7 +326,7 @@ public partial class AddMiniatureForm : IDisposable
             }
             else
             {
-                await MiniatureService.AddAsync(new MiniatureCreateDto(
+                await miniatureRepository.AddAsync(new MiniatureCreateDto(
                     Name: _name,
                     Size: _size,
                     ImageData: _imageData!,

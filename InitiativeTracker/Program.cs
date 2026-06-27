@@ -1,12 +1,16 @@
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Cropper.Blazor.Extensions;
 using InitiativeTracker.Components;
+using InitiativeTracker.Infrastructure;
 using InitiativeTracker.Infrastructure.Extensions;
 using InitiativeTracker.Infrastructure.Options;
 using Microsoft.AspNetCore.Hosting.StaticWebAssets;
 using Microsoft.Extensions.Options;
 using Serilog;
+
+[assembly: InternalsVisibleTo("InitiativeTracker.Tests")]
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,6 +35,12 @@ builder.Services.AddLogging(c =>
     c.ClearProviders()
         .AddSerilog();
 });
+
+builder.Services.Scan(scan => scan
+    .FromAssemblyOf<IWarmUp>()
+    .AddClasses(classes => classes.AssignableTo<IWarmUp>())
+    .AsImplementedInterfaces()
+    .WithScopedLifetime());
 
 builder.Services.AddCropper();
 

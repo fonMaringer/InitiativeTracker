@@ -1,0 +1,15 @@
+.add-library-inline {
+    margin-top: 10px;
+}
+
+.library-item {
+    padding: 6px 12px;
+    border-radius: 4px;
+    background-color: #2a2d32;
+    margin-bottom: 3px;
+    align-items: center;
+}
+
+.library-item:hover {
+    background-color: #373b41;
+}

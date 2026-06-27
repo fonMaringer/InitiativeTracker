@@ -1,31 +1,27 @@
-using InitiativeTracker.Application;
+using InitiativeTracker.DataAccess.Repositories;
 using InitiativeTracker.Domain.Entities;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 
 namespace InitiativeTracker.Components.Pages.Miniatures;
 
-public partial class MiniatureCatalog
+public partial class MiniatureCatalog(IMiniatureRepository miniatureRepository)
 {
-    private List<MiniatureEntity> _miniatures = [];
+    private List<Miniature> _miniatures = [];
     private bool _isLoading;
     private string _searchQuery = string.Empty;
 
-    [Inject] IMiniatureService MiniatureService { get; set; } = default!;
-    [Parameter] public EventCallback<MiniatureEntity?> OnEditSelected { get; set; }
-    [Parameter] public EventCallback OnDataChanged { get; set; }
-    [Parameter] public EventCallback<MiniatureEntity> OnAddForPrint { get; set; }
+    [Parameter]
+    public EventCallback<Miniature?> OnEditSelected { get; set; }
+    [Parameter]
+    public EventCallback OnDataChanged { get; set; }
+    [Parameter]
+    public EventCallback<Miniature> OnAddForPrint { get; set; }
 
     private volatile bool _isSearching;
     private int _pendingSearchVersion;
 
     protected override async Task OnInitializedAsync() => await LoadAllMiniatures();
-
-    public async Task RefreshAsync()
-    {
-        _searchQuery = string.Empty;
-        await LoadAllMiniatures();
-    }
 
     private async Task LoadAllMiniatures()
     {
@@ -33,8 +29,8 @@ public partial class MiniatureCatalog
         StateHasChanged();
         try
         {
-            var allItems = await MiniatureService.SearchAsync(string.Empty);
-            _miniatures = new List<MiniatureEntity>(allItems);
+            var allItems = await miniatureRepository.SearchAsync(string.Empty);
+            _miniatures = new List<Miniature>(allItems);
         }
         catch (Exception ex)
         {
@@ -64,7 +60,7 @@ public partial class MiniatureCatalog
         {
             _isLoading = true;
             StateHasChanged();
-            var results = await MiniatureService.SearchAsync(_searchQuery);
+            var results = await miniatureRepository.SearchAsync(_searchQuery);
             if (version == _pendingSearchVersion)
                 _miniatures = [..results];
             StateHasChanged();
@@ -81,15 +77,15 @@ public partial class MiniatureCatalog
         }
     }
 
-    private async Task SelectForEdit(MiniatureEntity? miniature) => await OnEditSelected.InvokeAsync(miniature);
+    private async Task SelectForEdit(Miniature? miniature) => await OnEditSelected.InvokeAsync(miniature);
 
-    private async Task OnAddToPrint(MiniatureEntity? miniature) => await OnAddForPrint.InvokeAsync(miniature!);
+    private async Task OnAddToPrint(Miniature? miniature) => await OnAddForPrint.InvokeAsync(miniature!);
 
-    private async Task OnDelete(MiniatureEntity miniature)
+    private async Task OnDelete(Miniature miniature)
     {
         try
         {
-            await MiniatureService.DeleteAsync(miniature.Id);
+            await miniatureRepository.DeleteAsync(miniature.Id);
             _miniatures.Remove(miniature);
             StateHasChanged();
             await OnDataChanged.InvokeAsync();

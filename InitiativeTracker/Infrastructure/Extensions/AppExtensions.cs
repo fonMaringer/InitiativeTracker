@@ -1,6 +1,4 @@
-using InitiativeTracker.Application;
 using InitiativeTracker.Infrastructure.Database;
-using Microsoft.EntityFrameworkCore;
 
 namespace InitiativeTracker.Infrastructure.Extensions;
 
@@ -15,15 +13,15 @@ public static class AppExtensions
             await dbContext.Database.EnsureCreatedAsync();
             //TODO
 
-            var initiativeService = scope.ServiceProvider.GetRequiredService<IInitiativeService>();
-            await initiativeService.WarmUpAsync();
+            var initiativeService = scope.ServiceProvider.GetServices<IWarmUp>();
+            foreach (var service in initiativeService)
+            {
+                await service.WarmUpAsync();
+            }
         }
 
         public void TearDown()
         {
-            using var scope = app.Services.CreateScope();
-            var initiativeService = scope.ServiceProvider.GetRequiredService<IInitiativeService>();
-            _ = initiativeService.SaveAllAsync();
         }
     }
 }

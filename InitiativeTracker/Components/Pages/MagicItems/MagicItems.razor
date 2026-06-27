@@ -1,0 +1,31 @@
+@page "/items"
+@rendermode InteractiveServer
+
+<PageTitle>Magic items</PageTitle>
+
+<div>
+    <h2>Magic items</h2>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="mb-4">
+                <h5>Item list (click to edit)</h5>
+                <MagicItemCatalog @key="_catalogKey" OnEditSelected="@OnEditSelected" OnDataChanged="@InvalidateCatalog" OnAddForPrint="@OnAddForPrint" />
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="mb-4">
+                <AddMagicItemForm OnDataChanged="InvalidateCatalog" EditItem="@_editItem" OnEditItemChanged="OnEditItemChanged" />
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div>
+                <h5>Print cards</h5>
+                <MagicItemPreparationList @ref="PreparationListRef" />
+            </div>
+        </div>
+    </div>
+</div>
+

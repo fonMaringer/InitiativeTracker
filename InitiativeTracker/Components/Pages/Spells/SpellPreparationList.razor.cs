@@ -1,18 +1,15 @@
 using InitiativeTracker.Application.PrintHtmlGenerators;
 using InitiativeTracker.Domain.Entities;
-using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 
 namespace InitiativeTracker.Components.Pages.Spells;
 
-public partial class SpellPreparationList
+public partial class SpellPreparationList(IJSRuntime jsRuntime)
 {
-    readonly List<PrintListSpellEntry> _printItems = [];
-    readonly PokerCardPrintGenerator _printGenerator = new();
+    private readonly List<PrintListSpellEntry> _printItems = [];
+    private readonly PokerCardPrintGenerator _printGenerator = new();
 
-    [Inject] private IJSRuntime JsRuntime { get; set; } = default!;
-
-    public void AddItem(SpellEntity spell, int quantity)
+    public void AddItem(Spell spell, int quantity)
     {
         if (quantity <= 0) return;
 
@@ -25,13 +22,13 @@ public partial class SpellPreparationList
         StateHasChanged();
     }
 
-    void RemoveFromPrintList(int spellId)
+    private void RemoveFromPrintList(int spellId)
     {
         _printItems.RemoveAll(p => p.Spell.Id == spellId);
         StateHasChanged();
     }
 
-    async Task GenerateAndOpenPrintHtml()
+    private async Task GenerateAndOpenPrintHtml()
     {
         var printDataList = new List<PokerCardPrintDataDto>();
 
@@ -69,12 +66,12 @@ public partial class SpellPreparationList
         }
 
         var html = _printGenerator.Generate(printDataList);
-        await JsRuntime.InvokeVoidAsync("openHtmlInNewTab", html);
+        await jsRuntime.InvokeVoidAsync("openHtmlInNewTab", html);
     }
 
-    public class PrintListSpellEntry(SpellEntity spell, int quantity)
+    public class PrintListSpellEntry(Spell spell, int quantity)
     {
-        public SpellEntity Spell { get; } = spell;
+        public Spell Spell { get; } = spell;
         public int Quantity { get; set; } = quantity;
     }
 }

@@ -1,0 +1,41 @@
+@rendermode InteractiveServer
+
+@if (_isLoading)
+{
+    <Spinner Color="SpinnerColor.Primary" Style="width: 30px; height: 30px"/>
+}
+else
+{
+    <div class="list-group">
+        @foreach (var enc in _encounters)
+        {
+            <div class="encounter-item @(enc.Id == SelectedEncounter?.Id ? "active" : "")"
+                 @onclick="() => SelectEncounter(enc.Id)"
+                 style="display: flex; justify-content: space-between;">
+                @if (_isRenaming && enc.Id == _renamingId)
+                {
+                    <TextInput TValue="string" @bind-Value="_renameValue" Style="flex-grow: 1; border-width: 0;" @onblur="CommitRename" @onkeyup="HandleRenameKey"/>
+                }
+                else
+                {
+                    <span class="encounter-name" @ondblclick="@(() => StartRename(enc.Id, enc.Name))">@enc.Name</span>
+                }
+
+                <div class="encounter-actions">
+                    <Button Color="ButtonColor.Danger" Icon="true" Size="ButtonSize.ExtraSmall" @onclick="_ => DeleteEncounter(enc.Id, enc.Name)"
+                            style="margin-left: 5px;">
+                        <Icon Name="IconName.Trash"/>
+                    </Button>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="add-encounter-inline" style="display: flex; align-items: center;">
+        <TextInput TValue="string" @bind-Value="_newEncounterName" Style="flex-grow: 1; height: 30px; margin-left: 5px;"
+                   placeholder="New encounter..." @onkeyup="AddEncounterWithKey"/>
+        <Button Color="ButtonColor.Primary" Icon="true" Size="ButtonSize.Small" @onclick="AddEncounter" Style="margin-left: 10px;">
+            <Icon Name="IconName.Plus"/>
+        </Button>
+    </div>
+}

@@ -6,7 +6,7 @@ namespace InitiativeTracker.Integration.RestClients.TtgClub.Adapters;
 
 public static class MagicItemDetailsAdapter
 {
-    public static ItemEntity ToItemEntity(this MagicItemsDetailsResponse s,
+    public static MagicItem ToItemEntity(this MagicItemsDetailsResponse s,
         string link)
         => new()
         {

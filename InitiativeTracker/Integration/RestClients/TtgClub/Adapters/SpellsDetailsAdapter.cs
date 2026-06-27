@@ -6,7 +6,7 @@ namespace InitiativeTracker.Integration.RestClients.TtgClub.Adapters;
 
 public static class SpellsDetailsAdapter
 {
-    public static SpellEntity ToSpellEntity(this SpellsDetailsResponse s,
+    public static Spell ToSpellEntity(this SpellsDetailsResponse s,
         string link) =>
         new()
         {

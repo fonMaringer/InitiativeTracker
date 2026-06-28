@@ -72,9 +72,10 @@ public class InitiativeServiceSortTests
         var high = CreateItem(101, "High", 20);
         _participantsRepository.GetAllEncounterParticipantsAsync(Arg.Any<int>()).Returns(Task.FromResult<List<EncounterParticipant>>([low, high]));
         var component = _ctx.Render<Components.Pages.Encounters.InitiativeTracker>();
+        await component.InvokeAsync(async () => await component.Instance.SelectEncounterAsync(_encounter));
+        _participantsRepository.GetAllEncounterParticipantsAsync(Arg.Any<int>()).Returns(Task.FromResult(new[]{low, high}.OrderByDescending(i => i.Initiative).ToList()));
 
         //Act
-        await component.InvokeAsync(async () => await component.Instance.SelectEncounterAsync(_encounter));
         await component.InvokeAsync(async () => await component.Instance.SortByInitiative());
 
         //Assert
@@ -92,9 +93,10 @@ public class InitiativeServiceSortTests
         var c = CreateItem(102, "C", 15);
         _participantsRepository.GetAllEncounterParticipantsAsync(Arg.Any<int>()).Returns(Task.FromResult<List<EncounterParticipant>>([a, b, c]));
         var component = _ctx.Render<Components.Pages.Encounters.InitiativeTracker>();
+        await component.InvokeAsync(async () => await component.Instance.SelectEncounterAsync(_encounter));
+        _participantsRepository.GetAllEncounterParticipantsAsync(Arg.Any<int>()).Returns(Task.FromResult(new[]{a, b, c}.OrderByDescending(i => i.Initiative).ToList()));
 
         //Act
-        await component.InvokeAsync(async () => await component.Instance.SelectEncounterAsync(_encounter));
         await component.InvokeAsync(async () => await component.Instance.SortByInitiative());
 
         //Assert
@@ -189,9 +191,10 @@ public class InitiativeServiceSortTests
         var d = CreateItem(103, "D", 20);
         _participantsRepository.GetAllEncounterParticipantsAsync(Arg.Any<int>()).Returns(Task.FromResult<List<EncounterParticipant>>([a, b, c, d]));
         var component = _ctx.Render<Components.Pages.Encounters.InitiativeTracker>();
+        await component.InvokeAsync(async () => await component.Instance.SelectEncounterAsync(_encounter));
+        _participantsRepository.GetAllEncounterParticipantsAsync(Arg.Any<int>()).Returns(Task.FromResult(new[]{a, b, c, d}.OrderByDescending(i => i.Initiative).ToList()));
 
         //Act
-        await component.InvokeAsync(async () => await component.Instance.SelectEncounterAsync(_encounter));
         await component.InvokeAsync(async () => await component.Instance.SortByInitiative());
 
         //Assert

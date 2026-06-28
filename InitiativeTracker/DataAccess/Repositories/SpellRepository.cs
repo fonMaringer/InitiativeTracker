@@ -1,11 +1,12 @@
 using InitiativeTracker.DataAccess.Dtos;
 using InitiativeTracker.Domain.Entities;
+using InitiativeTracker.Infrastructure;
 using InitiativeTracker.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 
 namespace InitiativeTracker.DataAccess.Repositories;
 
-public interface ISpellRepository
+public interface ISpellRepository : IRepository
 {
     Task AddAsync(SpellCreateDto dto);
     Task UpdateAsync(int id, SpellUpdateDto dto);

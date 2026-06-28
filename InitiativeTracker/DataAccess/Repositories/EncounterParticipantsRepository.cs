@@ -1,10 +1,11 @@
 using InitiativeTracker.Domain.Entities;
+using InitiativeTracker.Infrastructure;
 using InitiativeTracker.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 
 namespace InitiativeTracker.DataAccess.Repositories;
 
-public interface IEncounterParticipantsRepository
+public interface IEncounterParticipantsRepository : IRepository
 {
     Task<List<EncounterParticipant>> GetAllEncounterParticipantsAsync(int encounterId);
     Task SetEncounterParticipantsAsync(int encounterId, List<EncounterParticipant> participants);

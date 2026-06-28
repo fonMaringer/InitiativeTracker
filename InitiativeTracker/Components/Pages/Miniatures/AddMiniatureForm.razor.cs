@@ -48,7 +48,7 @@ public partial class AddMiniatureForm(
         CropBoxResizable = true,
     };
 
-    private readonly CreatureSize[] _sizeOptions = Enum.GetValues<CreatureSize>();
+    private readonly CreatureSize[] _sizeOptions = Enum.GetValues<CreatureSize>().Except([CreatureSize.Unknown]).ToArray();
     private bool _isDisabled => _isProcessing || string.IsNullOrWhiteSpace(_name) || (_editMiniature == null && _imageData == null);
 
     [Parameter]
@@ -164,7 +164,7 @@ public partial class AddMiniatureForm(
         if (_editMiniature != null && string.IsNullOrEmpty(_imageDataSrc))
         {
             var imageBytes = await miniatureRepository.GetImageAsync(_editMiniature.Id);
-            if (imageBytes != null && imageBytes.Length > 0)
+            if (imageBytes.Length > 0)
             {
                 _imageData = imageBytes;
                 _imageDataSrc = $"data:image/jpeg;base64,{Convert.ToBase64String(imageBytes)}";
@@ -271,7 +271,6 @@ public partial class AddMiniatureForm(
     private async Task OnImageSelected(InputFileChangeEventArgs e)
     {
         var firstFile = e.File;
-        if (firstFile == null) return;
 
         await using var stream = firstFile.OpenReadStream();
         using var ms = new MemoryStream();

@@ -1,0 +1,51 @@
+@rendermode InteractiveServer
+
+<div id="addStandForm" tabindex="0">
+    <h5>@(_editStand != null ? "Edit stand" : "Add stand")</h5>
+
+    @if (_isProcessing)
+    {
+        <Spinner Color="SpinnerColor.Primary" Style="margin-bottom: 15px; width: 30px; height: 30px"/>
+    }
+
+    <div class="mb-2 form-check">
+        <InputCheckbox @bind-Value="_inverseTextColor" class="form-check-input"/>
+        <label class="form-check-label"><b>Inverse text color</b></label>
+    </div>
+
+    <div class="mb-2">
+        <label class="form-label"><b>Image</b></label>
+        <InputFile OnChange="OnImageSelected" class="form-control"/>
+        <p class="text-muted" style="font-size: 0.8em;">
+            Or focus this form and press Ctrl+V to paste image from clipboard.
+        </p>
+    </div>
+
+    <div class="mb-2">
+        @if (_imageData != null)
+        {
+            <img src="data:image/png;base64,@Convert.ToBase64String(_imageData)"
+                 style="width: 300px; height: 300px; object-fit: cover;"/>
+        }
+    </div>
+
+    <Button Color="ButtonColor.Primary" Disabled="@_isDisabled" Class="me-2" @onclick="OnSave">
+        @(_editStand != null ? "Save" : "Add Stand")
+    </Button>
+    @if (_editStand != null)
+    {
+        <Button Color="ButtonColor.Secondary" @onclick="OnCancel">
+            Cancel
+        </Button>
+    }
+
+    @if (_errorMessage != null)
+    {
+        <Alert ShowDismissButton="true" Color="AlertColor.Danger" Style="margin-top: 10px;">@_errorMessage</Alert>
+    }
+
+    @if (_successMessage != null)
+    {
+        <Alert ShowDismissButton="true" Color="AlertColor.Success" Style="margin-top: 10px;">@_successMessage</Alert>
+    }
+</div>

@@ -1,11 +1,12 @@
 using InitiativeTracker.DataAccess.Dtos;
 using InitiativeTracker.Domain.Entities;
+using InitiativeTracker.Infrastructure;
 using InitiativeTracker.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 
 namespace InitiativeTracker.DataAccess.Repositories;
 
-public interface IMiniatureRepository
+public interface IMiniatureRepository : IRepository
 {
     Task AddAsync(MiniatureCreateDto dto);
     Task UpdateAsync(int id, MiniatureUpdateDto dto);

@@ -11,6 +11,7 @@ public class InitiativeTrackerDbContext(DbContextOptions<InitiativeTrackerDbCont
     public DbSet<Miniature> Miniatures => Set<Miniature>();
     public DbSet<MagicItem> MagicItems => Set<MagicItem>();
     public DbSet<Spell> Spells => Set<Spell>();
+    public DbSet<Stand> Stands => Set<Stand>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -57,6 +58,11 @@ public class InitiativeTrackerDbContext(DbContextOptions<InitiativeTrackerDbCont
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Name).IsRequired();
             entity.Property(e => e.Description).IsRequired();
+        });
+
+        modelBuilder.Entity<Stand>(entity =>
+        {
+            entity.HasKey(e => e.Id);
         });
     }
 }

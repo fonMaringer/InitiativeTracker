@@ -10,19 +10,6 @@ public record MiniaturePrintDataDto(
 
 public class MiniaturePrintGenerator
 {
-    private const int BaseWidth = 25;
-    private const int BaseHeight = 32;
-    
-    private static readonly Dictionary<CreatureSize, (int WidthMm, int HeightMm)> SizeDimensions = new()
-    {
-        [CreatureSize.Tiny]       = (BaseWidth / 2, BaseHeight / 2),
-        [CreatureSize.Small]      = (BaseWidth, BaseHeight),
-        [CreatureSize.Medium]     = (BaseWidth, BaseHeight),
-        [CreatureSize.Large]      = (BaseWidth * 2, BaseHeight * 2),
-        [CreatureSize.Huge]       = (BaseWidth * 3, BaseHeight * 3),
-        [CreatureSize.Gargantuan]  = (BaseWidth * 4, BaseHeight * 4),
-    };
-
     private static readonly CreatureSize[] SizeSortOrder = Enum.GetValues<CreatureSize>();
 
     public string Generate(IEnumerable<MiniaturePrintDataDto> items)
@@ -56,7 +43,7 @@ public class MiniaturePrintGenerator
 
         foreach (var group in grouped)
         {
-            var dim = SizeDimensions[group.Key];
+            var dim = Constants.SizeDimensions[group.Key];
             WriteSizeGroup(sb, dim.WidthMm, dim.HeightMm, group.ToList());
         }
 

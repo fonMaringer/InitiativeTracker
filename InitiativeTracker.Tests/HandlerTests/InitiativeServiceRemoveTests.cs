@@ -157,9 +157,10 @@ public class InitiativeServiceRemoveTests
         var item2 = CreateItem(101, "B", 10);
         _participantsRepository.GetAllEncounterParticipantsAsync(Arg.Any<int>()).Returns(Task.FromResult<List<EncounterParticipant>>([item1, item2]));
         var component = _ctx.Render<Components.Pages.Encounters.InitiativeTracker>();
+        await component.InvokeAsync(async () => await component.Instance.SelectEncounterAsync(_encounter));
+        _participantsRepository.GetAllEncounterParticipantsAsync(Arg.Any<int>()).Returns(Task.FromResult<List<EncounterParticipant>>([]));
         
         //Act
-        await component.InvokeAsync(async () => await component.Instance.SelectEncounterAsync(_encounter));
         await component.InvokeAsync(async () => await component.Instance.Clear());
         
         //Assert

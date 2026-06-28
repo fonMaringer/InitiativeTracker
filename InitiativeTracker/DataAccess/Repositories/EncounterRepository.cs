@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace InitiativeTracker.DataAccess.Repositories;
 
-public interface IEncounterRepository : IWarmUp
+public interface IEncounterRepository : IRepository, IWarmUp
 {
     Task<List<Encounter>> GetAllEncountersAsync();
     Task<Encounter?> GetEncounterByIdAsync(int id);

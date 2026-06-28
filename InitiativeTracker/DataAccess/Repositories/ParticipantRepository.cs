@@ -1,10 +1,11 @@
 using InitiativeTracker.DataAccess.Dtos;
 using InitiativeTracker.Domain.Entities;
+using InitiativeTracker.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
 namespace InitiativeTracker.DataAccess.Repositories;
 
-public interface IParticipantRepository
+public interface IParticipantRepository : IRepository
 {
     Task<IReadOnlyCollection<ParticipantCatalogItem>> GetAllAsync();
 

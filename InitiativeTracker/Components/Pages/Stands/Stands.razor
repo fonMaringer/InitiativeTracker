@@ -1,0 +1,31 @@
+@page "/stands"
+@rendermode InteractiveServer
+
+<PageTitle>Stands</PageTitle>
+
+<div>
+    <h2>Stands</h2>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="mb-4">
+                <h5>Stand list (click to edit)</h5>
+                <StandCatalog @key="_catalogKey" OnEditSelected="@OnEditSelected" OnDataChanged="@InvalidateCatalog" OnAddForPrint="@OnAddForPrint" />
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="mb-4">
+                <AddStandForm OnDataChanged="InvalidateCatalog" EditStand="@_editStand" OnEditStandChanged="OnEditStandChanged" />
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div>
+                <h5>Print stands</h5>
+                <StandPreparationList @ref="PreparationListRef" />
+            </div>
+        </div>
+    </div>
+</div>
+

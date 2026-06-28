@@ -1,0 +1,67 @@
+@rendermode InteractiveServer
+
+<div>
+    @if (_printItems.Count == 0)
+    {
+        <p class="text-muted">No stands in the print list. Use the catalog to add stands.</p>
+    }
+    else
+    {
+        <div class="grid-table" style="grid-template-columns: 80px 1fr 0.5fr 100px 80px; width: 100%;">
+            <div class="grid-header">
+                <div></div>
+                <div>Size</div>
+                <div>Print index</div>
+                <div>Qty</div>
+                <div></div>
+            </div>
+            @foreach (var printItem in _printItems)
+            {
+                <div class="grid-row">
+                    <div class="grid-cell">
+                        @if (_images.TryGetValue(printItem.Stand.Id, out var imgSrc))
+                        {
+                            <div style="width:64px; height:64px; overflow:hidden; position:relative;">
+                                <img src="@imgSrc"
+                                     style="width: 100%; height: 100%; object-fit: cover;"
+                                     @onclick:stopPropagation="true"/>
+                            </div>
+                        }
+                    </div>
+                    <div class="grid-cell">
+                        <select class="form-select" @bind="printItem.Size">
+                            @foreach (var option in _sizeOptions)
+                            {
+                                <option value="@option">@option</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="grid-cell">
+                        <CheckboxInput 
+                            @bind-Value="@printItem.AddIndex" onClick="this.select();"/>
+                        @if (printItem.AddIndex)
+                        {
+                            <label class="form-label" style="margin: 5px; height: auto;"><b> Start from: </b></label>
+                            <NumberInput TValue="int"
+                                         @bind-Value="@printItem.StartIndex"
+                                         Style="width: 80px; border-width: 0" onClick="this.select();"/>
+                        }
+                    </div>
+                    <div class="grid-cell">
+                        <NumberInput TValue="int" 
+                                     @bind-Value="@printItem.Quantity"
+                                     Style="width: 80px; border-width: 0" onClick="this.select();"/>
+                    </div>
+                    <div class="grid-cell">
+                        <Button Color="ButtonColor.Danger" Outline="true" @onclick="() => RemoveFromPrintList(printItem)">
+                            <Icon Name="IconName.Trash" Size="IconSize.x6"/>
+                        </Button>
+                    </div>
+                </div>
+            }
+        </div>
+        <hr/>
+        <Button Color="ButtonColor.Primary" @onclick="GenerateAndOpenPrintHtml">Preview and Print</Button>
+        <p class="text-muted" style="font-size: 0.8em;">Better print on A4 with minimal fields</p>
+    }
+</div>

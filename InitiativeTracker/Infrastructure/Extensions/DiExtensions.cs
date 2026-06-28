@@ -1,4 +1,3 @@
-using InitiativeTracker.DataAccess.Repositories;
 using InitiativeTracker.Infrastructure.Database;
 using InitiativeTracker.Integration.RestClients.TtgClub;
 using Microsoft.EntityFrameworkCore;
@@ -34,12 +33,11 @@ public static class DiExtensions
 
         public IServiceCollection AddApplication()
         {
-            services.TryAddScoped<IEncounterRepository, EncounterRepository>();
-            services.TryAddScoped<IParticipantRepository, ParticipantRepository>();
-            services.TryAddScoped<IMiniatureRepository, MiniatureRepository>();
-            services.TryAddScoped<IMagicItemRepository, MagicMagicItemRepository>();
-            services.TryAddScoped<ISpellRepository, SpellRepository>();
-            services.TryAddScoped<IEncounterParticipantsRepository, EncounterParticipantsRepository>();
+            services.Scan(scan => scan
+                .FromAssemblyOf<IRepository>()
+                .AddClasses(classes => classes.AssignableTo<IRepository>())
+                .AsImplementedInterfaces()
+                .WithScopedLifetime());
 
             return services;
         }

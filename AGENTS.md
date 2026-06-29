@@ -5,24 +5,28 @@
 - **Runtime:** .NET 10.0 (`net10.0`)
 - **Language:** C# 14 (LangVersion: `latest`)
 - **Framework:** ASP.NET Core Blazor Server with interactive server render mode (`AddInteractiveServerComponents()`, `AddInteractiveServerRenderMode()`)
-- **UI Library:** Blazor.Bootstrap 3.5.0
+- **UI Library:** Blazor.Bootstrap 3.5.0, Cropper.Blazor 1.5.1
 - **Data Access:** EF Core 10.0.9 with SQLite provider (`Microsoft.EntityFrameworkCore.Sqlite` 10.0.9)
 - **Logging:** Serilog (Console + File sinks) via `Serilog.Extensions.Logging` 10.0.0 and `Serilog.Settings.Configuration` 10.0.0
 - **JS Interop:** `Microsoft.JSInterop` 10.0.9
-- **Dependency Injection:** Built-in MS.DI (`Microsoft.Extensions.DependencyInjection.Abstractions` 10.0.8)
+- **Dependency Injection:** Built-in MS.DI (`Microsoft.Extensions.DependencyInjection.Abstractions` 10.0.8) with Scrutor for scanning
 - **Testing:** NUnit 4.5.1, FluentAssertions 8.0.0, NSubstitute 5.3.0, `coverlet.collector` 8.0.0, EF Core InMemory 10.0.9
 - **Solution file:** `InitiativeTracker.slnx`
 
 ### Architecture Pattern
 **Layered architecture (single-project monolith)** within `InitiativeTracker/`:
-- `Domain/Entities/` — EF Core entity classes and domain models (`InitiativeEntity`, `MiniatureEntity`, `ItemEntity`, `SpellEntity`, `InitiativeListItem`)
-- `Domain/Enums/` — enumerations (`CreatureSize`, `ItemRarity`, `SpellClass`, `Source`)
-- `Application/` — business-logic service classes with interfaces, DTOs, and HTML print generators
-- `Infrastructure/Database/` — EF Core DbContext and entity configurations
+- `Domain/Entities/` — EF Core entity classes and domain models (`Encounter`, `Miniature`, `MagicItem`, `Spell`, `EncounterParticipant`, `ParticipantCatalogItem`)
+- `Domain/Enums/` — enumerables (`CreatureSize`, `ItemRarity`, `SpellClass`, `Source`, `HitsMode`, `HealthState`, `OperationMode`)
+- `Application/` — business-logic service classes, DTOs, and HTML print generators (`MiniaturePrintGenerator`, `SpellPrintGenerator`, `PokerCardPrintGenerator`, etc.)
+- `DataAccess/Repositories/` — implementation of data access patterns (replaces old `Infrastructure/Database/` architecture)
+- `DataAccess/Dtos/` — Data Transfer Objects for Create/Update operations
+- `DataAccess/` (infrastructure) — `IRepository` interfaces and DB context configuration
 - `Infrastructure/Extensions/` — DI registration extensions using C# 14 extension everything syntax
-- `Infrastructure/Options/` — typed configuration options classes
+- `Infrastructure/Options/` — typed configuration options classes (`AppOptions`, `TtgClubClientOptions`)
+- `Infrastructure/Database/` — EF Core DbContext (`InitiativeTrackerDbContext`)
 - `Integration/RestClients/TtgClub/` — external HTTP API clients against ttg.club bestiary API
 - `Components/Pages/`, `Components/Layout/` — Blazor UI pages and layouts
+
 
 ---
 

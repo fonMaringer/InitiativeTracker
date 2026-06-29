@@ -14,6 +14,7 @@ All production code lives in a single ASP.NET Core Web project (`InitiativeTrack
 InitiativeTracker/
 ├── Domain/               — Entities, enums (innocent data)
 ├── Application/          — Business services, DTOs, print generators
+├── DataAccess/           — Repositories and DTOs for mutation operations
 ├── Infrastructure/       — EF Core DbContext, DI extensions, options, storage
 ├── Integration/          — External HTTP clients (ttg.club)
 └── Components/           — Blazor UI pages, layouts, shared components
@@ -26,9 +27,10 @@ Dependencies only flow downward. Upper layers depend on lower layers through abs
 ```mermaid
 graph TD
     COMP[Components - Blazor UI] --> APP[Application - Services + DTOs]
-    APP --> INFRA[Infrastructure - DbContext + DI]
-    APP --> DOM[Domain - Entities + Enums]
-    INFRA --> DOM
+    APP --> DATA[DataAccess - Repositories + DTOs]
+    DATA --> DOM[Domain - Entities + Enums]
+    APP --> DOM
+    INFRA[Infrastructure - DbContext + DI] --> DOM
     COMP -. integration only .-> INTEG[Integration - HTTP Clients]
 ```
 
@@ -36,18 +38,19 @@ graph TD
 - `Infrastructure/`, `Domain/`, or `Integration/` referencing types from `Application/` or `Components/`.
 - `Domain/` having any dependency on a framework namespace (` Microsoft.EntityFrameworkCore`, etc.). Domain entities may contain EF-specific attributes only when unavoidable (preferred: separate IConfigureEntity in Infrastructure).
 
+
 ---
 
 ## Layer Descriptions
 
-### 1. Domain Layer (`Domain/`)
+## 1. Domain Layer (`Domain/`)
 
 **Responsibility:** Define the business vocabulary — entity classes and enumerations. Contains no behavior, no framework dependencies, no logic.
 
 | Subfolder | Contents |
 |-----------|----------|
-| `Entities/` | `InitiativeEntity`, `MiniatureEntity`, `ItemEntity`, `SpellEntity`, `InitiativeListItem` |
-| `Enums/` | `CreatureSize`, `ItemRarity`, `ItemType`, `SpellClass`, `Source` |
+| `Entities/` | `Encounter`, `Miniature`, `MagicItem`, `Spell`, `EncounterParticipant`, `ParticipantCatalogItem` |
+| `Enums/` | `CreatureSize`, `ItemRarity`, `SpellClass`, `Source`, `HitsMode`, `HealthState`, `OperationMode` |
 
 **Rules:**
 - Domain entities are POCOs. No business logic, no `[Key]` or Fluent API — that belongs in the Infrastructure layer (`OnModelCreating`).
@@ -64,12 +67,13 @@ graph TD
 | `ItemService.cs` / `IItemService` | CRUD for item cards (name, rarity, attunement flag, HTML description). |
 | `SpellService.cs` / `ISpellService` | CRUD for spell cards (verbal/somatic/material flags, class, HTML description). |
 | `Dtos/` | `MiniatureCreateDto`, `MiniatureUpdateDto`, `ItemCreateDto`, `ItemUpdateDto`, `SpellCreateDto`, etc. — used as input contracts on all service methods. Domain entities should never flow through the UI boundary directly when mutation is possible. |
-| `PrintHtmlGenerators/` | Stateless generators that produce complete HTML + CSS for browser-based print output. Currently: `MiniaturePrintGenerator`, `ItemPrintGenerator`, `SpellPrintGenerator`. They accept entity collections and return a single HTML string. |
+| `PrintHtmlGenerators/` | Stateless generators that produce complete HTML + CSS for browser-based print output. Currently: `MiniaturePrintGenerator`, `SpellPrintGenerator`, `PokerCardPrintGenerator`. They accept entity collections and return a single HTML string. |
 
 **Rules:**
 - Every public service exposes both interface and class in the same file (co-located). Interface is private/ internal, not part of a public API surface — it exists to enable NSubstitute mocking in tests and DI binding.
 - Services take `DbContext` as primary constructor dependency directly. They do NOT receive an abstraction over DbContext.
 - All I/O methods on services are `async Task`. Synchronous business rules (`Next()`, `SortByInitiative()`) that operate on in-memory state may remain synchronous.
+
 
 ### 3. Infrastructure Layer (`Infrastructure/`)
 

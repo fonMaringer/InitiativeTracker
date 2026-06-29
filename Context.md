@@ -32,14 +32,14 @@ InitiativeTracker unifies these into one application, reducing context-switching
 ## 4. Key Business Modules
 
 ### 4.1 Initiative Tracker
-Manages the combat encounter round-by-round. The DM can:
+Manages combat encounters round-by-round. The DM can:
+- Create and manage multiple named encounter lists (e.g., "Ambush", "Boss Fight").
 - Add creatures to the initiative list automatically from the ttg.club bestiary API (these get an auto-rolled d20 + Dex modifier value)
 - Add player characters and other non-bestiary creatures via manual initiative entry
 - Navigate turn order with "Next" / "Previous"
 - Modify HP and AC mid-combat
 - Reorder, remove, sort, and clear entries
 
-**Dice rolling:** Creatures added from the bestiary have a known Dexterity modifier and receive an automatic d20 roll. Player characters and creatures not in the bestiary are entered with a manually typed initiative value.
 
 ### 4.2 Miniature Printing
 Allows the DM to maintain a library of miniature images and generate print-ready HTML sheets. Each miniature entry has a crop region for precise printing. Printed miniatures come in pairs (one upright, one rotated 180°), sized by D&D creature size category (Tiny → Gargantuan).
@@ -50,14 +50,18 @@ Allows the DM to maintain a library of miniature images and generate print-ready
 Physical poker-sized cards (2.5" × 3.5") for magic items and equipment. Useful as reference handouts during play. Supports rich HTML descriptions via WYSIWYG editor. DM composes a preparation list with quantities, then generates print HTML that opens in a new browser tab.
 
 ### 4.4 Spell Cards
-Physical poker-sized cards (2.5" × 3.5") for spells. Shows components (Verbal / Somatic / Material), class eligibility, and rich description. Prepared and printed the same way as item cards — preparation list → new tab → Ctrl+P.
+Physical poker-sized cards (2.5" × 3.5") for spells. Shows components (Verbal / Somatomic / Material), class eligibility, and rich description. Prepared and printed the same way as item cards — preparation list → new tab → Ctrl+P.
+
+### 4.5 Stands
+Provides a cataloging and preparation system for "Stands" (custom entity variants/cards). Supports creating, updating, and managing specific properties for presentation-ready output.
+**Printing:** Generates print-ready HTML sheets for stands, similar to miniature and item card workflows.
 
 ---
 
 ## 5. Business Rules
 
-### Initiative
-- Single global initiative list. Future consideration: multiple named encounter lists.
+### 5. Initiative
+- Supports multiple named encounter lists (e.g., "Ambush", "Boss Fight").
 - List persists across app restarts via SQLite (loaded in-memory at startup, flushed on shutdown).
 - Legendary actions, lair actions, and multi-action creatures are handled by the DM manually — no dedicated mechanism is planned.
 - In-memory state will eventually need auto-save to mitigate data loss from ungraceful shutdown.
@@ -102,7 +106,4 @@ It is purely a **DM-side toolkit** focused on combat tracking and physical print
 
 | Feature | Notes |
 |---------|-------|
-| Multiple initiative lists | Named encounter slots (e.g., "Ambush", "Boss Fight") — replaces single global list |
-| Auto-save mechanism | Periodic or event-driven flush of in-memory initiative state to SQLite to prevent data loss |
-| Image download by URL | Support fetching miniature images from remote URLs, including ttg.club |
 | Tablet-responsive UI | Optional: optimized mobile view for use at the table — not near-term priority |

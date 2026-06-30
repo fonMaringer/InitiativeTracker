@@ -21,11 +21,11 @@
         </p>
     </div>
 
-    <div class="mb-2">
+    <div class="mb-2" style="max-height: 300px; width: 100%; display: flex; justify-content: center;">
         @if (_imageData != null)
         {
             <img src="data:image/png;base64,@Convert.ToBase64String(_imageData)"
-                 style="width: 300px; height: 300px; object-fit: cover;"/>
+                 style="max-height: 300px;"/>
         }
     </div>
 

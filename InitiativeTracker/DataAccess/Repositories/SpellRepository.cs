@@ -116,11 +116,15 @@ public class SpellRepository(
     public async Task<IReadOnlyList<Spell>> SearchAsync(string query)
     {
         if (string.IsNullOrWhiteSpace(query))
-            return await dbContext.Spells.AsNoTracking().ToListAsync();
+            return await dbContext.Spells
+                .AsNoTracking()
+                .OrderBy(m => m.Name)
+                .ToListAsync();
 
         return await dbContext.Spells
             .AsNoTracking()
             .Where(e => EF.Functions.Like(e.Name, $"%{query}%"))
+            .OrderBy(m => m.Name)
             .ToListAsync();
     }
 }

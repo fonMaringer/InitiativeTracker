@@ -18,6 +18,7 @@ public class EncounterParticipantsRepository(
     public async Task<List<EncounterParticipant>> GetAllEncounterParticipantsAsync(int encounterId)
     {
         return await dbContext.EncounterParticipants
+            .AsNoTracking()
             .Where(p => p.EncounterId == encounterId)
             .OrderBy(p => p.Order)
             .ToListAsync();

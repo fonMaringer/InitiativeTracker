@@ -101,11 +101,15 @@ public class MagicMagicItemRepository(
     public async Task<IReadOnlyList<MagicItem>> SearchAsync(string query)
     {
         if (string.IsNullOrWhiteSpace(query))
-            return await dbContext.MagicItems.AsNoTracking().ToListAsync();
+            return await dbContext.MagicItems
+                .AsNoTracking()
+                .OrderBy(m => m.Name)
+                .ToListAsync();
 
         return await dbContext.MagicItems
             .AsNoTracking()
             .Where(e => EF.Functions.Like(e.Name, $"%{query}%"))
+            .OrderBy(m => m.Name)
             .ToListAsync();
     }
 }

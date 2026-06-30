@@ -104,11 +104,15 @@ public class MiniatureRepository(
     public async Task<IReadOnlyList<Miniature>> SearchAsync(string query)
     {
         if (string.IsNullOrWhiteSpace(query))
-            return await dbContext.Miniatures.AsNoTracking().ToListAsync();
+            return await dbContext.Miniatures
+                .AsNoTracking()
+                .OrderBy(m => m.Name)
+                .ToListAsync();
 
         return await dbContext.Miniatures
             .AsNoTracking()
             .Where(e => EF.Functions.Like(e.Name, $"%{query}%"))
+            .OrderBy(m => m.Name)
             .ToListAsync();
     }
 

@@ -21,33 +21,37 @@
 
             @if (_searchResults != null)
             {
-                <div class="grid-table" style="grid-template-columns: 300px 80px 120px 100px; margin-top: 10px;">
-                    <div class="grid-header">
-                        <div>Name</div>
-                        <div>Level</div>
-                        <div>School</div>
-                        <div>Select</div>
+                <div class="search-flex-container" style="margin-top: 10px;">
+                    <div class="search-flex-header">
+                        <div style="flex: 3;">Name</div>
+                        <div style="flex: 0.8;">Level</div>
+                        <div style="flex: 1.2;">School</div>
+                        <div style="flex: 1;">Select</div>
                     </div>
-                    @foreach (var result in _searchResults)
-                    {
-                        <div class="grid-row">
-                            <div class="grid-cell">@result.Name.Rus</div>
-                            <div class="grid-cell">@(result.Level == 0 ? "Cantrip" : result.Level)</div>
-                            <div class="grid-cell">@result.School</div>
-                            <div class="grid-cell">
-                                <Button Color="ButtonColor.Dark" @onclick="() => SelectSpell(result)" TooltipPlacement="TooltipPlacement.Bottom" TooltipTitle="Select to fill form fields">
-                                    <Icon Name="IconName.Check" Size="IconSize.x6"/>
-                                </Button>
-                                <Button Color="ButtonColor.Dark" @onclick="() => SaveFromItem(result)" TooltipPlacement="TooltipPlacement.Bottom" TooltipTitle="Select to save">
-                                    <Icon Name="IconName.Plus" Size="IconSize.x6"/>
-                                </Button>
+                    <div class="search-flex-body">
+                        @foreach (var result in _searchResults)
+                        {
+                            <div class="search-flex-row">
+                                <div style="flex: 3;">@result.Name.Rus</div>
+                                <div style="flex: 0.8;">@(result.Level == 0 ? "Cantrip" : result.Level)</div>
+                                <div style="flex: 1.2;">@result.School</div>
+                                <div style="flex: 1;">
+                                    <Button Color="ButtonColor.Dark" @onclick="() => SelectSpell(result)" TooltipPlacement="TooltipPlacement.Bottom" TooltipTitle="Select to fill form fields">
+                                        <Icon Name="IconName.Check" Size="IconSize.x6"/>
+                                    </Button>
+                                    <Button Color="ButtonColor.Dark" @onclick="() => SaveFromItem(result)" TooltipPlacement="TooltipPlacement.Bottom" TooltipTitle="Select to save">
+                                        <Icon Name="IconName.Plus" Size="IconSize.x6"/>
+                                    </Button>
+                                </div>
                             </div>
-                        </div>
-                    }
+                        }
+                    </div>
                 </div>
             }
         </div>
     }
+    
+    <hr/>
 
     <div class="mb-2" style="display: flex; gap: 10px;">
         <div style="flex: 1;">

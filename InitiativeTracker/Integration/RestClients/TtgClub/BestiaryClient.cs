@@ -23,6 +23,7 @@ public class BestiaryClient(IOptions<TtgClubClientOptions> options) : IBestiaryC
     
     private const string MediaType = "application/json";
     private readonly string _apiV1Path = options.Value.ApiV1Path;
+    private const int LoadItemsCount = 100;
     
     private readonly HttpClient _bestiaryV1Client = new()
     {
@@ -40,7 +41,7 @@ public class BestiaryClient(IOptions<TtgClubClientOptions> options) : IBestiaryC
         var request = new BestiarySearchRequest
         {
             Page = 0,
-            Size = 10,
+            Size = LoadItemsCount,
             Search = new(query, false),
             Order =
             [

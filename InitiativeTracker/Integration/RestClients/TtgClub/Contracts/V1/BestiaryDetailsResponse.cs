@@ -12,7 +12,6 @@ public class BestiaryDetailsResponse
     public string ProficiencyBonus { get; set; } = null!;
     public int ArmorClass { get; set; }
     public Hits Hits { get; set; } = null!;
-    public Speed[] Speed { get; set; } = [];
     public Ability Ability { get; set; } = null!;
     public string[] Images { get; set; } = [];
 }

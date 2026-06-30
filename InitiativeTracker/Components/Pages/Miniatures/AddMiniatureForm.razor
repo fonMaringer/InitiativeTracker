@@ -18,95 +18,107 @@
 
             @if (_searchResults != null)
             {
-                <div class="grid-table" style="grid-template-columns: 400px 200px 120px 80px; margin-top: 10px;">
-                    <div class="grid-header">
-                        <div>Name</div>
-                        <div>Type</div>
-                        <div>Source</div>
-                        <div>Select</div>
+                <div class="search-flex-container" style="margin-top: 10px;">
+                    <div class="search-flex-header">
+                        <div style="flex: 4;">Name</div>
+                        <div style="flex: 2;">Type</div>
+                        <div style="flex: 1.2;">Source</div>
+                        <div style="flex: 0.8;">Select</div>
                     </div>
-                    @foreach (var result in _searchResults)
-                    {
-                        <div class="grid-row">
-                            <div class="grid-cell">@result.Name.Rus</div>
-                            <div class="grid-cell">@result.Type</div>
-                            <div class="grid-cell">@result.Source.ShortName</div>
-                            <div class="grid-cell">
-                                <Button Color="ButtonColor.Dark" @onclick="() => SelectMiniature(result)"
-                                        TooltipPlacement="TooltipPlacement.Bottom"
-                                        TooltipTitle="Select to fill form fields">
-                                    <Icon Name="IconName.Plus" Size="IconSize.x6"/>
-                                </Button>
+                    <div class="search-flex-body">
+                        @foreach (var result in _searchResults)
+                        {
+                            <div class="search-flex-row">
+                                <div style="flex: 4;">@result.Name.Rus</div>
+                                <div style="flex: 2;">@result.Type</div>
+                                <div style="flex: 1.2;">
+                                    <Button Color="ButtonColor.None" TooltipPlacement="TooltipPlacement.Bottom" TooltipTitle="@result.Source.Name">
+                                        @result.Source.ShortName
+                                    </Button>
+                                </div>
+                                <div style="flex: 0.8;">
+                                    <Button Color="ButtonColor.Dark" @onclick="() => SelectMiniature(result)"
+                                            TooltipPlacement="TooltipPlacement.Bottom"
+                                            TooltipTitle="Select to fill form fields">
+                                        <Icon Name="IconName.Plus" Size="IconSize.x6"/>
+                                    </Button>
+                                </div>
                             </div>
-                        </div>
-                    }
+                        }
+                    </div>
                 </div>
             }
         </div>
     }
 
+    <hr/>
+    
     @if (_isProcessing)
     {
         <Spinner Color="SpinnerColor.Primary" Style="margin-bottom: 15px; width: 30px; height: 30px"/>
     }
-
-    <div class="mb-2" style="display: flex; gap: 10px;">
-        <div style="flex: 1;">
-            <label class="form-label"><b>Name</b></label>
-            <InputText @bind-Value="_name" class="form-control"/>
-        </div>
-        <div style="flex: 1;">
-            <label class="form-label"><b>Link</b></label>
-            <InputText @bind-Value="_link" class="form-control"/>
-        </div>
-    </div>
-
-    <div class="mb-2">
-        <label class="form-label"><b>Size</b></label>
-        <select class="form-select" @bind="_size">
-            @foreach (var option in _sizeOptions)
-            {
-                <option value="@option">@option</option>
-            }
-        </select>
-    </div>
-
-    <div class="mb-2">
-        <label class="form-label"><b>Image</b></label>
-        <InputFile OnChange="OnImageSelected" class="form-control"/>
-        <p class="text-muted" style="font-size: 0.8em;">
-            Or focus this form and press Ctrl+V to paste image from clipboard.
-        </p>
-    </div>
-
-    <div class="mb-2">
-        @if (_imageDataSrc != null)
-        {
-            <CropperComponent
-                Class="cropper-container"
-                ErrorLoadImageClass="cropper-error-load"
-                @ref="_cropperComponent"
-                OnCropEndEvent="OnCropEnd"
-                OnReadyEvent="OnCropperReady"
-                Src="@_imageDataSrc"
-                Options="CropperOptions">
-            </CropperComponent>
-        }
-    </div>
-
-    <div class="mb-2">
-        <label class="form-label"><b>Printed count</b></label>
-        <NumberInput TValue="int?" Min="0" @bind-Value="_printedCount" class="form-control"/>
-    </div>
-
-    <Button Color="ButtonColor.Primary" Disabled="@_isDisabled" Class="me-2" @onclick="OnSave">
-        @(_editMiniature != null ? "Save" : "Add Miniature")
-    </Button>
-    @if (_editMiniature != null)
+    else
     {
-        <Button Color="ButtonColor.Secondary" @onclick="OnCancel">
-            Cancel
+        <div class="mb-2" style="display: flex; gap: 10px;">
+            <div style="flex: 1;">
+                <label class="form-label"><b>Name</b></label>
+                <InputText @bind-Value="_name" class="form-control"/>
+            </div>
+            <div style="flex: 1;">
+                <label class="form-label"><b>Link</b></label>
+                <InputText @bind-Value="_link" class="form-control"/>
+            </div>
+        </div>
+
+        <div class="mb-2" style="display: flex; gap: 10px;">
+            <div style="flex: 1;">
+                <label class="form-label"><b>Size</b></label>
+                <select class="form-select" @bind="_size">
+                    @foreach (var option in _sizeOptions)
+                    {
+                        <option value="@option">@option</option>
+                    }
+                </select>
+            </div>
+            <div style="flex: 1;">
+                <label class="form-label"><b>Printed count</b></label>
+                <NumberInput TValue="int?" Min="0" @bind-Value="_printedCount" class="form-control"/>
+            </div>
+        </div>
+
+        <div class="mb-2">
+            <label class="form-label"><b>Image</b></label>
+            <InputFile OnChange="OnImageSelected" class="form-control"/>
+            <p class="text-muted" style="font-size: 0.8em;">
+                Or focus this form and press Ctrl+V to paste image from clipboard.
+            </p>
+        </div>
+
+        <div class="mb-2" style="max-height: 500px; width: 100%;">
+            @if (_imageDataSrc != null)
+            {
+                <CropperComponent
+                    @key="_imageDataSrc"
+                    Class="cropper-container"
+                    ErrorLoadImageClass="cropper-error-load"
+                    @ref="_cropperComponent"
+                    OnCropEndEvent="OnCropEnd"
+                    OnReadyEvent="OnCropperReady"
+                    Src="@_imageDataSrc"
+                    Options="CropperOptions">
+                </CropperComponent>
+            }
+        </div>
+
+        <Button Color="ButtonColor.Primary" Disabled="@_isDisabled" Class="me-2" @onclick="OnSave">
+            @(_editMiniature != null ? "Save" : "Add Miniature")
         </Button>
+        @if (_editMiniature != null)
+        {
+            <Button Color="ButtonColor.Secondary" @onclick="OnCancel">
+                Cancel
+            </Button>
+        }
     }
 
     @if (_errorMessage != null)

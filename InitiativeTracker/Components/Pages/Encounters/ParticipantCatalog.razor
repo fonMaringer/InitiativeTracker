@@ -6,46 +6,49 @@
 }
 else
 {
-    <div style="display: flex; justify-content: space-between; margin-bottom: 10px">
-        <span style="flex-grow: 1;">Name</span>
-        <span style="width: 60px; margin-left: 10px;">HP</span>
-        <span style="width: 60px; margin-left: 10px;">AC</span>
-        <span style="width: 60px; margin-left: 10px;">DEX</span>
-        <span style="width: 75px;"></span>
-    </div>
-
-    @if (_participants.Any())
-    {
-        <div class="list-group" style="max-height: 250px; overflow-y: auto;">
-            @foreach (var participant in _participants)
-            {
-                <div class="library-item" style="display: flex; justify-content: space-between;"
-                     @onclick="() => SelectParticipantForEdit(participant.Id)">
-                    <span style="flex-grow: 1;">@participant.Name</span>
-                    <spam style="width: 60px; margin-left: 10px; border-width: 1px; padding-left: 5px;">@participant.Hits</spam>
-                    <spam style="width: 60px; margin-left: 10px; border-width: 1px; padding-left: 5px;">@participant.ArmorClass</spam>
-                    <spam style="width: 60px; margin-left: 10px; border-width: 1px; padding-left: 5px;">@participant.Dexterity</spam>
-                    <Button Color="ButtonColor.Primary" Size="ButtonSize.ExtraSmall" @onclick="_ => AddToEncounter(participant.Id)"
-                            TooltipPlacement="TooltipPlacement.Bottom" TooltipTitle="Add to encounter" Style="margin-left: 10px; width: 22px;">
-                        <Icon Name="IconName.Plus"/>
-                    </Button>
-                    <Button Color="ButtonColor.Danger" Size="ButtonSize.ExtraSmall" @onclick="_ => DeleteLibraryParticipant(participant.Id)"
-                            TooltipPlacement="TooltipPlacement.Bottom" TooltipTitle="Remove from library" Style="margin-left: 10px;width: 22px;">
-                        <Icon Name="IconName.Trash"/>
-                    </Button>
-                </div>
-            }
+        <div class="search-flex-container">
+            <div class="search-flex-header">
+                <div style="flex: 3;">Name</div>
+                <div style="flex: 1;">HP</div>
+                <div style="flex: 1;">AC</div>
+                <div style="flex: 1;">DEX</div>
+                <div style="flex: 1.5;"></div>
+            </div>
+            <div class="search-flex-body">
+                @if (_participants.Any())
+                {
+                    @foreach (var participant in _participants)
+                    {
+                        <div class="search-flex-row" @onclick="() => SelectParticipantForEdit(participant.Id)">
+                            <div style="flex: 3;">@participant.Name</div>
+                            <div style="flex: 1;">@participant.Hits</div>
+                            <div style="flex: 1;">@participant.ArmorClass</div>
+                            <div style="flex: 1;">@participant.Dexterity</div>
+                            <div style="flex: 1.5; display: flex; gap: 5px;" @onclick:stopPropagation="true">
+                                <Button Color="ButtonColor.Primary" Size="ButtonSize.ExtraSmall" @onclick="_ => AddToEncounter(participant.Id)"
+                                        TooltipPlacement="TooltipPlacement.Bottom" TooltipTitle="Add to encounter">
+                                    <Icon Name="IconName.Plus"/>
+                                </Button>
+                                <Button Color="ButtonColor.Danger" Size="ButtonSize.ExtraSmall" @onclick="_ => DeleteLibraryParticipant(participant.Id)"
+                                        TooltipPlacement="TooltipPlacement.Bottom" TooltipTitle="Remove from library">
+                                    <Icon Name="IconName.Trash"/>
+                                </Button>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
         </div>
-    }
 
-    <div class="add-library-inline" style="display: flex; align-items: center; margin-top: 10px;">
-        <TextInput TValue="string" @bind-Value="_newLibraryName" Style="flex-grow: 1; height: 30px;" placeholder="New participant..."/>
-        <NumberInput TValue="int" @bind-Value="_newLibraryHp" Style="width: 60px; margin-left: 10px; border-width: 1px; padding-left: 5px; height: 30px;" onClick="this.select();"/>
-        <NumberInput TValue="int" @bind-Value="_newLibraryAc" Style="width: 60px; margin-left: 10px; border-width: 1px; padding-left: 5px; height: 30px;" onClick="this.select();"/>
-        <NumberInput TValue="int" @bind-Value="_newLibraryDex" Style="width: 60px; margin-left: 10px; border-width: 1px; padding-left: 5px; height: 30px;" onClick="this.select();"/>
-        <Button Color="ButtonColor.Primary" Icon="true" Size="ButtonSize.Small" @onclick="UpsertParticipant" Style="margin: 5px 5px 5px 10px; width: 44px;">
-            <Icon Name="@(_selectedParticipantId is null ? IconName.Plus : IconName.Save)"/>
-        </Button>
-        <span style="width: 50px;"></span>
+    <div class="add-library-inline" style="display: flex; align-items: center; margin-top: 10px; gap: 5px;">
+        <TextInput TValue="string" @bind-Value="_newLibraryName" Style="flex: 3; height: 30px;" placeholder="New participant..."/>
+        <NumberInput TValue="int" @bind-Value="_newLibraryHp" Style="flex: 1; height: 30px;" onClick="this.select();"/>
+        <NumberInput TValue="int" @bind-Value="_newLibraryAc" Style="flex: 1; height: 30px;" onClick="this.select();"/>
+        <NumberInput TValue="int" @bind-Value="_newLibraryDex" Style="flex: 1; height: 30px;" onClick="this.select();"/>
+        <div style="flex: 1.5;">
+            <Button Color="ButtonColor.Primary" Icon="true" Size="ButtonSize.Small" @onclick="UpsertParticipant" Style="height: 30px;">
+                <Icon Name="@(_selectedParticipantId is null ? IconName.Plus : IconName.Save)"/>
+            </Button>
+        </div>
     </div>
 }

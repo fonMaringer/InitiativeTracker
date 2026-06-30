@@ -26,6 +26,7 @@ public class ParticipantRepository(
     public async Task<IReadOnlyCollection<ParticipantCatalogItem>> GetAllAsync()
     {
         return await dbContext.ParticipantCatalog
+            .AsNoTracking()
             .OrderBy(p => p.Name)
             .ToListAsync();
     }

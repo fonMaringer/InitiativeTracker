@@ -40,6 +40,7 @@ public class EncounterRepository(
     public async Task<List<Encounter>> GetAllEncountersAsync()
     {
         return await dbContext.Encounters
+            .AsNoTracking()
             .OrderBy(p => p.CreatedAt)
             .ToListAsync();
     }

@@ -85,6 +85,7 @@ public class StandRepository(
     public async Task<IReadOnlyCollection<Stand>> GetAllAsync()
     {
         return await dbContext.Stands
+            .AsNoTracking()
             .OrderBy(p => p.Id)
             .ToListAsync();
     }

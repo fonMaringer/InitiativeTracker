@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
+using ErrorEventArgs = Microsoft.AspNetCore.Components.Web.ErrorEventArgs;
 
 namespace InitiativeTracker.Components.Pages.Miniatures;
 
@@ -46,6 +47,7 @@ public partial class AddMiniatureForm(
         AutoCropArea = 1m,
         Scalable = true,
         CropBoxResizable = true,
+        Rotatable = false,
     };
 
     private readonly CreatureSize[] _sizeOptions = Enum.GetValues<CreatureSize>().Except([CreatureSize.Unknown]).ToArray();
@@ -182,12 +184,14 @@ public partial class AddMiniatureForm(
     }
 
     [JSInvokable]
-    public void HandleClipboardImage(string mimeType, string base64)
+    public async Task HandleClipboardImage(string mimeType, string base64)
     {
         try
         {
+            var data = $"data:{(string.IsNullOrEmpty(mimeType) ? "image/jpeg" : mimeType)};base64,{base64}";
+            
             _imageData = Convert.FromBase64String(base64);
-            _imageDataSrc = $"data:{mimeType};base64,{base64}";
+            _imageDataSrc = data;
             _errorMessage = null;
         }
         catch (Exception ex)
@@ -195,7 +199,7 @@ public partial class AddMiniatureForm(
             _errorMessage = $"Failed to read pasted image: {ex.Message}";
         }
 
-        InvokeAsync(StateHasChanged);
+        StateHasChanged();
     }
 
     private void OnCropperReady(JSEventData<CropReadyEvent>? data)
@@ -212,7 +216,7 @@ public partial class AddMiniatureForm(
             await RestoreCropRegionToCropper();
         }
 
-        await InvokeAsync(StateHasChanged);
+        StateHasChanged();
     }
 
     private void OnCropEnd(JSEventData<CropEndEvent>? data)
@@ -224,12 +228,19 @@ public partial class AddMiniatureForm(
     {
         if (_cropperComponent == null) return;
 
-        var cropperData = await _cropperComponent.GetDataAsync(true);
-        _cropX = (double)(cropperData.X ?? 0m);
-        _cropY = (double)(cropperData.Y ?? 0m);
-        _cropWidth = (double)(cropperData.Width ?? 0m);
-        _cropHeight = (double)(cropperData.Height ?? 0m);
-        await InvokeAsync(StateHasChanged);
+        try
+        {
+            var cropperData = await _cropperComponent.GetDataAsync(true);
+            _cropX = (double)(cropperData.X ?? 0m);
+            _cropY = (double)(cropperData.Y ?? 0m);
+            _cropWidth = (double)(cropperData.Width ?? 0m);
+            _cropHeight = (double)(cropperData.Height ?? 0m);
+        }
+        catch
+        {
+            //ignore
+        }
+        StateHasChanged();
     }
 
     protected override void OnParametersSet()

@@ -121,10 +121,14 @@ public class SpellRepository(
                 .OrderBy(m => m.Name)
                 .ToListAsync();
 
+
+        query = query.Trim();
+
         return await dbContext.Spells
             .AsNoTracking()
-            .Where(e => EF.Functions.Like(e.Name, $"%{query}%"))
             .OrderBy(m => m.Name)
+            .AsAsyncEnumerable()
+            .Where(e => e.Name.Contains(query, StringComparison.InvariantCultureIgnoreCase))
             .ToListAsync();
     }
 }

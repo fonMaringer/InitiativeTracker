@@ -3,7 +3,7 @@
 <div>
     <div class="mb-3" style="display: flex; align-items: center;">
         <TextInput @bind-Value="_searchQuery" @onkeyup="OnKeyUpSearch" Style="width: 300px; margin-right: 10px"/>
-        <Button Color="ButtonColor.Dark" @onclick="(_ => _onSearch())">
+        <Button Color="ButtonColor.Dark" @onclick="(_ => OnSearch())">
             <Icon Name="IconName.Search" Size="IconSize.x6"/>
         </Button>
     </div>

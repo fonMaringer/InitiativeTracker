@@ -12,8 +12,7 @@ public interface IMiniatureRepository : IRepository
     Task UpdateAsync(int id, MiniatureUpdateDto dto);
     Task DeleteAsync(int id);
     Task<Miniature?> GetByIdAsync(int id);
-    Task<IReadOnlyList<Miniature>> SearchAsync(string query);
-    Task<byte[]> GetImageAsync(int miniatureId);
+    Task<IReadOnlyList<MiniatureCatalogDto>> SearchAsync(string query);
 }
 
 public class MiniatureRepository(
@@ -101,12 +100,20 @@ public class MiniatureRepository(
     public Task<Miniature?> GetByIdAsync(int id)
         => dbContext.Miniatures.AsNoTracking().FirstOrDefaultAsync(e => e.Id == id);
 
-    public async Task<IReadOnlyList<Miniature>> SearchAsync(string query)
+    public async Task<IReadOnlyList<MiniatureCatalogDto>> SearchAsync(string query)
     {
         if (string.IsNullOrWhiteSpace(query))
             return await dbContext.Miniatures
                 .AsNoTracking()
                 .OrderBy(m => m.Name)
+                .Select(m => new MiniatureCatalogDto(
+                    m.Id,
+                    m.Name,
+                    m.Size,
+                    m.CroppedImageData!,
+                    m.PrintedCount,
+                    m.Link
+                ))
                 .ToListAsync();
 
         query = query.Trim();
@@ -114,19 +121,16 @@ public class MiniatureRepository(
         return await dbContext.Miniatures
             .AsNoTracking()
             .OrderBy(m => m.Name)
+            .Select(m => new MiniatureCatalogDto(
+                m.Id,
+                m.Name,
+                m.Size,
+                m.CroppedImageData!,
+                m.PrintedCount,
+                m.Link
+            ))
             .AsAsyncEnumerable()
             .Where(e => e.Name.Contains(query, StringComparison.InvariantCultureIgnoreCase))
             .ToListAsync();
-    }
-
-    public async Task<byte[]> GetImageAsync(int miniatureId)
-    {
-        var imageData = await dbContext.Miniatures
-            .AsNoTracking()
-            .Where(e => e.Id == miniatureId)
-            .Select(e => e.ImageData)
-            .FirstOrDefaultAsync();
-
-        return imageData ?? [];
     }
 }

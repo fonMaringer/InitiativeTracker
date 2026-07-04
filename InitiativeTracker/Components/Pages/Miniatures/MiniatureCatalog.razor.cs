@@ -1,3 +1,4 @@
+using InitiativeTracker.DataAccess.Dtos;
 using InitiativeTracker.DataAccess.Repositories;
 using InitiativeTracker.Domain.Entities;
 using Microsoft.AspNetCore.Components;
@@ -7,7 +8,7 @@ namespace InitiativeTracker.Components.Pages.Miniatures;
 
 public partial class MiniatureCatalog(IMiniatureRepository miniatureRepository)
 {
-    private List<Miniature> _miniatures = [];
+    private List<MiniatureCatalogDto> _miniatures = [];
     private bool _isLoading;
     private string _searchQuery = string.Empty;
 
@@ -16,7 +17,7 @@ public partial class MiniatureCatalog(IMiniatureRepository miniatureRepository)
     [Parameter]
     public EventCallback OnDataChanged { get; set; }
     [Parameter]
-    public EventCallback<Miniature> OnAddForPrint { get; set; }
+    public EventCallback<MiniatureCatalogDto> OnAddForPrint { get; set; }
 
     private volatile bool _isSearching;
     private int _pendingSearchVersion;
@@ -30,7 +31,7 @@ public partial class MiniatureCatalog(IMiniatureRepository miniatureRepository)
         try
         {
             var allItems = await miniatureRepository.SearchAsync(string.Empty);
-            _miniatures = new List<Miniature>(allItems);
+            _miniatures = new List<MiniatureCatalogDto>(allItems);
         }
         catch (Exception ex)
         {
@@ -46,10 +47,10 @@ public partial class MiniatureCatalog(IMiniatureRepository miniatureRepository)
     private async Task OnKeyUpSearch(KeyboardEventArgs? e)
     {
         if (e?.Code is "Enter" or "NumpadEnter")
-            await _onSearch();
+            await OnSearch();
     }
 
-    private async Task _onSearch()
+    public async Task OnSearch()
     {
         if (_isSearching) return;
 
@@ -63,25 +64,31 @@ public partial class MiniatureCatalog(IMiniatureRepository miniatureRepository)
             var results = await miniatureRepository.SearchAsync(_searchQuery);
             if (version == _pendingSearchVersion)
                 _miniatures = [..results];
-            StateHasChanged();
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Failed to search miniatures: {ex.Message}");
-            StateHasChanged();
         }
         finally
         {
             _isLoading = false;
             _isSearching = false;
+            StateHasChanged();
         }
     }
 
-    private async Task SelectForEdit(Miniature? miniature) => await OnEditSelected.InvokeAsync(miniature);
+    private async Task SelectForEdit(MiniatureCatalogDto? dto)
+    {
+        if (dto == null)
+            return;
 
-    private async Task OnAddToPrint(Miniature? miniature) => await OnAddForPrint.InvokeAsync(miniature!);
+        var miniature = await miniatureRepository.GetByIdAsync(dto.Id);
+        await OnEditSelected.InvokeAsync(miniature);
+    }
 
-    private async Task OnDelete(Miniature miniature)
+    private async Task OnAddToPrint(MiniatureCatalogDto? miniature) => await OnAddForPrint.InvokeAsync(miniature!);
+
+    private async Task OnDelete(MiniatureCatalogDto miniature)
     {
         try
         {

@@ -7,18 +7,18 @@
     }
     else
     {
-        <div class="grid-table" style="grid-template-columns: 80px 1fr 0.5fr 100px 80px; width: 100%;">
-            <div class="grid-header">
-                <div></div>
-                <div>Size</div>
-                <div>Print index</div>
-                <div>Qty</div>
-                <div></div>
+        <div class="catalog-scroll-area d-flex flex-column">
+            <div class="catalog-header d-flex mb-2">
+                <div style="flex: 0.5"></div>
+                <div style="flex: 1">Size</div>
+                <div style="flex: 1">Print index</div>
+                <div style="flex: 0.7">Qty</div>
+                <div style="flex: 0.5"></div>
             </div>
             @foreach (var printItem in _printItems)
             {
-                <div class="grid-row">
-                    <div class="grid-cell">
+                <div class="d-flex align-items-center catalog-row mb-2">
+                    <div style="flex: 0.5;">
                         @if (_images.TryGetValue(printItem.Stand.Id, out var imgSrc))
                         {
                             <div style="width:64px; height:64px; overflow:hidden; position:relative;">
@@ -28,7 +28,7 @@
                             </div>
                         }
                     </div>
-                    <div class="grid-cell">
+                    <div style="flex: 1;">
                         <select class="form-select" @bind="printItem.Size">
                             @foreach (var option in _sizeOptions)
                             {
@@ -36,7 +36,7 @@
                             }
                         </select>
                     </div>
-                    <div class="grid-cell">
+                    <div style="flex: 1; display: flex; flex-direction: row; margin-left: 10px;">
                         <CheckboxInput 
                             @bind-Value="@printItem.AddIndex" onClick="this.select();"/>
                         @if (printItem.AddIndex)
@@ -47,12 +47,12 @@
                                          Style="width: 80px; border-width: 0" onClick="this.select();"/>
                         }
                     </div>
-                    <div class="grid-cell">
+                    <div style="flex: 0.7;">
                         <NumberInput TValue="int" 
                                      @bind-Value="@printItem.Quantity"
                                      Style="width: 80px; border-width: 0" onClick="this.select();"/>
                     </div>
-                    <div class="grid-cell">
+                    <div style="flex: 0.5;">
                         <Button Color="ButtonColor.Danger" Outline="true" @onclick="() => RemoveFromPrintList(printItem)">
                             <Icon Name="IconName.Trash" Size="IconSize.x6"/>
                         </Button>

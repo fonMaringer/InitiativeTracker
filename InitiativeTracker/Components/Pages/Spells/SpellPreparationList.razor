@@ -7,22 +7,22 @@
     }
     else
     {
-        <div class="grid-table" style="grid-template-columns: 1fr 80px 80px; width: 100%;">
-            <div class="grid-header">
-                <div>Name</div>
-                <div>Qty</div>
-                <div></div>
+        <div class="catalog-scroll-area d-flex flex-column">
+            <div class="catalog-header d-flex mb-2">
+                <div style="flex: 2">Name</div>
+                <div style="flex: 0.6">Qty</div>
+                <div style="flex: 0.5"></div>
             </div>
             @foreach (var printItem in _printItems)
             {
-                <div class="grid-row">
-                    <div class="grid-cell">@printItem.Spell.Name</div>
-                    <div class="grid-cell">
+                <div class="d-flex align-items-center catalog-row mb-2">
+                    <div style="flex: 2">@printItem.Spell.Name</div>
+                    <div style="flex: 0.6">
                         <NumberInput TValue="int" 
                                      @bind-Value="@printItem.Quantity"
                                     Style="width: 60px; border-width: 0" onClick="this.select();"/>
                     </div>
-                    <div class="grid-cell">
+                    <div style="flex: 0.5">
                         <Button Color="ButtonColor.Danger" Outline="true" @onclick="() => RemoveFromPrintList(printItem.Spell.Id)">
                             <Icon Name="IconName.Trash" Size="IconSize.x6"/>
                         </Button>

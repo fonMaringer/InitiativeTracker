@@ -46,10 +46,10 @@ public partial class SpellCatalog(ISpellRepository spellRepository)
     private async Task OnKeyUpSearch(KeyboardEventArgs? e)
     {
         if (e?.Code is "Enter" or "NumpadEnter")
-            await _onSearch();
+            await OnSearch();
     }
 
-    private async Task _onSearch()
+    public async Task OnSearch()
     {
         if (_isSearching) return;
 
@@ -63,17 +63,16 @@ public partial class SpellCatalog(ISpellRepository spellRepository)
             var results = await spellRepository.SearchAsync(_searchQuery);
             if (version == _pendingSearchVersion)
                 _spells = [..results];
-            StateHasChanged();
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Failed to search spells: {ex.Message}");
-            StateHasChanged();
         }
         finally
         {
             _isLoading = false;
             _isSearching = false;
+            StateHasChanged();
         }
     }
 

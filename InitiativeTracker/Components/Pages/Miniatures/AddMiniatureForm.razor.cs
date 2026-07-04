@@ -13,7 +13,6 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
-using ErrorEventArgs = Microsoft.AspNetCore.Components.Web.ErrorEventArgs;
 
 namespace InitiativeTracker.Components.Pages.Miniatures;
 
@@ -40,7 +39,7 @@ public partial class AddMiniatureForm(
 
     private CropperComponent? _cropperComponent;
 
-    private readonly Options CropperOptions = new()
+    private readonly Options _cropperOptions = new()
     {
         AspectRatio = 25m / 32m,
         ViewMode = ViewMode.Vm0,
@@ -142,10 +141,8 @@ public partial class AddMiniatureForm(
     {
         try
         {
-            using var httpClient = new HttpClient
-            {
-                Timeout = TimeSpan.FromSeconds(30),
-            };
+            using var httpClient = new HttpClient();
+            httpClient.Timeout = TimeSpan.FromSeconds(30);
             httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0");
 
             _imageData = await httpClient.GetByteArrayAsync(imageUrl);
@@ -161,15 +158,14 @@ public partial class AddMiniatureForm(
     protected override async Task OnParametersSetAsync()
     {
         await base.OnParametersSetAsync();
-        OnParametersSet();
 
-        if (_editMiniature != null && string.IsNullOrEmpty(_imageDataSrc))
+        if (_editMiniature is not null)
         {
-            var imageBytes = await miniatureRepository.GetImageAsync(_editMiniature.Id);
-            if (imageBytes.Length > 0)
+            var miniature = await miniatureRepository.GetByIdAsync(_editMiniature.Id);
+            if (miniature is {ImageData.Length: > 0})
             {
-                _imageData = imageBytes;
-                _imageDataSrc = $"data:image/jpeg;base64,{Convert.ToBase64String(imageBytes)}";
+                _imageData = miniature.ImageData;
+                _imageDataSrc = $"data:image/jpeg;base64,{Convert.ToBase64String(miniature.ImageData)}";
             }
         }
     }
@@ -222,6 +218,7 @@ public partial class AddMiniatureForm(
     private void OnCropEnd(JSEventData<CropEndEvent>? data)
     {
         _ = HandleCropEndAsync();
+        StateHasChanged();
     }
 
     private async Task HandleCropEndAsync()
@@ -240,7 +237,6 @@ public partial class AddMiniatureForm(
         {
             //ignore
         }
-        StateHasChanged();
     }
 
     protected override void OnParametersSet()
@@ -295,7 +291,9 @@ public partial class AddMiniatureForm(
     {
         if (_cropperComponent == null)
             return;
-        
+
+        await HandleCropEndAsync();
+
         _isProcessing = true;
         _errorMessage = null;
         _successMessage = null;
@@ -332,7 +330,6 @@ public partial class AddMiniatureForm(
 
                 _successMessage = $"'{_name}' updated successfully.";
                 await OnEditMiniatureChanged.InvokeAsync(null);
-                await OnDataChanged.InvokeAsync();
             }
             else
             {
@@ -340,7 +337,7 @@ public partial class AddMiniatureForm(
                     Name: _name,
                     Size: _size,
                     ImageData: _imageData!,
-                    CroppedImageData: croppedImageData ?? [],
+                    CroppedImageData: croppedImageData,
                     PrintedCount: _printedCount ?? 0,
                     Link: _link,
                     CropX: _cropX,
@@ -350,8 +347,9 @@ public partial class AddMiniatureForm(
 
                 _successMessage = $"'{_name}' added successfully.";
                 ResetForm();
-                await OnDataChanged.InvokeAsync();
             }
+
+            await OnDataChanged.InvokeAsync();
         }
         catch (Exception ex)
         {

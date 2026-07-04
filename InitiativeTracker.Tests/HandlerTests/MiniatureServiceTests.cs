@@ -250,14 +250,6 @@ public class MiniatureRepositoryTests
         result[0].Name.Should().Be("Goblin");
     }
 
-    [Test]
-    public async Task GetImageAsync_NonExistentId_ShouldReturnEmptyArray()
-    {
-        var result = await _repository.GetImageAsync(999);
-
-        result.Should().BeEmpty();
-    }
-
     static MiniatureCreateDto CreateMiniatureCreateDto(
         string name,
         CreatureSize size,

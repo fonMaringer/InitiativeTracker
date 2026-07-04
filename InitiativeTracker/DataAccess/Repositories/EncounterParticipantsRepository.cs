@@ -26,13 +26,27 @@ public class EncounterParticipantsRepository(
 
     public async Task SetEncounterParticipantsAsync(int encounterId, List<EncounterParticipant> participants)
     {
-        await using var transaction = await dbContext.Database.BeginTransactionAsync();
-        
-        var currentParticipants = await GetAllEncounterParticipantsAsync(encounterId);
-        dbContext.EncounterParticipants.RemoveRange(currentParticipants);
-        dbContext.EncounterParticipants.AttachRange(participants);
-        await dbContext.SaveChangesAsync();
+        var existing = await dbContext.EncounterParticipants
+            .Where(p => p.EncounterId == encounterId)
+            .ToListAsync();
 
-        await transaction.CommitAsync();
+        var incomingIds = participants.Select(p => p.Id).ToList();
+        var toRemove = existing.Where(e => !incomingIds.Contains(e.Id));
+        dbContext.EncounterParticipants.RemoveRange(toRemove);
+
+        foreach (var participant in participants)
+        {
+            var localCopy = existing.FirstOrDefault(e => e.Id == participant.Id);
+            if (localCopy == null)
+            {
+                await dbContext.EncounterParticipants.AddAsync(participant);
+            }
+            else
+            {
+                dbContext.Entry(localCopy).CurrentValues.SetValues(participant);
+            }
+        }
+
+        await dbContext.SaveChangesAsync();
     }
 }

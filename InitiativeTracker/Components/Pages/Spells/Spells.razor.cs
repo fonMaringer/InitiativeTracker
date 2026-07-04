@@ -4,9 +4,9 @@ namespace InitiativeTracker.Components.Pages.Spells;
 
 public partial class Spells
 {
-    private int _catalogKey;
     private Spell? _editSpell;
     private SpellPreparationList? PreparationListRef;
+    private SpellCatalog? Catalog;
 
     private Task OnEditSelected(Spell? spell) => OnEditSpellChanged(spell);
 
@@ -16,9 +16,10 @@ public partial class Spells
         StateHasChanged();
     }
 
-    private void InvalidateCatalog()
+    private async Task InvalidateCatalog()
     {
-        _catalogKey++;
+        if (Catalog is not null)
+            await Catalog.OnSearch();
     }
 
     private async Task OnAddForPrint(Spell spell)

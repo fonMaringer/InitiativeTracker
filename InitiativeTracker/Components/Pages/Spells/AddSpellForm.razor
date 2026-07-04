@@ -153,14 +153,14 @@
     </div>
 
     <div class="mb-2">
-        <label class="form-label"><b>Description</b></label>
-        <InputTextArea @bind-Value="_description" class="form-control" rows="6"/>
-        <p class="text-muted" style="font-size: 0.8em;">HTML markup is supported.</p>
+        <label class="form-label"><b>Printed count</b></label>
+        <NumberInput TValue="int?" Min="0" @bind-Value="_printedCount" class="form-control"/>
     </div>
 
     <div class="mb-2">
-        <label class="form-label"><b>Printed count</b></label>
-        <NumberInput TValue="int?" Min="0" @bind-Value="_printedCount" class="form-control"/>
+        <label class="form-label"><b>Description</b></label>
+        <InputTextArea @bind-Value="_description" class="form-control" rows="6"/>
+        <p class="text-muted" style="font-size: 0.8em;">HTML markup is supported.</p>
     </div>
 
     <Button Color="ButtonColor.Primary" Disabled="@_isDisabled" Class="me-2" @onclick="OnSave">

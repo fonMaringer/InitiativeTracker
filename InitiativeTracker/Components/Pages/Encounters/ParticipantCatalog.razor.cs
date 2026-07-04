@@ -15,9 +15,9 @@ public partial class ParticipantCatalog(
     private bool _isLoading;
     private int? _selectedParticipantId;
     private string _newLibraryName = string.Empty;
-    private int _newLibraryDex = 0;
+    private int _newLibraryDex = 10;
     private int _newLibraryHp = 1;
-    private int _newLibraryAc = 0;
+    private int _newLibraryAc = 10;
 
     [Parameter]
     public EventCallback<EncounterParticipant> OnAddToEncounter { get; set; }
@@ -58,7 +58,9 @@ public partial class ParticipantCatalog(
             Dexterity = participant.Dexterity,
             Source = Source.Manual,
             HitsAverage = participant.Hits,
+            HitsCurrent = participant.Hits,
             ArmorClass = participant.ArmorClass,
+            ArmorClassCurrent = participant.ArmorClass,
         };
 
         await OnAddToEncounter.InvokeAsync(item);
@@ -91,9 +93,9 @@ public partial class ParticipantCatalog(
 
         _selectedParticipantId = null;
         _newLibraryName = string.Empty;
-        _newLibraryDex = 0;
+        _newLibraryDex = 10;
         _newLibraryHp = 1;
-        _newLibraryAc = 0;
+        _newLibraryAc = 10;
         await LoadAll();
     }
 

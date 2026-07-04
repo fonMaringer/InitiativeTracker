@@ -1,16 +1,16 @@
 using InitiativeTracker.Application.PrintHtmlGenerators;
-using InitiativeTracker.Domain.Entities;
+using InitiativeTracker.DataAccess.Dtos;
 using Microsoft.JSInterop;
 
 namespace InitiativeTracker.Components.Pages.Miniatures;
 
 public partial class MiniaturePreparationList(IJSRuntime jsRuntime)
 {
-    private List<PrintListMiniatureEntry> _printItems = [];
+    private readonly List<PrintListMiniatureEntry> _printItems = [];
     private readonly Dictionary<int, string> _images = new();
     private readonly MiniaturePrintGenerator _printGenerator = new();
 
-    public void AddItem(Miniature miniature, int quantity)
+    public void AddItem(MiniatureCatalogDto miniature, int quantity)
     {
         if (quantity <= 0) return;
 
@@ -40,7 +40,7 @@ public partial class MiniaturePreparationList(IJSRuntime jsRuntime)
         foreach (var printItem in _printItems)
         {
             var entity = printItem.Miniature;
-            var imageBase64 = entity.CroppedImageData != null ? Convert.ToBase64String(entity.CroppedImageData) : string.Empty;
+            var imageBase64 = Convert.ToBase64String(entity.CroppedImageData);
 
             printDataList.Add(new MiniaturePrintDataDto(
                 Size: entity.Size,
@@ -52,9 +52,9 @@ public partial class MiniaturePreparationList(IJSRuntime jsRuntime)
         await jsRuntime.InvokeVoidAsync("openHtmlInNewTab", html);
     }
 
-    public class PrintListMiniatureEntry(Miniature miniature, int quantity)
+    public class PrintListMiniatureEntry(MiniatureCatalogDto miniature, int quantity)
     {
-        public Miniature Miniature { get; } = miniature;
+        public MiniatureCatalogDto Miniature { get; } = miniature;
         public int Quantity { get; set; } = quantity;
     }
 }

@@ -14,11 +14,6 @@ public class MiniaturePrintGenerator
 
     public string Generate(IEnumerable<MiniaturePrintDataDto> items)
     {
-        var grouped = items
-            .GroupBy(i => i.Size)
-            .OrderBy(g => Array.IndexOf(SizeSortOrder, g.Key))
-            .ToList();
-
         var sb = new StringBuilder();
 
         sb.AppendLine("<!DOCTYPE html>");
@@ -40,6 +35,11 @@ public class MiniaturePrintGenerator
         sb.AppendLine("</style>");
         sb.AppendLine("</head>");
         sb.AppendLine("<body>");
+
+        var grouped = items
+            .GroupBy(i => i.Size is CreatureSize.Small ? CreatureSize.Medium : i.Size)
+            .OrderBy(g => Array.IndexOf(SizeSortOrder, g.Key))
+            .ToList();
 
         foreach (var group in grouped)
         {

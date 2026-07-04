@@ -10,7 +10,7 @@
         <div class="col-md-4">
             <div class="mb-4">
                 <h5>Item list (click to edit)</h5>
-                <MagicItemCatalog @key="_catalogKey" OnEditSelected="@OnEditSelected" OnDataChanged="@InvalidateCatalog" OnAddForPrint="@OnAddForPrint" />
+                <MagicItemCatalog @ref="Catalog" OnEditSelected="@OnEditSelected" OnDataChanged="@InvalidateCatalog" OnAddForPrint="@OnAddForPrint" />
             </div>
         </div>
 

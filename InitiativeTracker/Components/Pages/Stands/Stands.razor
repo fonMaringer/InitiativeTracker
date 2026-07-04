@@ -10,7 +10,7 @@
         <div class="col-md-4">
             <div class="mb-4">
                 <h5>Stand list (click to edit)</h5>
-                <StandCatalog @key="_catalogKey" OnEditSelected="@OnEditSelected" OnDataChanged="@InvalidateCatalog" OnAddForPrint="@OnAddForPrint" />
+                <StandCatalog @ref="Catalog" OnEditSelected="@OnEditSelected" OnDataChanged="@InvalidateCatalog" OnAddForPrint="@OnAddForPrint" />
             </div>
         </div>
 

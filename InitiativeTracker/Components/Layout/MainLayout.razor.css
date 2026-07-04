@@ -19,6 +19,7 @@ main {
 }
 
 .top-row {
+    background-color: var(--bs-body-bg, #fff);
     border-bottom: 1px solid #d6d5d5;
     justify-content: flex-end;
     height: 3.5rem;
@@ -66,7 +67,7 @@ main {
     .top-row {
         position: sticky;
         top: 0;
-        z-index: 1;
+        z-index: 1000;
     }
 
     .top-row.auth ::deep a:first-child {

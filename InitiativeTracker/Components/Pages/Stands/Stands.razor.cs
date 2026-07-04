@@ -4,9 +4,9 @@ namespace InitiativeTracker.Components.Pages.Stands;
 
 public partial class Stands
 {
-    private int _catalogKey;
     private Stand? _editStand;
     private StandPreparationList? PreparationListRef;
+    private StandCatalog? Catalog;
 
     private Task OnEditSelected(Stand? stand) => OnEditStandChanged(stand);
 
@@ -16,9 +16,10 @@ public partial class Stands
         StateHasChanged();
     }
 
-    private void InvalidateCatalog()
+    private async Task InvalidateCatalog()
     {
-        _catalogKey++;
+        if (Catalog is not null)
+            await Catalog.LoadAllStands();
     }
 
     private async Task OnAddForPrint(Stand stand)

@@ -17,4 +17,13 @@ public static class Constants
         [CreatureSize.Gargantuan]  = (BaseWidth * 4, BaseHeight * 4),
     };
 
+    public static readonly Dictionary<CreatureSize, int> GroupingOrder = new()
+    {
+        [CreatureSize.Tiny] = 0,
+        [CreatureSize.Small] = 10,
+        [CreatureSize.Medium] = 10,
+        [CreatureSize.Large] = 20,
+        [CreatureSize.Huge] = 30,
+        [CreatureSize.Gargantuan] = 40,
+    };
 }

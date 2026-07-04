@@ -18,7 +18,7 @@ public partial class StandCatalog(IStandRepository standRepository)
 
     protected override async Task OnInitializedAsync() => await LoadAllStands();
 
-    private async Task LoadAllStands()
+    public async Task LoadAllStands()
     {
         _isLoading = true;
         StateHasChanged();

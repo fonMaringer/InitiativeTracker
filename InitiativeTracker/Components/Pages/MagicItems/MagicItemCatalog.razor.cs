@@ -46,10 +46,10 @@ public partial class MagicItemCatalog(IMagicItemRepository magicItemRepository)
     private async Task OnKeyUpSearch(KeyboardEventArgs? e)
     {
         if (e?.Code is "Enter" or "NumpadEnter")
-            await _onSearch();
+            await OnSearch();
     }
 
-    private async Task _onSearch()
+    public async Task OnSearch()
     {
         if (_isSearching) return;
 
@@ -63,17 +63,16 @@ public partial class MagicItemCatalog(IMagicItemRepository magicItemRepository)
             var results = await magicItemRepository.SearchAsync(_searchQuery);
             if (version == _pendingSearchVersion)
                 _items = results.OrderBy(i => i.Name).ToList();
-            StateHasChanged();
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Failed to search items: {ex.Message}");
-            StateHasChanged();
         }
         finally
         {
             _isLoading = false;
             _isSearching = false;
+            StateHasChanged();
         }
     }
 

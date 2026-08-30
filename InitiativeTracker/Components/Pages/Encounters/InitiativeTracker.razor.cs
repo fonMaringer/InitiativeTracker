@@ -162,16 +162,15 @@ public partial class InitiativeTracker(
             throw new InvalidOperationException();
 
         var currentRound = CurrentEncounter.CurrentRound;
-        var currentActiveParticipantId = CurrentEncounter.CurrentActiveParticipantId ?? Participants.FirstOrDefault()?.Id;
+        var currentActiveParticipantId = CurrentEncounter.CurrentActiveParticipantId;
         
-        var currentItem = Participants.FirstOrDefault(p => p.Id == currentActiveParticipantId);
-        if (currentItem is null)
+        if (currentActiveParticipantId is null)
         {
             currentActiveParticipantId = Participants.FirstOrDefault()?.Id;
         }
         else
         {
-            var currentIndex = Participants.IndexOf(currentItem);
+            var currentIndex = Participants.FindIndex(p => p.Id == currentActiveParticipantId);
             var nextIndex = currentIndex + 1;
             if (nextIndex >= Participants.Count)
             {

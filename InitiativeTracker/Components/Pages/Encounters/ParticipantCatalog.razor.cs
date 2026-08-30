@@ -8,7 +8,7 @@ namespace InitiativeTracker.Components.Pages.Encounters;
 
 public partial class ParticipantCatalog(
     IParticipantRepository participantRepository
-    ) : ComponentBase
+) : ComponentBase
 {
     private IReadOnlyCollection<ParticipantCatalogItem> _participants = [];
 
@@ -59,6 +59,7 @@ public partial class ParticipantCatalog(
             Source = Source.Manual,
             HitsAverage = participant.Hits,
             HitsCurrent = participant.Hits,
+            HitsDefault = participant.Hits,
             ArmorClass = participant.ArmorClass,
             ArmorClassCurrent = participant.ArmorClass,
         };

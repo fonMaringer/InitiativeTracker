@@ -78,6 +78,18 @@ public partial class EncounterCatalog(
             await AddEncounter();
     }
 
+    internal async Task CopyEncounter(Encounter source)
+    {
+        var copy = await encounterRepository.CopyEncounterAsync(source.Id, $"{source.Name} (copy)");
+        if (copy is null)
+            return;
+
+        _encounters.Add(copy);
+        SelectedEncounter = copy;
+        await OnSelectEncounter.InvokeAsync(copy);
+        StateHasChanged();
+    }
+
     private async Task DeleteEncounter(int encounterId, string name)
     {
         var confirmed = await jsRuntime.InvokeAsync<bool>("confirm", $"Delete \"{name}\" and all its entries?");

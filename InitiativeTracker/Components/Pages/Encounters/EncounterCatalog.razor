@@ -22,6 +22,12 @@ else
                 }
 
                 <div class="encounter-actions">
+                    <span @onclick="() => CopyEncounter(enc)" @onclick:stopPropagation="true">
+                        <Button Color="ButtonColor.Secondary" Icon="true" Size="ButtonSize.ExtraSmall"
+                                TooltipPlacement="TooltipPlacement.Bottom" TooltipTitle="Copy encounter">
+                            <Icon Name="IconName.Copy"/>
+                        </Button>
+                    </span>
                     <Button Color="ButtonColor.Danger" Icon="true" Size="ButtonSize.ExtraSmall" @onclick="_ => DeleteEncounter(enc.Id, enc.Name)"
                             style="margin-left: 5px;">
                         <Icon Name="IconName.Trash"/>

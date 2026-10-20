@@ -57,6 +57,23 @@ public class EncounterParticipant
         HitsCurrent = HitsDefault;
     }
 
+    public EncounterParticipant CopyAsTemplate() => new()
+    {
+        Order = Order,
+        Initiative = Initiative,
+        Dexterity = Dexterity,
+        Name = Name,
+        HitsAverage = HitsAverage,
+        HitsFormula = HitsFormula,
+        HitsBonus = HitsBonus,
+        HitsDefault = HitsDefault,
+        HitsCurrent = HitsDefault,
+        ArmorClass = ArmorClass,
+        ArmorClassCurrent = ArmorClass,
+        Link = Link,
+        Source = Source,
+    };
+
     public void Initialize(HitsMode mode)
     {
         switch (mode)

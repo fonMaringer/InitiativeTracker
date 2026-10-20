@@ -11,6 +11,7 @@ public interface IEncounterRepository : IRepository, IWarmUp
     Task<List<Encounter>> GetAllEncountersAsync();
     Task<Encounter?> GetEncounterByIdAsync(int id);
     Task<Encounter> CreateEncounterAsync(EncounterCreateDto dto);
+    Task<Encounter?> CopyEncounterAsync(int sourceEncounterId, string name);
     Task UpdateEncounterAsync(EncounterUpdateDto dto);
     Task DeleteEncounterAsync(int id);
 }
@@ -68,6 +69,47 @@ public class EncounterRepository(
         catch (Exception ex)
         {
             logger.LogError(ex, "Unable to create encounter");
+            throw;
+        }
+    }
+
+    public async Task<Encounter?> CopyEncounterAsync(int sourceEncounterId, string name)
+    {
+        try
+        {
+            var source = await dbContext.Encounters
+                .AsNoTracking()
+                .FirstOrDefaultAsync(e => e.Id == sourceEncounterId);
+            if (source is null)
+                return null;
+
+            var sourceParticipants = await dbContext.EncounterParticipants
+                .AsNoTracking()
+                .Where(p => p.EncounterId == sourceEncounterId)
+                .OrderBy(p => p.Order)
+                .ToListAsync();
+
+            var copy = new Encounter
+            {
+                Name = name,
+                CreatedAt = DateTime.UtcNow,
+                CurrentRound = 1,
+            };
+
+            foreach (var participant in sourceParticipants)
+            {
+                var clone = participant.CopyAsTemplate();
+                clone.Encounter = copy;
+                dbContext.EncounterParticipants.Add(clone);
+            }
+
+            dbContext.Encounters.Add(copy);
+            await dbContext.SaveChangesAsync();
+            return copy;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Unable to copy encounter with Id {Id}.", sourceEncounterId);
             throw;
         }
     }

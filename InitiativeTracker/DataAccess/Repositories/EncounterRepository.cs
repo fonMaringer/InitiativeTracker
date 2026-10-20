@@ -94,6 +94,7 @@ public class EncounterRepository(
                 Name = name,
                 CreatedAt = DateTime.UtcNow,
                 CurrentRound = 1,
+                SkipDead = source.SkipDead,
             };
 
             foreach (var participant in sourceParticipants)
@@ -128,6 +129,8 @@ public class EncounterRepository(
                 entity.CurrentRound = dto.CurrentRound.Value;
             if (dto.CurrentActiveParticipantId is not null)
                 entity.CurrentActiveParticipantId = dto.CurrentActiveParticipantId.Value;
+            if (dto.SkipDead is not null)
+                entity.SkipDead = dto.SkipDead.Value;
 
             await dbContext.SaveChangesAsync();
         }

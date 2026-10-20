@@ -68,7 +68,24 @@ public partial class InitiativeTracker(
                 CurrentEncounter.Id,
                 null,
                 CurrentRound: round,
-                CurrentActiveParticipantId: currentActiveParticipantId
+                CurrentActiveParticipantId: currentActiveParticipantId,
+                SkipDead: null
+            )
+        );
+    }
+
+    internal async Task SaveSkipDead()
+    {
+        if (CurrentEncounter is null)
+            return;
+
+        await encounterRepository.UpdateEncounterAsync(
+            new(
+                CurrentEncounter.Id,
+                null,
+                null,
+                null,
+                CurrentEncounter.SkipDead
             )
         );
     }
@@ -161,27 +178,47 @@ public partial class InitiativeTracker(
         if (CurrentEncounter is null)
             throw new InvalidOperationException();
 
+        if (Participants.Count == 0)
+            return (CurrentEncounter.CurrentRound, null);
+
         var currentRound = CurrentEncounter.CurrentRound;
         var currentActiveParticipantId = CurrentEncounter.CurrentActiveParticipantId;
-        
+
         if (currentActiveParticipantId is null)
-        {
-            currentActiveParticipantId = Participants.FirstOrDefault()?.Id;
-        }
-        else
-        {
-            var currentIndex = Participants.FindIndex(p => p.Id == currentActiveParticipantId);
-            var nextIndex = currentIndex + 1;
-            if (nextIndex >= Participants.Count)
-            {
-                currentRound++;
-                nextIndex = 0;
-            }
+            return (currentRound, PickFirstParticipant()?.Id);
 
-            currentActiveParticipantId = Participants[nextIndex].Id;
+        var currentIndex = Participants.FindIndex(p => p.Id == currentActiveParticipantId);
+        var skipDead = CurrentEncounter.SkipDead;
+
+        for (var step = 1; step <= Participants.Count; step++)
+        {
+            var wrapped = currentIndex + step >= Participants.Count;
+            var candidate = Participants[(currentIndex + step) % Participants.Count];
+
+            if (!skipDead || candidate.State is not HealthState.Dead)
+                return (currentRound + (wrapped ? 1 : 0), candidate.Id);
         }
 
-        return (currentRound, currentActiveParticipantId);
+        var nextIndex = currentIndex + 1;
+        if (nextIndex >= Participants.Count)
+        {
+            currentRound++;
+            nextIndex = 0;
+        }
+
+        return (currentRound, Participants[nextIndex].Id);
+    }
+
+    private EncounterParticipant? PickFirstParticipant()
+    {
+        if (CurrentEncounter?.SkipDead is true)
+        {
+            var living = Participants.FirstOrDefault(p => p.State is not HealthState.Dead);
+            if (living is not null)
+                return living;
+        }
+
+        return Participants.FirstOrDefault();
     }
 
     internal async Task Next()

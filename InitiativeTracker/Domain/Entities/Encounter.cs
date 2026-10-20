@@ -7,4 +7,5 @@ public class Encounter
     public DateTime CreatedAt { get; set; }
     public int CurrentRound { get; set; }
     public int? CurrentActiveParticipantId { get; set; }
+    public bool SkipDead { get; set; } = true;
 }

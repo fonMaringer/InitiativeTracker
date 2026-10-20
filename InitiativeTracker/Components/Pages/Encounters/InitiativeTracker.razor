@@ -8,8 +8,12 @@
 }
 else
 {
-    <div class="tracker-stats">
-        <h4>Round: @CurrentEncounter.CurrentRound</h4>
+    <div class="tracker-stats" style="display: flex; align-items: center; gap: 20px;">
+        <h4 style="margin: 0">Round: @CurrentEncounter.CurrentRound</h4>
+        <div style="display: flex; align-items: center; gap: 5px;">
+            <Switch TValue="bool" @bind-Value="CurrentEncounter.SkipDead" @bind-Value:after="SaveSkipDead"/>
+            <span>Skip dead</span>
+        </div>
     </div>
 
     <div class="grid-table" style="grid-template-columns: 20fr 39fr 100fr 30fr 90fr 30fr 15fr">

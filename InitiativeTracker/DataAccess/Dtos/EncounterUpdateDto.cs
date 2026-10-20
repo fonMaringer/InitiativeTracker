@@ -4,5 +4,6 @@ public record EncounterUpdateDto(
     int Id,
     string? Name,
     int? CurrentRound,
-    int? CurrentActiveParticipantId
+    int? CurrentActiveParticipantId,
+    bool? SkipDead
     );

@@ -140,6 +140,7 @@ public partial class EncounterCatalog(
                 _renamingId,
                 _renameValue,
                 null,
+                null,
                 null
             )
         );
